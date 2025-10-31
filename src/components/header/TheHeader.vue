@@ -93,7 +93,7 @@
 
 /* Icon styles from icon.css and style.css */
 .icon {
-  background-image: url('trungbug/amisrecrui/AmisRecrui-9976a06c1a27fea5c7e453067db1b4f0209ca23b/assets/icons/ICON.svg');
+  background-image: url('../assets/ICON.svg');
   background-repeat: no-repeat;
   background-color: transparent;
   width: 20px;

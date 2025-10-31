@@ -1,22 +1,33 @@
 <template>
-  <div class="container d-flex flex-direction-column">
+  <div class="layout">
+    <!-- Header trên cùng -->
     <Header />
-    <div class="content w-100 d-flex flex1">
+
+    <!-- Phần nội dung chính: sidebar + content -->
+    <div class="layout-body">
       <Sidebar />
-      <router-view />
+      <div class="layout-content">
+        <router-view></router-view>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import Header from './components/TheHeader.vue'
-import Sidebar from './components/TheSideBar.vue'
+import Header from './components/header/TheHeader.vue'
+import Sidebar from './components/sidebar/TheSidebar.vue'
 </script>
 
-<style>
-/* @import './assets/css/filter.css';
-@import './assets/css/common.css';
-@import './assets/css/style.css';
-@import './assets/css/icon.css';
-@import './assets/css/avatar.css'; */
+<style scoped>
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.layout-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
 </style>

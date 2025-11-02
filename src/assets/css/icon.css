@@ -140,8 +140,9 @@
   -webkit-mask-repeat: no-repeat;
 }
 .icon-search {
-  mask-image: url('@/assets/icon/ICON.svg');
-  mask-repeat: no-repeat -16px -79px;
+  -webkit-mask-image: url('../icon/ICON.svg');
+  -webkit-mask-position: -16px -79px; /* Sửa từ mask-repeat */
+  -webkit-mask-repeat: no-repeat;
   width: 20px;
   height: 20px;
 }

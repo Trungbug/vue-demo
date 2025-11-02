@@ -1,12 +1,13 @@
 <template>
-  <div class="layout">
+  <div class="layout-container">
     <!-- Header trên cùng -->
     <Header />
 
     <!-- Phần nội dung chính: sidebar + content -->
-    <div class="layout-body dis-flex">
+    <div class="layout-body">
       <Sidebar />
-      <div class="layout-content dis-flex">
+      <div class="layout-content">
+        <!-- Nội dung của route (Candidate.vue) sẽ hiển thị ở đây -->
         <router-view></router-view>
       </div>
     </div>
@@ -19,29 +20,28 @@ import Sidebar from './components/sidebar/TheSidebar.vue'
 </script>
 
 <style scoped>
-.app-container {
+/* Container chính của toàn bộ ứng dụng */
+.layout-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+  width: 100vw; /* Chiếm toàn bộ chiều rộng màn hình */
+  overflow: hidden; /* Ngăn cuộn ở cấp cao nhất */
 }
 
-/* phần dưới header chia làm 2 cột */
-.main-layout {
+/* Phần body (dưới header) chứa sidebar và content */
+.layout-body {
   display: flex;
-  flex: 1;
-  overflow: hidden;
+  flex: 1; /* Chiếm toàn bộ không gian còn lại dưới header */
+  height: calc(100vh - 50px); /* Chiều cao = 100% viewport - chiều cao header (50px) */
+  overflow: hidden; /* Ngăn cuộn ở body */
 }
 
-/* sidebar cố định chiều rộng */
-.main-layout > *:first-child {
-  width: 240px; /* hoặc width: var(--sidebar-width) nếu bạn có biến CSS */
-}
-
-/* content chiếm toàn bộ phần còn lại */
-.main-content {
-  flex: 1;
-  background-color: #f5f5f5;
-  overflow-y: auto;
-  overflow-x: hidden;
+/* Phần nội dung chính (bên phải sidebar) */
+.layout-content {
+  flex: 1; /* Chiếm toàn bộ không gian còn lại bên phải sidebar */
+  height: 100%; /* Chiều cao bằng layout-body */
+  overflow-y: auto; /* Cho phép cuộn nội dung nếu dài hơn */
+  background-color: #f3f4f6; /* Màu nền cho phần content */
 }
 </style>

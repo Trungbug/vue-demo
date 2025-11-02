@@ -1,11 +1,16 @@
 <template>
   <div class="content">
+    <div class="title-header">
+      <div class="title-left">Ứng viên</div>
+      <div class="title-right">
+        <button class="btn">
+          <div class="icon icon-add"></div>
+          <span class="title-name pl-2">Thêm ứng viên</span>
+        </button>
+      </div>
+    </div>
     <div class="list-candidate">
       <!-- Tiêu đề -->
-      <div class="title-header">
-        <div class="title-left">Ứng viên</div>
-        <div class="title-right">+ Thêm ứng viên</div>
-      </div>
 
       <!-- Nội dung chính -->
       <div class="candidates-wrapper">
@@ -26,12 +31,15 @@
 .content {
   width: 100%;
   height: 100%;
-  padding: 16px;
+
   box-sizing: border-box;
   background-color: #f3f4f6;
   overflow: auto; /* cho phép cuộn nếu dài */
 }
-
+.title-name {
+  font-weight: 500;
+  font-size: 14px !important;
+}
 /* Khối danh sách ứng viên */
 .list-candidate {
   width: 100%;
@@ -45,22 +53,18 @@
 
 /* Header */
 .title-header {
+  height: 50px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background-color: #c7d2fe; /* xanh nhạt */
-  padding: 12px;
-  border-radius: 4px;
-  margin-bottom: 12px;
+  padding: 16px 24px 0 24px;
 }
 .title-left {
-  font-weight: bold;
+  font-size: 20px;
+  font-weight: 700;
+  padding-top: 8px;
+  padding-bottom: 4px;
 }
 .title-right {
-  background-color: #2563eb;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 4px;
 }
 
 /* Khu vực nội dung chính */
@@ -91,5 +95,18 @@
   border-radius: 4px;
   padding: 8px;
   text-align: center;
+}
+.btn {
+  width: auto;
+  font-weight: 500;
+  font-size: 14px !important;
+  height: 36px !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+
+  background-color: #2680eb !important;
+  color: #ffffff !important;
+  border: 1px solid #e0e6ec;
+  border-color: transparent !important;
 }
 </style>

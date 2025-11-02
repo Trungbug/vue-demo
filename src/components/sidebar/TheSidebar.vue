@@ -33,7 +33,7 @@ const toggleSidebar = () => {
 }
 
 const menu = [
-  { title: 'Tin tuyển dụng', icon: 'fa-solid fa-bullhorn' }, // Sửa lại icon cho phù hợp
+  { title: 'Tin tuyển dụng', icon: 'icon icon-list' }, // Sửa lại icon cho phù hợp
   { title: 'Ứng viên', icon: 'icon icon-candidate', active: true },
   { title: 'Lịch', icon: 'fa-solid fa-calendar' },
   { title: 'Kho tiềm năng', icon: 'icon icon-sb-talent' },
@@ -57,7 +57,7 @@ const menu = [
 
 /* Sidebar styles from style.css */
 .sidebar {
-  width: 220px;
+  width: 230px;
   height: calc(100vh - 60px);
   position: relative;
   background-image: url('https://amisplatform.misacdn.net/apps/recruit2/event-sidebar.1a602823bdf63dc5.svg');
@@ -68,10 +68,11 @@ const menu = [
   color: #fff;
   display: flex;
   flex-direction: column;
-  padding-top: 16px;
+  padding-top: 32px;
 }
 
 .sidebar-item {
+  margin-left: 12px;
   display: flex;
   align-items: center;
   border-radius: 4px;
@@ -94,6 +95,7 @@ const menu = [
 }
 .sidebar .title {
   font-size: 14px;
+  margin-left: 12px;
 }
 
 .bottom-area {

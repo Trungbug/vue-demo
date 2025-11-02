@@ -1,69 +1,92 @@
+/* ✅ Base icon style — dùng mask thay background */
 .icon {
-  background-image: url('../icons/ICON.svg');
-  background-repeat: no-repeat;
-  background-color: transparent;
+  display: inline-block;
   width: 20px;
   height: 20px;
+  -webkit-mask-image: url('../icons/ICON.svg');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: auto;
+  background-color: currentColor;
+  color: #c5ccd5; /* mặc định xám nhạt */
 }
+
+/* ✅ Các icon riêng (chuyển background-position → mask-position) */
 .icon-list {
-  background-position: -66px -1px;
-  width: 13px;
-  height: 14px;
+  -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
+  -webkit-mask-position: -94px -113px;
+  -webkit-mask-repeat: no-repeat;
+  background-color: #c5ccd5;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
 }
+
 .icon-logo {
-  background-position: -53px -411px;
+  -webkit-mask-position: -53px -411px;
   width: 54px;
   height: 54px;
 }
+
 .icon-world {
-  background-position: -113px 0;
+  -webkit-mask-position: -113px 0;
   width: 14px;
   height: 16px;
   display: flex;
   align-items: center;
 }
+
 .icon-cart {
-  background-position: -22px -1266px;
+  -webkit-mask-position: -22px -1266px;
   width: 16px;
   height: 16px;
 }
+
 .icon-chat {
-  background-position: -7px -1097px;
+  -webkit-mask-position: -7px -1097px;
   width: 34px;
   height: 34px;
 }
+
 .icon-notification {
-  background-position: -2px -634px;
+  -webkit-mask-position: -2px -634px;
   width: 20px;
   height: 21px;
 }
+
 .icon-user {
-  background-position: -123px -139px;
+  -webkit-mask-position: -123px -139px;
   width: 18px;
   height: 18px;
 }
+
 .icon-candidate {
-  background-position: -26px -114px;
-  width: 20px;
-  height: 19px;
-}
-.icon-collape {
-  background-position: -200px -141px;
-  width: 8px;
-  height: 14px;
-}
-.icon-menu {
-  background-image: url('../icons/dots-menu-svgrepo-com.svg');
-  -webkit-mask-position: 0px -112px;
+  -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
+  -webkit-mask-position: -24px -112px;
   -webkit-mask-repeat: no-repeat;
   background-color: #ffffff;
 }
+
+.icon-collape {
+  -webkit-mask-position: -200px -141px;
+  width: 8px;
+  height: 14px;
+}
+
+.icon-menu {
+  -webkit-mask-image: url('../icons/dots-menu-svgrepo-com.svg');
+  -webkit-mask-position: 0px -112px;
+  -webkit-mask-repeat: no-repeat;
+  background-color: currentColor;
+}
+
+/* ✅ Các icon từ CDN — giữ nguyên link, chuyển về mask */
 .icon-sb-talent {
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit2/assets/images/ICON.svg);
   -webkit-mask-position: 0px -112px;
   -webkit-mask-repeat: no-repeat;
-  background-color: #c5ccd5;
+  background-color: currentColor;
 }
+
 .icon-recruitment-campaign-active {
   width: 22px;
   height: 22px;
@@ -71,20 +94,16 @@
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit2/assets/images/ICON.svg);
   -webkit-mask-position: -73px -633px;
   -webkit-mask-repeat: no-repeat;
-  background-color: #ffffff;
+  background-color: currentColor;
 }
-.icon-switch-app[_ngcontent-nnw-c464] {
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  background-image: url(https://amisplatform.misacdn.net/apps/recruit/icon-swich-app.9361b9384db46956.svg);
-}
+
 .icon-sb-recriment {
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
   -webkit-mask-position: -94px -113px;
   -webkit-mask-repeat: no-repeat;
-  background-color: #c5ccd5;
+  background-color: currentColor;
 }
+
 .icon-email-ai-marketing {
   width: 24px;
   height: 24px;
@@ -92,13 +111,15 @@
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
   -webkit-mask-position: -160px -248px;
   -webkit-mask-repeat: no-repeat;
-  background-color: #c5ccd5;
+  background-color: currentColor;
 }
 
+/* ✅ Các phần còn lại giữ nguyên vì không thuộc nhóm icon sprite */
 .apui-user-controlpanel-item {
   position: relative;
   background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTEuNSIgY3k9IjUuNSIgcj0iMy41IiBzdHJva2U9IiM3NTc1NzUiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMy41MDYyOSAxNS43NDEzTDMuMTA2NTIgMTYuMjk2NUMxLjM5MTk2IDE4LjY3NzggMy4wOTM2OCAyMiA2LjAyODA0IDIySDE1Ljk3MkMxOC45MDYzIDIyIDIwLjYwOCAxOC42Nzc4IDE4Ljg5MzUgMTYuMjk2NUwxOC40OTM3IDE1Ljc0MTNDMTYuODAyNCAxMy4zOTIyIDE0LjA4NDUgMTIgMTEuMTg5OSAxMkgxMC44MTAxQzcuOTE1NTMgMTIgNS4xOTc2MSAxMy4zOTIyIDMuNTA2MjkgMTUuNzQxM1oiIHN0cm9rZT0iIzc1NzU3NSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTIxIDVWN1Y5IiBzdHJva2U9IiMyQ0EwMUMiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0xOSA3SDIxSDIzIiBzdHJva2U9IiMyQ0EwMUMiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=);
 }
+
 .misa-helpmenu-trigger {
   width: 32px;
   height: 32px;

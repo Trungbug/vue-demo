@@ -3,7 +3,7 @@
     <div class="header-left d-flex align-items-center">
       <div class="icon-switch-app"></div>
       <div class="icon icon-logo"></div>
-      <div class="title-name">TUYỂN DỤNG</div>
+      <div class="title-name .m-r-24">Tuyển dụng</div>
       <div class="search-box">
         <input type="text" placeholder="Tìm kiếm nhanh trong danh sách" />
         <i class="fas fa-search"></i>
@@ -45,7 +45,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 60px;
+  height: 50px;
   background-color: #fff;
   padding: 0 20px;
 }
@@ -63,9 +63,15 @@
 }
 
 .title-name {
+  color: #1f1f1f;
+  /* font-family: Inter; */
   font-size: 18px;
-  font-weight: 700;
   font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  -webkit-user-select: none;
+  user-select: none;
+  margin-left: -12px;
 }
 
 /* Search box styles from style.css */

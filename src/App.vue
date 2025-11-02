@@ -4,9 +4,9 @@
     <Header />
 
     <!-- Phần nội dung chính: sidebar + content -->
-    <div class="layout-body">
+    <div class="layout-body dis-flex">
       <Sidebar />
-      <div class="layout-content">
+      <div class="layout-content dis-flex">
         <router-view></router-view>
       </div>
     </div>
@@ -19,15 +19,29 @@ import Sidebar from './components/sidebar/TheSidebar.vue'
 </script>
 
 <style scoped>
-.layout {
+.app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
-.layout-body {
+/* phần dưới header chia làm 2 cột */
+.main-layout {
   display: flex;
   flex: 1;
   overflow: hidden;
+}
+
+/* sidebar cố định chiều rộng */
+.main-layout > *:first-child {
+  width: 240px; /* hoặc width: var(--sidebar-width) nếu bạn có biến CSS */
+}
+
+/* content chiếm toàn bộ phần còn lại */
+.main-content {
+  flex: 1;
+  background-color: #f5f5f5;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 </style>

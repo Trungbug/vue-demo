@@ -3,7 +3,7 @@
     <div class="title-header">
       <div class="title-left">Ứng viên</div>
       <div class="title-right">
-        <button class="btn" @click="isFormVisibale = true">
+        <button class="btn" @click="isFormVisible = true">
           <div class="icon icon-add"></div>
           <span class="title-name pl-2">Thêm ứng viên</span>
         </button>

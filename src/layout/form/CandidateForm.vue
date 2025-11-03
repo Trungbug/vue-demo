@@ -1,18 +1,9 @@
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="form-grid">
-      <div class="form-group">
-        <label for="fullName">Họ và tên *</label>
-        <input id="fullName" v-model="formData.CandidateName" type="text" required />
-      </div>
-      <div class="form-group">
-        <label for="phoneNumber">Số điện thoại</label>
-        <input id="phoneNumber" v-model="formData.Mobile" type="text" />
-      </div>
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" v-model="formData.Email" type="email" />
-      </div>
+      <BaseInput v-model="formData.CandidateName" label="Họ và tên" :required="true" />
+      <BaseInput v-model="formData.Mobile" label="Số điện thoại" />
+      <BaseInput v-model="formData.Email" label="Email" type="email" />
     </div>
 
     <div class="form-actions">
@@ -25,14 +16,14 @@
 <script setup>
 import { ref } from 'vue'
 
+import BaseInput from '@/components/input/Input.vue'
+
 const emit = defineEmits(['submit', 'cancel'])
 
-// Dữ liệu của form
 const formData = ref({
   CandidateName: '',
   Mobile: '',
   Email: '',
-  // Thêm các trường khác ở đây
 })
 
 const handleSubmit = () => {
@@ -48,23 +39,10 @@ const handleCancel = () => {
 <style scoped>
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Chia thành 3 cột */
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-.form-group label {
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-.form-group input {
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
+
 .form-actions {
   margin-top: 24px;
   display: flex;

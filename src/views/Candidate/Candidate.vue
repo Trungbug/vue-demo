@@ -80,7 +80,7 @@ import { ref } from 'vue'
 import TheTable from '@/components/table/TheTable.vue'
 import candidateData from '@/api/candidate-data.json'
 import BaseDialog from '@/components/base/BaseDialog.vue'
-import CandidateForm from '@/components/form/CandidateForm.vue'
+import CandidateForm from '@/layout/form/CandidateForm.vue'
 
 const isFormVisible = ref(false)
 // Các cột cho bảng, key phải khớp với file JSON

@@ -44,20 +44,12 @@
       </div>
 
       <div class="table-area">
-        <div class="data-grid">
-          <div class="datagrid-header">
-            <div class="datagrid-content">
-              <table class="datagrid-table">
-                <tbody>
-                  <tr>
-                    <td>jahhahouha</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="datagird-view">nội dung</div>
-        </div>
+        <TheTable
+          :fields="candidateFields"
+          :rows="candidateRows"
+          @edit="handleEdit"
+          @delete="handleDelete"
+        />
       </div>
       <div class="paging">Phân trang</div>
     </div>
@@ -65,7 +57,26 @@
 </template>
 
 <script setup>
-// Chưa cần logic — chỉ layout
+import { ref } from 'vue'
+import TheTable from '@/components/table/TheTable.vue'
+
+// Định nghĩa các cột cho bảng
+const candidateFields = ref([
+  { key: 'fullName', label: 'Họ tên' },
+  { key: 'phoneNumber', label: 'Số điện thoại' },
+  { key: 'email', label: 'Email' },
+  { key: 'recruitmentCampaign', label: 'Chiến dịch tuyển dụng' },
+  { key: 'position', label: 'Vị trí tuyển dụng' },
+  { key: 'jobPosting', label: 'Tin tuyển dụng' },
+  { key: 'recruitmentRound', label: 'Vòng tuyển dụng' },
+  { key: 'assessment', label: 'Đánh giá' },
+  { key: 'candidateSource', label: 'Nguồn ứng viên' },
+  { key: 'educationLevel', label: 'Trình độ đào tạo' },
+  { key: 'educationPlace', label: 'Nơi đào tạo' },
+  { key: 'major', label: 'Chuyên ngành' },
+  { key: 'recentWorkplace', label: 'Nơi làm việc gần đây' },
+  { key: 'recruiter', label: 'Nhân sự khai thác' },
+])
 </script>
 
 <style scoped>
@@ -198,44 +209,6 @@
 }
 
 /* Các style cũ cho table và paging */
-.table-area {
-  flex: 1;
-  background-color: #fff; /* Đổi màu nền bảng thành trắng */
-  border-radius: 4px;
-  text-align: center;
-  overflow: auto;
-  border-left: 1px solid #e0e6ec;
-  border-right: 1px solid #e0e6ec;
-}
-.data-grid {
-  width: 100%;
-  height: 100%;
-  color: #000000;
-}
-.datagrid-header {
-  background-color: #f1f2f6 !important;
-  color: #959595;
-  font-weight: 400;
-  touch-action: pinch-zoom;
-}
-.datagrid-content {
-  margin-bottom: -1px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: 2;
-  pointer-events: none;
-  overflow: hidden;
-}
-.datagrid-table {
-  max-width: none;
-  position: relative;
-  border-collapse: collapse;
-  border-spacing: 0;
-  margin: 0;
-}
 .paging {
   background-color: #fff; /* Đổi màu nền phân trang thành trắng */
   border-radius: 4px;

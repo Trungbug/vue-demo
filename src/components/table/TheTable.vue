@@ -1,54 +1,52 @@
 <template>
-  <div class="base-table-container">
-    <!-- Khung bảng có thể cuộn ngang và dọc -->
-    <div class="table-scroll-wrapper">
-      <table class="base-table">
-        <thead>
-          <tr>
-            <th v-for="field in fields" :key="field.key" class="table-header-cell">
-              {{ field.label }}
-            </th>
-          </tr>
-        </thead>
+  <div class="ms-table">
+    <table>
+      <thead>
+        <tr>
+          <th v-for="field in fields" :key="field.key">{{ field.label }}</th>
+          <th class="actions-header">Chức năng</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, rowIndex) in rows" :key="rowIndex" class="table-row">
+          <td v-for="field in fields" :key="field.key">
+            <template v-if="field.type === 'custom'">
+              <slot :name="field.key" :row="row" :field="field" :value="row[field.key]">
+                {{ handleFormat(row[field.key], 'text') }}
+              </slot>
+            </template>
 
-        <tbody>
-          <!-- Duyệt qua từng dòng dữ liệu -->
-          <tr v-for="(row, rowIndex) in rows" :key="row.id || rowIndex" class="table-row">
-            <!-- Duyệt qua từng ô trong dòng -->
-            <td v-for="field in fields" :key="field.key" class="table-cell">
-              <!-- Nếu có hàm format riêng -->
-              <span>{{ formatValue(row[field.key], field.type) }}</span>
-            </td>
-          </tr>
+            <template v-else>
+              {{ handleFormat(row[field.key], field.type || 'text') }}
+            </template>
+          </td>
 
-          <!-- Trường hợp không có dữ liệu -->
-          <tr v-if="!rows || rows.length === 0">
-            <td :colspan="fields.length" class="no-data">Không có dữ liệu</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button @click="handleEdit(row)" class="edit-btn">Sửa</button>
+              <button @click="handleDelete(row)" class="delete-btn">Xóa</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
 <script setup>
-//#region IMPORTS
-import { defineProps } from 'vue'
-//#endregion
+import { formatNumber, formatDate, formatText } from '@/ultils/formatter'
 
-//#region PROPS
-/**
- * @prop {Array} fields - Danh sách cột hiển thị trên bảng. Mỗi phần tử là object có dạng:
- *   { key: string, label: string, type?: string }
- *   - key: tên thuộc tính trong dữ liệu rows
- *   - label: tiêu đề cột
- *   - type: kiểu dữ liệu ('text', 'number', 'date')
- * @prop {Array} rows - Dữ liệu hiển thị trong bảng. Mỗi phần tử là 1 object.
- */
+//#region Props
 const props = defineProps({
   fields: {
     type: Array,
     required: true,
+    validator: (value) => {
+      return value.every((field) => {
+        const validTypes = ['text', 'number', 'date', 'custom']
+        return field.key && field.label && validTypes.includes(field.type || 'text')
+      })
+    },
   },
   rows: {
     type: Array,
@@ -57,90 +55,92 @@ const props = defineProps({
 })
 //#endregion
 
-//#region METHODS
-/**
- * Hàm định dạng giá trị hiển thị dựa theo kiểu dữ liệu
- * @param {any} value - Giá trị cần hiển thị
- * @param {string} type - Kiểu dữ liệu ('text', 'number', 'date')
- * @returns {string} Chuỗi hiển thị
- */
-const formatValue = (value, type = 'text') => {
-  // Kiểm tra null hoặc undefined
-  if (value === null || value === undefined || value === '') {
-    return '--'
-  }
+//#region Emits
+const emit = defineEmits(['edit', 'delete'])
+//#endregion
 
+//#region Methods
+const handleFormat = (value, type) => {
   switch (type) {
     case 'number':
-      return Number(value).toLocaleString('vi-VN')
+      return formatNumber(value)
     case 'date':
-      try {
-        const date = new Date(value)
-        if (isNaN(date)) return '--'
-        return date.toLocaleDateString('vi-VN')
-      } catch {
-        return '--'
-      }
+      return formatDate(value)
+    case 'text':
+      return formatText(value)
     default:
-      return String(value)
+      return formatText(value)
   }
+}
+
+const handleEdit = (row) => {
+  emit('edit', row)
+}
+
+const handleDelete = (row) => {
+  emit('delete', row)
 }
 //#endregion
 </script>
 
 <style scoped>
-/* Container chính */
-.base-table-container {
+.ms-table {
   width: 100%;
-  height: 100vh; /* full chiều cao màn hình */
-  display: flex;
-  flex-direction: column;
+  overflow-x: auto;
 }
 
-/* Khung cuộn */
-.table-scroll-wrapper {
-  flex: 1;
-  overflow-x: auto; /* cuộn ngang */
-  overflow-y: auto; /* cuộn dọc */
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background-color: #fff;
-}
-
-/* Bảng */
-.base-table {
+table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1200px; /* Đảm bảo có thể cuộn ngang nếu quá hẹp */
 }
 
-/* Header */
-.table-header-cell {
-  background-color: #f9fafb;
-  font-weight: 600;
+th,
+td {
   padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
   text-align: left;
+  border-bottom: 1px solid #e0e6ec;
   white-space: nowrap;
 }
 
-/* Hàng dữ liệu */
-.table-row:hover {
-  background-color: #f1f5f9;
+th {
+  background-color: #f1f2f6;
+  font-weight: 600;
+  color: #1f1f1f;
 }
 
-.table-cell {
-  padding: 10px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 250px;
-}
-
-.no-data {
+.actions-header {
   text-align: center;
-  padding: 20px;
-  color: #6b7280;
+}
+
+.table-row:hover {
+  background-color: #f0f8ff;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+
+.edit-btn {
+  background-color: #2680eb;
+}
+
+.delete-btn {
+  background-color: #d9534f;
+}
+
+.edit-btn:hover,
+.delete-btn:hover {
+  opacity: 0.9;
 }
 </style>

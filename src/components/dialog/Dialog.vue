@@ -43,7 +43,9 @@ const close = () => {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   width: 90%;
-  max-width: 800px; /* Điều chỉnh độ rộng tối đa của form */
+  max-width: 920px;
+  max-height: 610px;
+  flex-direction: column;
 }
 .dialog-header {
   display: flex;
@@ -51,6 +53,7 @@ const close = () => {
   align-items: center;
   padding: 16px 24px;
   border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
 .dialog-title {
   font-size: 20px;
@@ -64,6 +67,8 @@ const close = () => {
   color: #666;
 }
 .dialog-body {
+  flex: 1;
+  overflow-y: auto;
   padding: 24px;
 }
 </style>

@@ -77,13 +77,13 @@
 </template>
 <script setup>
 import { ref } from 'vue'
-import TheTable from '@/components/table/TheTable.vue'
+import TheTable from '@/components/table/Table.vue'
 import candidateData from '@/api/candidate-data.json'
-import BaseDialog from '@/components/base/BaseDialog.vue'
-import CandidateForm from '@/layout/form/CandidateForm.vue'
+import BaseDialog from '@/components/dialog/Dialog.vue'
+import CandidateForm from '@/views/Candidate/form/CandidateForm.vue'
 
 const isFormVisible = ref(false)
-// Các cột cho bảng, key phải khớp với file JSON
+
 const candidateFields = ref([
   { key: 'CandidateName', label: 'Họ tên' },
   { key: 'Mobile', label: 'Số điện thoại' },
@@ -109,7 +109,6 @@ const handleAddCandidate = (formData) => {
   isFormVisible.value = false
 }
 
-// Sử dụng dữ liệu từ file JSON
 const candidateRows = ref(candidateData)
 
 const handleEdit = (row) => {
@@ -139,7 +138,7 @@ const handleDelete = (row) => {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Ngăn wrapper tự cuộn */
+  overflow: hidden;
 }
 .toolbar {
   background-color: #fff;

@@ -56,9 +56,7 @@ const props = defineProps({
 
 //#region Emits
 const emit = defineEmits(['edit', 'delete'])
-//#endregion
 
-//#region Methods
 const handleFormat = (value, type) => {
   if (value === null || value === undefined || value === '') return '--'
   switch (type) {

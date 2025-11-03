@@ -46,6 +46,8 @@ const close = () => {
   max-width: 920px;
   max-height: 610px;
   flex-direction: column;
+  width: 560px;
+  height: 610px;
 }
 .dialog-header {
   display: flex;

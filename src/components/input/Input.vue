@@ -1,23 +1,45 @@
 <template>
-  <div class="input-container">
+  <div class="form-group">
+    <label v-if="label" class="form-label">
+      {{ label }}
+      <span v-if="required" class="text-required">*</span>
+    </label>
     <input
-      type="text"
+      :type="type"
       class="texteditor-input"
       :placeholder="placeholder"
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
+      :class="{ 'input-error': error }"
     />
+    <span v-if="error" class="error-message">{{ error }}</span>
   </div>
 </template>
 
 <script setup>
 defineProps({
+  // Hỗ trợ v-model để truyền và cập nhật giá trị từ component cha
   modelValue: {
     type: String,
     default: '',
   },
-
+  label: {
+    type: String,
+    default: '',
+  },
   placeholder: {
+    type: String,
+    default: '',
+  },
+  required: {
+    type: Boolean,
+    default: false,
+  },
+  type: {
+    type: String,
+    default: 'text',
+  },
+  error: {
     type: String,
     default: '',
   },
@@ -27,28 +49,55 @@ defineEmits(['update:modelValue'])
 </script>
 
 <style scoped>
-.input-container {
+/* Container cho mỗi trường input */
+.form-group {
   display: flex;
-  align-items: center;
-  position: relative;
-  width: 250px;
+  flex-direction: column;
+  width: 100%;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #1f1f1f;
+}
+
+.text-required {
+  color: #e53935;
+}
+
+/* Style cho ô input */
+.texteditor-input {
+  width: 100%;
   height: 36px;
+  padding: 6px 12px;
   border: 1px solid #dddde4;
   border-radius: 4px;
   transition: border-color 0.3s ease;
-}
-
-.input-container:hover {
-  border-color: #2680eb;
-}
-
-.texteditor-input {
-  flex: 1;
-  height: 100%;
-  padding: 6px 16px 6px 36px;
-  border: none;
-  outline: none;
-  background-color: transparent;
   font-size: 14px;
+  box-sizing: border-box; /* Đảm bảo padding không làm vỡ layout */
+}
+
+/* Hiệu ứng khi hover */
+.texteditor-input:hover {
+  border-color: #2680eb; /* Màu viền xanh khi hover */
+}
+
+/* Hiệu ứng khi focus */
+.texteditor-input:focus {
+  border-color: #2680eb;
+  outline: none;
+  box-shadow: 0 0 0 1px #2680eb;
+}
+
+.input-error {
+  border-color: #e53935;
+}
+
+.error-message {
+  font-size: 12px;
+  color: #e53935;
+  margin-top: 4px;
 }
 </style>

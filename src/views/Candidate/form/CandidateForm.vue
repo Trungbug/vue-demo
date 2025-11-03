@@ -1,276 +1,256 @@
 <template>
-  <div class="candidate-form-container">
-    <form @submit.prevent="handleSave" class="modal-body grid-2">
-      <div class="left-column">
-        <div class="avatar">
-          <img :src="avatarPreview" alt="Ảnh ứng viên" />
+  <form @submit.prevent="handleSubmit">
+    <div class="form-layout">
+      <BaseInput
+        v-model="formData.CandidateName"
+        label="Họ và tên"
+        :required="true"
+        class="span-2"
+        placeholder="Nhập họ và tên"
+      />
+      <BaseInput v-model="formData.Birthday" label="Ngày sinh" placeholder="dd/MM/yyyy" />
+      <BaseInput v-model="formData.Gender" label="Giới tính" placeholder="Chọn giới tính" />
+
+      <BaseInput
+        v-model="formData.Area"
+        label="Khu vực"
+        placeholder="Chọn giá trị"
+        class="span-1"
+      />
+      <BaseInput
+        v-model="formData.Mobile"
+        label="Số điện thoại"
+        placeholder="Nhập số điện thoại"
+        class="span-1"
+      />
+      <BaseInput
+        v-model="formData.Email"
+        label="Email"
+        type="email"
+        placeholder="Nhập Email"
+        class="span-2"
+      />
+
+      <BaseInput
+        v-model="formData.Address"
+        label="Địa chỉ"
+        placeholder="Nhập địa chỉ"
+        class="span-4"
+      />
+
+      <div class="form-section-header span-4">HỌC VẤN</div>
+
+      <BaseInput
+        v-model="formData.EducationDegreeName"
+        label="Trình độ đào tạo"
+        placeholder="Nhập trình độ đào tạo"
+        class="span-2"
+      />
+      <BaseInput
+        v-model="formData.EducationPlaceName"
+        label="Nơi đào tạo"
+        placeholder="Nhập nơi đào tạo"
+        class="span-2"
+      />
+
+      <BaseInput
+        v-model="formData.EducationMajorName"
+        label="Chuyên ngành"
+        placeholder="Nhập chuyên ngành"
+        class="span-2"
+      />
+      <div class="form-section-header span-4"></div>
+      <BaseInput
+        v-model="formData.ApplyDate"
+        label="Ngày ứng tuyển"
+        :required="true"
+        placeholder="dd/MM/yyyy"
+        class="span-2"
+      />
+      <BaseInput
+        v-model="formData.ChannelName"
+        label="Nguồn ứng viên"
+        placeholder="Chọn nguồn ứng viên"
+        class="span-2"
+      />
+
+      <BaseInput
+        v-model="formData.AttractivePersonnel"
+        label="Nhân sự khai thác"
+        placeholder="Chọn nhân sự"
+        class="span-2"
+      />
+      <BaseInput
+        v-model="formData.Collaborator"
+        label="Cộng tác viên"
+        placeholder="Chọn cộng tác viên"
+        class="span-2"
+      />
+
+      <BaseInput
+        v-model="formData.WorkPlaceRecent"
+        label="Nơi làm việc gần đây"
+        placeholder="Nhập nơi làm việc gần đây"
+        class="span-4"
+      />
+
+      <div class="form-section-header span-4">KINH NGHIỆM LÀM VIỆC</div>
+      <BaseInput
+        v-model="formData.ExperienceWorkplace"
+        label="Nơi làm việc"
+        placeholder="Nhập nơi làm việc"
+        class="span-2"
+      />
+      <div class="form-group span-2">
+        <label class="form-label">Thời gian</label>
+        <div class="date-range">
+          <BaseInput v-model="formData.ExperienceFrom" placeholder="MM/yyyy" />
+          <span>-</span>
+          <BaseInput v-model="formData.ExperienceTo" placeholder="MM/yyyy" />
         </div>
-        <input
-          type="file"
-          @change="handleFileChange"
-          accept="image/*"
-          ref="fileInput"
-          style="display: none"
-        />
-        <button type="button" class="btn-upload" @click="triggerFileInput">Tải ảnh lên</button>
       </div>
 
-      <div class="right-column">
-        <div class="form-section">
-          <div class="form-group">
-            <label>Họ và tên *</label>
-            <input v-model="form.fullName" type="text" placeholder="Nhập họ và tên" required />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Ngày sinh</label>
-              <input v-model="form.dob" type="date" />
-            </div>
-            <div class="form-group">
-              <label>Giới tính</label>
-              <select v-model="form.gender">
-                <option value="" disabled>Chọn giới tính</option>
-                <option value="male">Nam</option>
-                <option value="female">Nữ</option>
-                <option value="other">Khác</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Khu vực</label>
-            <div class="input-group">
-              <select v-model="form.region">
-                <option value="" disabled>Chọn khu vực</option>
-                <option value="hanoi">Hà Nội</option>
-                <option value="hcm">TP. Hồ Chí Minh</option>
-              </select>
-              <button type="button" class="btn-more">...</button>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Số điện thoại</label>
-              <input v-model="form.phone" type="text" placeholder="Nhập số điện thoại" />
-            </div>
-            <div class="form-group">
-              <label>Email</label>
-              <input v-model="form.email" type="email" placeholder="Nhập email" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Địa chỉ</label>
-            <input v-model="form.address" type="text" placeholder="Nhập địa chỉ" />
-          </div>
-        </div>
-
-        <div class="form-section education">
-          <h3>Học vấn</h3>
-          <div class="form-group">
-            <label>Trình độ đào tạo</label>
-            <input v-model="form.degree" type="text" placeholder="Trình độ đào tạo" />
-          </div>
-          <div class="form-group">
-            <label>Nơi đào tạo</label>
-            <input v-model="form.university" type="text" placeholder="Nơi đào tạo" />
-          </div>
-          <div class="form-group">
-            <label>Chuyên ngành</label>
-            <input v-model="form.major" type="text" placeholder="Chuyên ngành" />
-          </div>
-        </div>
-      </div>
-    </form>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" @click="handleCancel">Hủy</button>
-      <button class="btn-save" @click="handleSave">Lưu</button>
+      <BaseInput
+        v-model="formData.ExperienceJobTitle"
+        label="Vị trí công việc"
+        placeholder="Nhập vị trí công việc"
+        class="span-2"
+      />
+      <BaseInput
+        vmodel="formData.ExperienceDescription"
+        label="Mô tả công việc"
+        placeholder="Nhập mô tả công việc"
+        class="span-2"
+      />
     </div>
-  </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" @click="handleCancel">Hủy</button>
+      <button type="submit" class="btn-primary">Lưu</button>
+    </div>
+  </form>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import BaseInput from '@/components/input/Input.vue'
 
-const emit = defineEmits(['cancel', 'submit'])
+// Tạm thời comment các component chưa tạo
+// import BaseSelect from '@/components/base/BaseSelect.vue'
+// import BaseDatePicker from '@/components/base/BaseDatePicker.vue'
 
-// State cho form, tương ứng với các input trong template
-const form = ref({
-  fullName: '',
-  dob: '',
-  gender: '',
-  region: '',
-  phone: '',
-  email: '',
-  address: '',
-  degree: '',
-  university: '',
-  major: '',
-  avatarFile: null,
+const emit = defineEmits(['submit', 'cancel'])
+
+// Mở rộng formData để chứa tất cả các trường trong form
+const formData = ref({
+  CandidateName: '',
+  Birthday: '',
+  Gender: '',
+  Area: '',
+  Mobile: '',
+  Email: '',
+  Address: '',
+  EducationDegreeName: '',
+  EducationPlaceName: '',
+  EducationMajorName: '',
+  ApplyDate: '',
+  ChannelName: '',
+  AttractivePersonnel: '',
+  Collaborator: '',
+  WorkPlaceRecent: '',
+  ExperienceWorkplace: '',
+  ExperienceFrom: '',
+  ExperienceTo: '',
+  ExperienceJobTitle: '',
+  ExperienceDescription: '',
 })
 
-// Ref để truy cập DOM element của input file
-const fileInput = ref(null)
-
-// Tạo URL xem trước cho ảnh
-const avatarPreview = computed(() => {
-  if (form.value.avatarFile) {
-    return URL.createObjectURL(form.value.avatarFile)
-  }
-  // Ảnh mặc định
-  return 'https://via.placeholder.com/150'
-})
-
-// Xử lý khi người dùng chọn một file ảnh
-const handleFileChange = (event) => {
-  const file = event.target.files[0]
-  if (file) {
-    form.value.avatarFile = file
-  }
-}
-
-// Trigger sự kiện click cho input file ẩn
-const triggerFileInput = () => {
-  fileInput.value.click()
+const handleSubmit = () => {
+  // TODO: Thêm logic validate ở đây
+  // Gửi dữ liệu form lên component cha
+  emit('submit', formData.value)
 }
 
 const handleCancel = () => {
   emit('cancel')
 }
-
-const handleSave = () => {
-  if (!form.value.fullName) {
-    alert('Họ và tên là trường bắt buộc.')
-    return
-  }
-  // Gửi dữ liệu form đến component cha (Candidate.vue)
-  emit('submit', form.value)
-}
 </script>
 
 <style scoped>
-/* Toàn bộ CSS từ file style.css của bạn được chuyển vào đây */
-.candidate-form-container {
-  /* Container này sẽ được đặt bên trong .dialog-body */
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-body {
-  /* modal-body bây giờ là thẻ form, nó sẽ tự động giãn ra và được cuộn bởi .dialog-body */
-}
-
-/* Các style còn lại được giữ nguyên từ file style.css của bạn */
-.grid-2 {
+.form-layout {
   display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 32px;
+  /* Tạo layout 4 cột linh hoạt */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 24px; /* 16px cho khoảng cách hàng, 24px cho khoảng cách cột */
+  max-height: 65vh; /* Giới hạn chiều cao và cho phép cuộn */
+  overflow-y: auto; /* Bật cuộn dọc */
+  padding: 0 4px; /* Thêm padding để thanh cuộn không quá sát */
 }
 
-.left-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+/* Các class co dãn cột */
+.span-1 {
+  grid-column: span 1;
+}
+.span-2 {
+  grid-column: span 2;
+}
+.span-3 {
+  grid-column: span 3;
+}
+.span-4 {
+  grid-column: span 4;
 }
 
-.avatar {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  border: 1px dashed #ccc;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  background: #f8f8f8;
-}
-
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.btn-upload {
-  background: #f3f4f6;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-
-.right-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 12px;
-}
-.form-group label {
-  margin-bottom: 4px;
-  font-weight: 500;
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.input-group {
-  display: flex;
-  gap: 6px;
-}
-
-input,
-select {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  flex: 1;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-h3 {
-  margin-top: 20px;
-  margin-bottom: 12px;
+/* Tiêu đề cho các nhóm trường */
+.form-section-header {
+  grid-column: span 4;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
 }
 
-.modal-footer {
+/* Dùng cho trường thời gian (Từ - Đến) */
+.date-range {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
-  /* Giữ footer ở dưới cùng */
+  align-items: center;
+  gap: 8px;
+}
+.date-range span {
   flex-shrink: 0;
 }
 
-.btn-cancel {
-  background: #f3f4f6;
-  border: 1px solid #ccc;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+/* Nút bấm */
+.form-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
 }
-
-.btn-save {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
+.btn-primary,
+.btn-secondary {
+  height: 36px;
+  padding: 0 16px;
   border-radius: 4px;
+  border: 1px solid #ccc;
   cursor: pointer;
+  font-weight: 500;
+}
+.btn-primary {
+  background-color: #2680eb;
+  color: white;
+  border-color: #2680eb;
+}
+.btn-secondary {
+  background-color: #fff;
+  border-color: #dddde4;
+}
+.btn-secondary:hover {
+  background-color: #f0f0f0;
 }
 </style>

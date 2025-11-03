@@ -10,7 +10,6 @@
       </div>
     </div>
 
-    <!-- Nội dung chính -->
     <div class="candidates-wrapper">
       <div class="toolbar">
         <div class="toolbar-container">
@@ -42,7 +41,6 @@
           </div>
         </div>
       </div>
-
       <div class="table-area">
         <TheTable
           :fields="candidateFields"
@@ -59,24 +57,36 @@
 <script setup>
 import { ref } from 'vue'
 import TheTable from '@/components/table/TheTable.vue'
+import candidateData from '@/api/candidate-data.json'
 
 // Định nghĩa các cột cho bảng
 const candidateFields = ref([
-  { key: 'fullName', label: 'Họ tên' },
-  { key: 'phoneNumber', label: 'Số điện thoại' },
-  { key: 'email', label: 'Email' },
-  { key: 'recruitmentCampaign', label: 'Chiến dịch tuyển dụng' },
-  { key: 'position', label: 'Vị trí tuyển dụng' },
-  { key: 'jobPosting', label: 'Tin tuyển dụng' },
-  { key: 'recruitmentRound', label: 'Vòng tuyển dụng' },
-  { key: 'assessment', label: 'Đánh giá' },
-  { key: 'candidateSource', label: 'Nguồn ứng viên' },
-  { key: 'educationLevel', label: 'Trình độ đào tạo' },
-  { key: 'educationPlace', label: 'Nơi đào tạo' },
-  { key: 'major', label: 'Chuyên ngành' },
-  { key: 'recentWorkplace', label: 'Nơi làm việc gần đây' },
-  { key: 'recruiter', label: 'Nhân sự khai thác' },
+  { key: 'CandidateName', label: 'Họ tên' },
+  { key: 'Mobile', label: 'Số điện thoại' },
+  { key: 'Email', label: 'Email' },
+  { key: 'RecruitmentCampaignNames', label: 'Chiến dịch tuyển dụng' },
+  { key: 'JobPositionName', label: 'Vị trí tuyển dụng' },
+  { key: 'RecruitmentName', label: 'Tin tuyển dụng' },
+  { key: 'RecruitmentRoundName', label: 'Vòng tuyển dụng' },
+  { key: 'Score', label: 'Đánh giá', type: 'number' },
+  { key: 'ChannelName', label: 'Nguồn ứng viên' },
+  { key: 'EducationDegreeName', label: 'Trình độ đào tạo' },
+  { key: 'EducationPlaceName', label: 'Nơi đào tạo' },
+  { key: 'EducationMajorName', label: 'Chuyên ngành' },
+  { key: 'WorkPlaceRecent', label: 'Nơi làm việc gần đây' },
+  { key: 'AttractivePersonnel', label: 'Nhân sự khai thác' },
 ])
+
+// Sử dụng dữ liệu đã import
+const candidateRows = ref(candidateData)
+
+const handleEdit = (row) => {
+  console.log('Edit:', row)
+}
+
+const handleDelete = (row) => {
+  console.log('Delete:', row)
+}
 </script>
 
 <style scoped>
@@ -84,24 +94,15 @@ const candidateFields = ref([
 .content {
   width: 100%;
   height: 100%;
-
   box-sizing: border-box;
   background-color: #f3f4f6;
-  overflow: auto; /* cho phép cuộn nếu dài */
+  overflow: hidden; /* Ngăn cuộn ở content */
+  display: flex;
+  flex-direction: column;
 }
 .title-name {
   font-weight: 500;
   font-size: 14px !important;
-}
-/* Khối danh sách ứng viên */
-.list-candidate {
-  width: 100%;
-  height: 100%;
-  background-color: #ffffff;
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Header */
@@ -110,6 +111,7 @@ const candidateFields = ref([
   display: flex;
   justify-content: space-between;
   padding: 16px 24px 0 24px;
+  flex-shrink: 0; /* Không co lại */
 }
 .title-left {
   font-size: 20px;
@@ -117,79 +119,67 @@ const candidateFields = ref([
   padding-top: 8px;
   padding-bottom: 4px;
 }
-.title-right {
-}
 
 /* Khu vực nội dung chính */
 .candidates-wrapper {
-  width: 100%;
-  height: calc(100% - 50px);
+  flex: 1; /* Chiếm hết không gian còn lại */
   padding: 24px;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Ngăn cuộn ở wrapper */
 }
 
-/* Các phần con trong wrapper */
-/* Các phần con trong wrapper */
+/* Toolbar */
 .toolbar {
   background-color: #fff;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+  flex-shrink: 0;
 }
-
 .toolbar-container {
   padding: 12px 16px;
   min-height: 64px;
 }
-
 .toolbar-grid-default {
   display: flex;
-  justify-content: space-between; /* Quan trọng: Đẩy 2 khối left/right ra xa nhau */
+  justify-content: space-between;
   align-items: center;
   width: 100%;
 }
-
-/* Kiểu cho khối bên trái (ô tìm kiếm) */
-.grid-right .search-container {
+.grid-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search-container {
   display: flex;
   align-items: center;
   position: relative;
-  width: 250px; /* Độ rộng ô tìm kiếm */
+  width: 250px;
   height: 36px;
   border: 1px solid #dddde4;
   border-radius: 4px;
   transition: border-color 0.3s ease;
 }
-
-.grid-right .search-container:hover {
+.search-container:hover {
   border-color: #2680eb;
 }
-
-.grid-right .icon-search {
+.icon-search {
   position: absolute;
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: #666; /* Màu cho icon */
+  background-color: #666;
 }
-
-.grid-right .texteditor-input {
+.texteditor-input {
   flex: 1;
   height: 100%;
-  padding: 6px 16px 6px 36px; /* Chừa khoảng trống cho icon */
+  padding: 6px 16px 6px 36px;
   border: none;
   outline: none;
   background-color: transparent;
   font-size: 14px;
 }
-
-/* Kiểu cho khối bên phải (các icon) */
-.grid-right {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Khoảng cách giữa các icon */
-}
-
 .wrap-icon-button-toolbar {
   display: flex;
   align-items: center;
@@ -208,15 +198,27 @@ const candidateFields = ref([
   background-color: #666;
 }
 
-/* Các style cũ cho table và paging */
+/* Table Area */
+.table-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  border-left: 1px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0;
+}
+
+/* Paging */
 .paging {
-  background-color: #fff; /* Đổi màu nền phân trang thành trắng */
-  border-radius: 4px;
+  background-color: #fff;
   padding: 16px;
   text-align: center;
   border: 1px solid #e0e6ec;
   border-top: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  flex-shrink: 0;
 }
+
 .btn {
   width: auto;
   font-weight: 500;

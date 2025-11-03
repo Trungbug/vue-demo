@@ -23,7 +23,7 @@
                 <input
                   type="text"
                   class="texteditor-input"
-                  placeholder="Tìm kiếm theo Tên, SĐT, Email..."
+                  placeholder="Tìm kiếm nhanh trong danh sách"
                 />
               </div>
               <div class="wrap-icon-button-toolbar" title="Lọc">
@@ -43,7 +43,22 @@
         </div>
       </div>
 
-      <div class="table-area">Bảng ứng viên</div>
+      <div class="table-area">
+        <div class="data-grid">
+          <div class="datagrid-header">
+            <div class="datagrid-content">
+              <table class="datagrid-table">
+                <tbody>
+                  <tr>
+                    <td>jahhahouha</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="datagird-view">nội dung</div>
+        </div>
+      </div>
       <div class="paging">Phân trang</div>
     </div>
   </div>
@@ -191,6 +206,35 @@
   overflow: auto;
   border-left: 1px solid #e0e6ec;
   border-right: 1px solid #e0e6ec;
+}
+.data-grid {
+  width: 100%;
+  height: 100%;
+  color: #000000;
+}
+.datagrid-header {
+  background-color: #f1f2f6 !important;
+  color: #959595;
+  font-weight: 400;
+  touch-action: pinch-zoom;
+}
+.datagrid-content {
+  margin-bottom: -1px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.datagrid-table {
+  max-width: none;
+  position: relative;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 0;
 }
 .paging {
   background-color: #fff; /* Đổi màu nền phân trang thành trắng */

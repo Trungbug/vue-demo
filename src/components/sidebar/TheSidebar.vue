@@ -1,23 +1,25 @@
 <template>
   <div class="sidebar h-100" :class="{ collapsed: isCollapsed }">
-    <div
-      class="sidebar-item"
-      v-for="item in menu"
-      :key="item.title"
-      :class="{ active: item.active }"
-    >
-      <i :class="item.icon"></i>
-      <div class="title">{{ item.title }}</div>
-    </div>
-
-    <div class="bottom-area">
+    <div class="sidebar-container">
       <div
-        class="collape-btn align-items-center d-flex"
-        title="Thu gọn sidebar"
-        @click="toggleSidebar"
+        class="sidebar-item"
+        v-for="item in menu"
+        :key="item.title"
+        :class="{ active: item.active }"
       >
-        <div class="icon icon-collape"></div>
-        <div class="title">Thu gọn</div>
+        <i :class="item.icon"></i>
+        <div class="title">{{ item.title }}</div>
+      </div>
+
+      <div class="bottom-area">
+        <div
+          class="collape-btn align-items-center d-flex"
+          title="Thu gọn sidebar"
+          @click="toggleSidebar"
+        >
+          <div class="icon icon-collape"></div>
+          <div class="title">Thu gọn</div>
+        </div>
       </div>
     </div>
   </div>
@@ -58,7 +60,7 @@ const menu = [
 /* Sidebar styles from style.css */
 .sidebar {
   width: 230px;
-  height: calc(100vh - 60px);
+  height: calc(102vh - 60px);
   position: relative;
   background-image: url('https://amisplatform.misacdn.net/apps/recruit2/event-sidebar.1a602823bdf63dc5.svg');
   transition: width 0.18s ease;
@@ -68,7 +70,6 @@ const menu = [
   color: #fff;
   display: flex;
   flex-direction: column;
-  padding-top: 32px;
 }
 
 .sidebar-item {
@@ -86,7 +87,11 @@ const menu = [
   cursor: pointer;
   gap: 8px;
 }
-
+.sidebar-container {
+  padding-top: 32px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+}
 .sidebar-item:hover {
   color: #c5ccd5;
 }

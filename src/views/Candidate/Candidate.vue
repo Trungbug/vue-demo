@@ -3,12 +3,15 @@
     <div class="title-header">
       <div class="title-left">Ứng viên</div>
       <div class="title-right">
-        <button class="btn">
+        <button class="btn" @click="isFormVisibale = true">
           <div class="icon icon-add"></div>
           <span class="title-name pl-2">Thêm ứng viên</span>
         </button>
       </div>
     </div>
+    <BaseDialog v-model:show="isFormVisible" title="Thêm ứng viên mới">
+      <CandidateForm @cancel="isFormVisible = false" @submit="handleAddCandidate" />
+    </BaseDialog>
 
     <div class="candidates-wrapper">
       <div class="toolbar">
@@ -41,6 +44,7 @@
           </div>
         </div>
       </div>
+
       <div class="table-area">
         <TheTable
           :fields="candidateFields"
@@ -49,17 +53,37 @@
           @delete="handleDelete"
         />
       </div>
-      <div class="paging">Phân trang</div>
+
+      <div class="paging">
+        <div class="total-records">
+          Tổng: <strong>{{ candidateRows.length }}</strong> bản ghi
+        </div>
+        <div class="pagination-controls">
+          <span>Số bản ghi/trang</span>
+          <select>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span
+            ><strong>1 - {{ candidateRows.length }}</strong> bản ghi</span
+          >
+          <button class="page-nav-btn">&lt;</button>
+          <button class="page-nav-btn">&gt;</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref } from 'vue'
 import TheTable from '@/components/table/TheTable.vue'
 import candidateData from '@/api/candidate-data.json'
+import BaseDialog from '@/components/base/BaseDialog.vue'
+import CandidateForm from '@/components/form/CandidateForm.vue'
 
-// Định nghĩa các cột cho bảng
+const isFormVisible = ref(false)
+// Các cột cho bảng, key phải khớp với file JSON
 const candidateFields = ref([
   { key: 'CandidateName', label: 'Họ tên' },
   { key: 'Mobile', label: 'Số điện thoại' },
@@ -76,8 +100,16 @@ const candidateFields = ref([
   { key: 'WorkPlaceRecent', label: 'Nơi làm việc gần đây' },
   { key: 'AttractivePersonnel', label: 'Nhân sự khai thác' },
 ])
+const handleAddCandidate = (formData) => {
+  const newCandidate = {
+    ...formData,
+    CandidateID: new Date().getTime(),
+  }
+  candidateRows.value.unshift(newCandidate)
+  isFormVisible.value = false
+}
 
-// Sử dụng dữ liệu đã import
+// Sử dụng dữ liệu từ file JSON
 const candidateRows = ref(candidateData)
 
 const handleEdit = (row) => {
@@ -90,51 +122,66 @@ const handleDelete = (row) => {
 </script>
 
 <style scoped>
-/* Tổng thể content */
 .content {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   background-color: #f3f4f6;
-  overflow: hidden; /* Ngăn cuộn ở content */
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
+.title-header {
+  padding: 16px 24px 0 24px;
+}
+.candidates-wrapper {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Ngăn wrapper tự cuộn */
+}
+.toolbar {
+  background-color: #fff;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.table-area {
+  flex: 1;
+  overflow: auto;
+  border-left: 1px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0;
+  background-color: #fff;
+}
+
+.paging {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* ... các style khác giữ nguyên ... */
 .title-name {
   font-weight: 500;
   font-size: 14px !important;
 }
-
-/* Header */
 .title-header {
   height: 50px;
   display: flex;
   justify-content: space-between;
-  padding: 16px 24px 0 24px;
-  flex-shrink: 0; /* Không co lại */
 }
 .title-left {
   font-size: 20px;
   font-weight: 700;
   padding-top: 8px;
   padding-bottom: 4px;
-}
-
-/* Khu vực nội dung chính */
-.candidates-wrapper {
-  flex: 1; /* Chiếm hết không gian còn lại */
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* Ngăn cuộn ở wrapper */
-}
-
-/* Toolbar */
-.toolbar {
-  background-color: #fff;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  flex-shrink: 0;
 }
 .toolbar-container {
   padding: 12px 16px;
@@ -169,7 +216,6 @@ const handleDelete = (row) => {
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: #666;
 }
 .texteditor-input {
   flex: 1;
@@ -194,31 +240,6 @@ const handleDelete = (row) => {
 .wrap-icon-button-toolbar:hover {
   background-color: #f0f0f0;
 }
-.wrap-icon-button-toolbar .icon {
-  background-color: #666;
-}
-
-/* Table Area */
-.table-area {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  border-left: 1px solid #e0e0e0;
-  border-right: 1px solid #e0e0e0;
-}
-
-/* Paging */
-.paging {
-  background-color: #fff;
-  padding: 16px;
-  text-align: center;
-  border: 1px solid #e0e6ec;
-  border-top: none;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  flex-shrink: 0;
-}
-
 .btn {
   width: auto;
   font-weight: 500;
@@ -233,5 +254,27 @@ const handleDelete = (row) => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.total-records strong {
+  color: #1f1f1f;
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.pagination-controls select {
+  height: 32px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 0 8px;
+}
+.page-nav-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
 }
 </style>

@@ -87,9 +87,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import TheTable from '@/components/table/Table.vue'
-import candidateData from '@/api/candidate-data.json'
+// import candidateData from '@/api/candidate-data.json'
 import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/Candidate/form/CandidateForm.vue'
 
@@ -113,15 +113,70 @@ const candidateFields = ref([
   { key: 'AttractivePersonnel', label: 'Nhân sự khai thác' },
 ])
 
-const candidateRows = ref(candidateData)
+const candidateRows = ref([])
+const STORAGE_KEY = 'candidates' // Định nghĩa key cho localStorage
 
+/**
+ * Lấy dữ liệu ứng viên khi component được tải
+ */
+onMounted(() => {
+  const storedData = localStorage.getItem(STORAGE_KEY)
+
+  if (storedData) {
+    candidateRows.value = JSON.parse(storedData)
+  } else {
+    fetchAndStoreCandidates()
+  }
+})
+
+/**
+ * Hàm fetch dữ liệu từ file JSON và lưu vào localStorage
+ */
+const fetchAndStoreCandidates = async () => {
+  try {
+    const response = await fetch('/api/candidate-data.json')
+    if (!response.ok) {
+      throw new Error('Không thể tải dữ liệu')
+    }
+    const data = await response.json()
+
+    candidateRows.value = data
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  } catch (error) {
+    console.error('Lỗi khi fetch dữ liệu ứng viên:', error)
+  }
+}
+
+/**
+ * Cập nhật hàm thêm ứng viên để lưu vào localStorage
+ */
 const handleAddCandidate = (formData) => {
   const newCandidate = {
     ...formData,
-    CandidateID: new Date().getTime(),
+    CandidateID: new Date().getTime(), // Tạo ID tạm thời
+    RecruitmentRoundName: 'Ứng tuyển', // Thêm các giá trị mặc định nếu cần
+    Score: 0,
   }
+
+  // Thêm vào đầu danh sách
   candidateRows.value.unshift(newCandidate)
+
+  // Cập nhật lại localStorage
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(candidateRows.value))
+
   isFormVisible.value = false
+}
+
+const handleDelete = (row) => {
+  console.log('Delete:', row)
+  candidateRows.value = candidateRows.value.filter((item) => item.CandidateID !== row.CandidateID)
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(candidateRows.value))
+}
+
+const handleEdit = (row) => {
+  console.log('Edit:', row)
 }
 
 const handleSubmitForm = () => {
@@ -134,14 +189,6 @@ const handleCancelForm = () => {
   if (candidateFormRef.value) {
     candidateFormRef.value.handleCancel()
   }
-}
-
-const handleEdit = (row) => {
-  console.log('Edit:', row)
-}
-
-const handleDelete = (row) => {
-  console.log('Delete:', row)
 }
 </script>
 

@@ -5,8 +5,8 @@
       <div class="icon icon-logo"></div>
       <div class="title-name .m-r-24">Tuyển dụng</div>
       <div class="search-box">
-        <input type="text" placeholder="Tìm kiếm nhanh trong danh sách" />
-        <i class="fas fa-search"></i>
+        <div class="icon icon-search"></div>
+        <input type="text" class="texteditor-input" placeholder="Tìm kiếm nhanh trong danh sách" />
       </div>
     </div>
     <div class="header-right d-flex align-items-center">
@@ -104,6 +104,13 @@
   background-color: transparent;
   width: 20px;
   height: 20px;
+}
+.icon-search {
+  -webkit-mask-image: url('../icon/ICON.svg');
+  -webkit-mask-position: -16px -79px; /* Sửa từ mask-repeat */
+  -webkit-mask-repeat: no-repeat;
+  width: 18px;
+  height: 19px;
 }
 
 .icon-logo {

@@ -20,7 +20,23 @@
             <input type="checkbox" class="ms-checkbox" />
           </td>
           <td v-for="field in fields" :key="field.key">
-            {{ handleFormat(row[field.key], field.type || 'text') }}
+            <div v-if="field.key === 'CandidateName'" class="avatar-name-cell">
+              <img v-if="row.Avatar" :src="row.Avatar" alt="Avatar" class="candidate-avatar-img" />
+
+              <div
+                v-else
+                class="candidate-avatar-color"
+                :style="{ backgroundColor: row.AvatarColor || '#ccc' }"
+              >
+                {{ getInitials(row.CandidateName) }}
+              </div>
+
+              <span>{{ handleFormat(row[field.key], field.type || 'text') }}</span>
+            </div>
+
+            <template v-else>
+              {{ handleFormat(row[field.key], field.type || 'text') }}
+            </template>
           </td>
           <td class="actions-cell">
             <div class="action-buttons">
@@ -37,9 +53,7 @@
 </template>
 
 <script setup>
-import { formatNumber, formatDate, formatText } from '@/ultils/formatter'
-
-// ... (phần script của bạn giữ nguyên) ...
+import { formatNumber, formatDate, formatText, getInitials } from '@/ultils/formatter'
 
 //#region Props
 const props = defineProps({
@@ -160,5 +174,34 @@ th {
   width: 18px;
   height: 18px;
   cursor: pointer;
+}
+
+/* Style cho cột Tên + Avatar */
+.avatar-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Style cho avatar là HÌNH ẢNH */
+.candidate-avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.candidate-avatar-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  flex-shrink: 0; /* Ngăn avatar bị co lại */
 }
 </style>

@@ -143,8 +143,8 @@
   -webkit-mask-image: url('../icon/ICON.svg');
   -webkit-mask-position: -16px -79px; /* Sửa từ mask-repeat */
   -webkit-mask-repeat: no-repeat;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 19px;
 }
 .icon-filter {
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
@@ -153,6 +153,7 @@
   width: 20px;
   height: 20px;
   min-width: 20px;
+  background-color: #7a8188;
 }
 .icon-export {
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
@@ -161,6 +162,7 @@
   width: 20px;
   height: 20px;
   min-width: 20px;
+  background-color: #7a8188;
 }
 .icon-interactive-history {
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
@@ -173,9 +175,10 @@
 }
 .icon-setting-column {
   -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
-  -webkit-mask-position: -24px -608px;
+  -webkit-mask-position: -26px -610px;
   -webkit-mask-repeat: no-repeat;
   width: 20px;
   height: 20px;
   min-width: 20px;
+  background-color: #7a8188;
 }

@@ -24,3 +24,22 @@ export const formatText = (v) => {
   if (v === null || v === undefined || v === '') return '-'
   return String(v)
 }
+/**
+ * Hàm lấy 2 chữ cái đầu của tên
+ * @param {string} name Tên đầy đủ
+ * @returns {string} 2 chữ cái đầu
+ */
+export const getInitials = (name) => {
+  if (!name || typeof name !== 'string' || name.trim() === '') return '?'
+  const words = name.trim().split(/\s+/)
+  if (words.length === 1) {
+    return words[0][0].toUpperCase()
+  }
+  if (words.length > 1) {
+    const first = words[0][0]
+    const last = words[words.length - 1][0]
+    return (first + last).toUpperCase()
+  }
+
+  return '?'
+}

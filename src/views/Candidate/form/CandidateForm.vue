@@ -20,11 +20,23 @@
           v-model="formData.CandidateName"
           label="Họ và tên"
           :required="true"
-          class="span-2"
+          class="full-width"
           placeholder="Nhập họ và tên"
         />
-        <BaseInput v-model="formData.Birthday" label="Ngày sinh" placeholder="dd/MM/yyyy" />
-        <BaseInput v-model="formData.Gender" label="Giới tính" placeholder="Chọn giới tính" />
+        <div class="form-row">
+          <BaseDatePicker
+            v-model="formData.Birthday"
+            label="Ngày sinh"
+            placeholder="Chọn ngày sinh"
+          />
+
+          <BaseInput
+            v-model="formData.Gender"
+            label="Giới tính"
+            placeholder="Chọn giới tính"
+            class="half-width"
+          />
+        </div>
 
         <BaseInput
           v-model="formData.Area"
@@ -32,19 +44,21 @@
           placeholder="Chọn giá trị"
           class="span-1"
         />
-        <BaseInput
-          v-model="formData.Mobile"
-          label="Số điện thoại"
-          placeholder="Nhập số điện thoại"
-          class="span-1"
-        />
-        <BaseInput
-          v-model="formData.Email"
-          label="Email"
-          type="email"
-          placeholder="Nhập Email"
-          class="span-2"
-        />
+        <div class="form-row">
+          <BaseInput
+            v-model="formData.Mobile"
+            label="Số điện thoại"
+            placeholder="Nhập số điện thoại"
+            class="half-width"
+          />
+          <BaseInput
+            v-model="formData.Email"
+            label="Email"
+            type="email"
+            placeholder="Nhập Email"
+            class="half-width"
+          />
+        </div>
 
         <BaseInput
           v-model="formData.Address"
@@ -75,13 +89,12 @@
           class="span-2"
         />
         <div class="form-section-header span-4"></div>
-        <BaseInput
-          v-model="formData.ApplyDate"
-          label="Ngày ứng tuyển"
-          :required="true"
-          placeholder="dd/MM/yyyy"
-          class="span-2"
+        <BaseDatePicker
+          v-model="formData.Birthday"
+          label="Ngày sinh"
+          placeholder="Chọn ngày sinh"
         />
+
         <BaseInput
           v-model="formData.ChannelName"
           label="Nguồn ứng viên"
@@ -119,9 +132,25 @@
         <div class="form-group span-2">
           <label class="form-label">Thời gian</label>
           <div class="date-range">
-            <BaseInput v-model="formData.ExperienceFrom" placeholder="MM/yyyy" />
+            <BaseDatePicker
+              v-model="formData.ExperienceFrom"
+              placeholder="Từ tháng/năm"
+              type="month"
+              format="MM/YYYY"
+            />
             <span>-</span>
-            <BaseInput v-model="formData.ExperienceTo" placeholder="MM/yyyy" />
+            <BaseDatePicker
+              v-model="formData.ExperienceTo"
+              placeholder="Đến tháng/năm"
+              type="month"
+              format="MM/YYYY"
+            />
+            <BaseDatePicker
+              v-model="formData.ExperienceTo"
+              placeholder="Đến tháng/năm"
+              type="month"
+              format="MM/YYYY"
+            />
           </div>
         </div>
 
@@ -132,17 +161,12 @@
           class="span-2"
         />
         <BaseInput
-          vmodel="formData.ExperienceDescription"
+          v-model="formData.ExperienceDescription"
           label="Mô tả công việc"
           placeholder="Nhập mô tả công việc"
           class="span-2"
         />
       </div>
-    </div>
-
-    <div class="form-actions">
-      <button type="button" class="btn-secondary" @click="handleCancel">Hủy</button>
-      <button type="submit" class="btn-primary">Lưu</button>
     </div>
   </form>
 </template>
@@ -150,14 +174,10 @@
 <script setup>
 import { ref } from 'vue'
 import BaseInput from '@/components/input/Input.vue'
-
-// Tạm thời comment các component chưa tạo
-// import BaseSelect from '@/components/base/BaseSelect.vue'
-// import BaseDatePicker from '@/components/base/BaseDatePicker.vue'
+import BaseDatePicker from '@/components/datetime/DateTimePicker.vue'
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// Mở rộng formData để chứa tất cả các trường trong form
 const formData = ref({
   CandidateName: '',
   Birthday: '',
@@ -182,25 +202,26 @@ const formData = ref({
 })
 
 const handleSubmit = () => {
-  // TODO: Thêm logic validate ở đây
-  // Gửi dữ liệu form lên component cha
   emit('submit', formData.value)
 }
 
 const handleCancel = () => {
   emit('cancel')
 }
+
+// Expose methods để parent component có thể gọi
+defineExpose({
+  handleSubmit,
+  handleCancel,
+})
 </script>
 
 <style scoped>
-/* 1. Thêm class này để biến <form> thành flex container */
 .candidate-form-container {
   display: flex;
   flex-direction: column;
-
   height: 100%;
   overflow: hidden;
-  padding-right: 24px;
   font-size: 14px;
 }
 
@@ -208,23 +229,20 @@ const handleCancel = () => {
   display: flex;
   flex: 1;
   overflow-y: auto;
+  padding-right: 24px;
 }
 
 .form-layout {
-  display: grid;
-
-  gap: 16px 24px;
-  flex: 1;
-  max-height: 65vh;
-  overflow-y: auto;
-  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
 .avatar-candidate {
   margin-right: 24px;
 }
 
-/* Các class co dãn cột */
 .span-1 {
   grid-column: span 1;
 }
@@ -238,7 +256,6 @@ const handleCancel = () => {
   grid-column: span 4;
 }
 
-/* Tiêu đề cho các nhóm trường */
 .form-section-header {
   grid-column: span 4;
   font-size: 16px;
@@ -250,7 +267,6 @@ const handleCancel = () => {
   padding-bottom: 8px;
 }
 
-/* Dùng cho trường thời gian (Từ - Đến) */
 .date-range {
   display: flex;
   align-items: center;
@@ -260,42 +276,8 @@ const handleCancel = () => {
   flex-shrink: 0;
 }
 
-/* 5. Điều chỉnh .form-actions để nó "dính" ở dưới cùng */
-.form-actions {
-  flex-shrink: 0; /* Ngăn không cho footer bị co lại */
-  /* margin-top: 24px; */ /* <-- XÓA */
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  border-top: 1px solid #e0e0e0;
-  padding: 16px 24px; /* Thêm padding cho nhất quán */
-  background: #fff; /* Thêm nền trắng để che nội dung cuộn bên dưới */
-}
-
-.btn-primary,
-.btn-secondary {
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  font-weight: 500;
-}
-.btn-primary {
-  background-color: #2680eb;
-  color: white;
-  border-color: #2680eb;
-}
-.btn-secondary {
-  background-color: #fff;
-  border-color: #dddde4;
-}
-.btn-secondary:hover {
-  background-color: #f0f0f0;
-}
-/* Cột Ảnh (Bên trái) */
 .avatar-section {
-  flex: 0 0 120px; /* Cố định chiều rộng 120px */
+  flex: 0 0 120px;
 }
 
 .avatar-placeholder {
@@ -317,11 +299,25 @@ const handleCancel = () => {
   border-color: #2680eb;
 }
 .avatar-placeholder i {
-  font-size: 40px; /* Icon người dùng */
+  font-size: 40px;
   color: #c5ccd5;
 }
 .avatar-placeholder span {
   font-size: 12px;
   margin-top: 8px;
+}
+.full-width {
+  width: 100%;
+}
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px; /* khoảng cách giữa 2 input */
+  width: 100%;
+}
+
+.half-width {
+  flex: 1;
+  width: 50%;
 }
 </style>

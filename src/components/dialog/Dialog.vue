@@ -9,7 +9,7 @@
         <slot></slot>
       </div>
       <div class="dialog-footer">
-        <slot></slot>
+        <slot name="footer"></slot>
       </div>
     </div>
   </div>
@@ -48,6 +48,7 @@ const close = () => {
   width: 90%;
   max-width: 920px;
   max-height: 610px;
+  display: flex; /* Đảm bảo layout flex */
   flex-direction: column;
   width: 560px;
   height: 610px;
@@ -70,8 +71,8 @@ const close = () => {
   color: #666;
 }
 .dialog-body {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1; /* Cho phép body co dãn */
+  overflow-y: auto; /* Thêm thanh cuộn khi nội dung dài */
   padding: 24px;
 }
 
@@ -84,5 +85,6 @@ const close = () => {
   background: #fff;
   position: sticky;
   bottom: 0;
+  flex-shrink: 0; /* Ngăn footer co lại */
 }
 </style>

@@ -9,8 +9,18 @@
         </button>
       </div>
     </div>
+
     <BaseDialog v-model:show="isFormVisible" title="Thêm ứng viên">
-      <CandidateForm @cancel="isFormVisible = false" @submit="handleAddCandidate" />
+      <CandidateForm
+        ref="candidateFormRef"
+        @cancel="isFormVisible = false"
+        @submit="handleAddCandidate"
+      />
+
+      <template #footer>
+        <button type="button" class="btn-secondary" @click="handleCancelForm">Hủy</button>
+        <button type="button" class="btn-primary" @click="handleSubmitForm">Thêm</button>
+      </template>
     </BaseDialog>
 
     <div class="candidates-wrapper">
@@ -75,6 +85,7 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref } from 'vue'
 import TheTable from '@/components/table/Table.vue'
@@ -83,6 +94,7 @@ import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/Candidate/form/CandidateForm.vue'
 
 const isFormVisible = ref(false)
+const candidateFormRef = ref(null)
 
 const candidateFields = ref([
   { key: 'CandidateName', label: 'Họ tên' },
@@ -100,6 +112,9 @@ const candidateFields = ref([
   { key: 'WorkPlaceRecent', label: 'Nơi làm việc gần đây' },
   { key: 'AttractivePersonnel', label: 'Nhân sự khai thác' },
 ])
+
+const candidateRows = ref(candidateData)
+
 const handleAddCandidate = (formData) => {
   const newCandidate = {
     ...formData,
@@ -109,7 +124,17 @@ const handleAddCandidate = (formData) => {
   isFormVisible.value = false
 }
 
-const candidateRows = ref(candidateData)
+const handleSubmitForm = () => {
+  if (candidateFormRef.value) {
+    candidateFormRef.value.handleSubmit()
+  }
+}
+
+const handleCancelForm = () => {
+  if (candidateFormRef.value) {
+    candidateFormRef.value.handleCancel()
+  }
+}
 
 const handleEdit = (row) => {
   console.log('Edit:', row)
@@ -166,7 +191,6 @@ const handleDelete = (row) => {
   border-bottom-right-radius: 4px;
 }
 
-/* ... các style khác giữ nguyên ... */
 .title-name {
   font-weight: 500;
   font-size: 14px !important;
@@ -275,5 +299,33 @@ const handleDelete = (row) => {
   border-radius: 4px;
   background-color: #fff;
   cursor: pointer;
+}
+
+/* Styles cho nút trong footer */
+.btn-primary,
+.btn-secondary {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+}
+.btn-primary {
+  background-color: #2680eb;
+  color: white;
+  border-color: #2680eb;
+}
+.btn-primary:hover {
+  background-color: #1a6fd1;
+}
+.btn-secondary {
+  background-color: #fff;
+  border-color: #dddde4;
+  color: #333;
+}
+.btn-secondary:hover {
+  background-color: #f0f0f0;
 }
 </style>

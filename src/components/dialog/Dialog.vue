@@ -8,6 +8,9 @@
       <div class="dialog-body">
         <slot></slot>
       </div>
+      <div class="dialog-footer">
+        <slot></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -53,12 +56,10 @@ const close = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  border-bottom: 1px solid #e0e0e0;
-  flex-shrink: 0;
+  margin: 24px 16px 0 24px;
 }
 .dialog-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
 }
 .close-btn {
@@ -72,5 +73,16 @@ const close = () => {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #ddd;
+  padding: 12px 16px;
+  background: #fff;
+  position: sticky;
+  bottom: 0;
 }
 </style>

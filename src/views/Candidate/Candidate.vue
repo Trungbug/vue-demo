@@ -9,7 +9,7 @@
         </button>
       </div>
     </div>
-    <BaseDialog v-model:show="isFormVisible" title="Thêm ứng viên mới">
+    <BaseDialog v-model:show="isFormVisible" title="Thêm ứng viên">
       <CandidateForm @cancel="isFormVisible = false" @submit="handleAddCandidate" />
     </BaseDialog>
 

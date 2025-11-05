@@ -3,23 +3,26 @@
     <div class="title-header">
       <div class="title-left">Ứng viên</div>
       <div class="title-right">
-        <button class="btn" @click="isFormVisible = true">
+        <button class="btn" @click="openAddDialog">
           <div class="icon icon-add"></div>
           <span class="title-name pl-2">Thêm ứng viên</span>
         </button>
       </div>
     </div>
 
-    <BaseDialog v-model:show="isFormVisible" title="Thêm ứng viên">
+    <BaseDialog v-model:show="isFormVisible" :title="dialogTitle">
       <CandidateForm
         ref="candidateFormRef"
-        @cancel="isFormVisible = false"
+        @cancel="handleCancelForm"
         @submit="handleAddCandidate"
+        :initialData="candidateToEdit"
       />
 
       <template #footer>
         <button type="button" class="btn-secondary" @click="handleCancelForm">Hủy</button>
-        <button type="button" class="btn-primary" @click="handleSubmitForm">Thêm</button>
+        <button type="button" class="btn-primary" @click="handleSubmitForm">
+          {{ candidateToEdit ? 'Lưu' : 'Thêm' }}
+        </button>
       </template>
     </BaseDialog>
 
@@ -168,7 +171,6 @@ const performSearch = () => {
   }
 
   candidateRows.value = masterCandidateList.value.filter((candidate) => {
-    // Luôn kiểm tra null trước khi gọi .toLowerCase()
     return (
       (candidate.CandidateName?.toLowerCase() || '').includes(query) ||
       (candidate.Mobile?.toLowerCase() || '').includes(query) ||
@@ -187,23 +189,21 @@ const performSearch = () => {
   })
 }
 
-// --- Xử lý Dialog (Thêm/Sửa) ---
-
-// const openAddDialog = () => {
-//   candidateToEdit.value = null
-//   dialogTitle.value = 'Thêm ứng viên'
-//   isFormVisible.value = true
-// }
+const openAddDialog = () => {
+  candidateToEdit.value = null // <-- Quan trọng: Đặt về null
+  dialogTitle.value = 'Thêm ứng viên'
+  isFormVisible.value = true
+}
 
 const handleEdit = (row) => {
-  candidateToEdit.value = { ...row } // Copy dữ liệu để edit
+  candidateToEdit.value = { ...row }
   dialogTitle.value = 'Chỉnh sửa thông tin ứng viên'
   isFormVisible.value = true
 }
 
 const handleCancelForm = () => {
   isFormVisible.value = false
-  candidateToEdit.value = null
+  candidateToEdit.value = null // <-- Quan trọng: Reset khi hủy
 }
 
 // Gọi hàm submit của form con
@@ -215,15 +215,15 @@ const handleSubmitForm = () => {
 
 /**
  * Hàm Lưu (Thêm mới hoặc Cập nhật)
- * SỬA LỖI: Phải sửa trên masterCandidateList và chạy lại tìm kiếm
  */
 const handleSave = (formData) => {
   if (candidateToEdit.value) {
+    // Chế độ Sửa
     const index = masterCandidateList.value.findIndex(
       (c) => c.CandidateID === candidateToEdit.value.CandidateID,
     )
     if (index !== -1) {
-      masterCandidateList.value[index] = { ...formData }
+      masterCandidateList.value[index] = { ...masterCandidateList.value[index], ...formData }
     }
   } else {
     const newCandidate = {
@@ -237,10 +237,10 @@ const handleSave = (formData) => {
     masterCandidateList.value.unshift(newCandidate)
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(masterCandidateList.value))
+
   performSearch()
 
-  isFormVisible.value = false
-  candidateToEdit.value = null
+  handleCancelForm()
 }
 
 /**
@@ -255,8 +255,6 @@ const handleDelete = (row) => {
     performSearch()
   }
 }
-
-// *** ĐỔI TÊN HÀM GỌI TỪ FORM ***
 const handleAddCandidate = (formData) => {
   handleSave(formData)
 }

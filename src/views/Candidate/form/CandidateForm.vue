@@ -175,13 +175,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+// *** THÊM 'watch' VÀO ĐÂY ***
+import { ref, watch } from 'vue'
 import BaseInput from '@/components/input/Input.vue'
 import BaseDatePicker from '@/components/datetime/DateTimePicker.vue'
 
+const props = defineProps({
+  initialData: {
+    type: Object,
+    default: () => null,
+  },
+})
+
 const emit = defineEmits(['submit', 'cancel'])
 
-const formData = ref({
+// Hàm tạo form rỗng
+const createEmptyForm = () => ({
   CandidateName: '',
   Birthday: '',
   Gender: '',
@@ -204,19 +213,35 @@ const formData = ref({
   ExperienceDescription: '',
 })
 
+const formData = ref(createEmptyForm())
 const errors = ref({})
+
+// *** THÊM WATCHER ĐỂ CẬP NHẬT FORMDATA KHI PROP THAY ĐỔI ***
+watch(
+  () => props.initialData,
+  (newData) => {
+    if (newData) {
+      formData.value = { ...newData }
+    } else {
+      formData.value = createEmptyForm()
+      errors.value = {}
+    }
+  },
+  {
+    immediate: true, // Chạy ngay khi component được tạo
+    deep: true, // Cần thiết nếu `initialData` có object lồng nhau (mặc dù ở đây không)
+  },
+)
 
 const validateForm = () => {
   errors.value = {}
   let isValid = true
 
-  // Validate họ tên
   if (!formData.value.CandidateName?.trim()) {
     errors.value.CandidateName = 'Họ và tên không được để trống'
     isValid = false
   }
 
-  // Validate email
   if (formData.value.Email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.value.Email)) {
@@ -225,16 +250,13 @@ const validateForm = () => {
     }
   }
 
-  // Validate số điện thoại
   if (formData.value.Mobile) {
-    const phoneRegex = /^[0-9]{10}$/
-    if (!phoneRegex.test(formData.value.Mobile)) {
-      errors.value.Mobile = 'Số điện thoại không đúng định dạng (10 số)'
+    const phoneRegex = /^[0-9\s+]{10,15}$/
+    if (!phoneRegex.test(formData.value.Mobile.replace(/ /g, ''))) {
+      errors.value.Mobile = 'Số điện thoại không đúng định dạng'
       isValid = false
     }
   }
-
-  // Validate ngày sinh
   if (formData.value.Birthday) {
     const birthday = new Date(formData.value.Birthday)
     const today = new Date()
@@ -251,7 +273,6 @@ const handleSubmit = () => {
   if (validateForm()) {
     emit('submit', formData.value)
   } else {
-    // Hiển thị thông báo lỗi nếu có
     alert('Vui lòng kiểm tra lại thông tin nhập liệu!')
   }
 }
@@ -260,7 +281,6 @@ const handleCancel = () => {
   emit('cancel')
 }
 
-// Expose methods để parent component có thể gọi
 defineExpose({
   handleSubmit,
   handleCancel,

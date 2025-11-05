@@ -22,6 +22,7 @@
           :required="true"
           class="full-width"
           placeholder="Nhập họ và tên"
+          :error="errors.CandidateName"
         />
         <div class="form-row">
           <BaseDatePicker
@@ -50,6 +51,7 @@
             label="Số điện thoại"
             placeholder="Nhập số điện thoại"
             class="half-width"
+            :error="errors.Mobile"
           />
           <BaseInput
             v-model="formData.Email"
@@ -57,6 +59,7 @@
             type="email"
             placeholder="Nhập Email"
             class="half-width"
+            :error="errors.Email"
           />
         </div>
 
@@ -201,8 +204,56 @@ const formData = ref({
   ExperienceDescription: '',
 })
 
+const errors = ref({})
+
+const validateForm = () => {
+  errors.value = {}
+  let isValid = true
+
+  // Validate họ tên
+  if (!formData.value.CandidateName?.trim()) {
+    errors.value.CandidateName = 'Họ và tên không được để trống'
+    isValid = false
+  }
+
+  // Validate email
+  if (formData.value.Email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.value.Email)) {
+      errors.value.Email = 'Email không đúng định dạng'
+      isValid = false
+    }
+  }
+
+  // Validate số điện thoại
+  if (formData.value.Mobile) {
+    const phoneRegex = /^[0-9]{10}$/
+    if (!phoneRegex.test(formData.value.Mobile)) {
+      errors.value.Mobile = 'Số điện thoại không đúng định dạng (10 số)'
+      isValid = false
+    }
+  }
+
+  // Validate ngày sinh
+  if (formData.value.Birthday) {
+    const birthday = new Date(formData.value.Birthday)
+    const today = new Date()
+    if (birthday > today) {
+      errors.value.Birthday = 'Ngày sinh không thể lớn hơn ngày hiện tại'
+      isValid = false
+    }
+  }
+
+  return isValid
+}
+
 const handleSubmit = () => {
-  emit('submit', formData.value)
+  if (validateForm()) {
+    emit('submit', formData.value)
+  } else {
+    // Hiển thị thông báo lỗi nếu có
+    alert('Vui lòng kiểm tra lại thông tin nhập liệu!')
+  }
 }
 
 const handleCancel = () => {

@@ -42,6 +42,8 @@ const menu = [
   { title: 'Chiến dịch tuyển dụng', icon: 'icon icon-list' },
   { title: 'Công việc', icon: 'icon-recruitment-campaign-active' },
   { title: 'aiMarketing', icon: 'icon-email-ai-marketing' },
+  { title: 'Trao đổi với ứng viên', icon: 'icon icon-chat-box' },
+  { title: 'Khác', icon: 'icon icon-sb-other' },
 ]
 </script>
 
@@ -60,7 +62,6 @@ const menu = [
 /* Sidebar styles from style.css */
 .sidebar {
   width: 230px;
-  height: calc(102vh - 60px);
   position: relative;
   background-image: url('https://amisplatform.misacdn.net/apps/recruit2/event-sidebar.1a602823bdf63dc5.svg');
   transition: width 0.18s ease;

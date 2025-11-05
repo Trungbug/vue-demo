@@ -35,6 +35,8 @@
                 <input
                   type="text"
                   class="texteditor-input"
+                  v-model="searchQuery"
+                  @keydown.enter.prevent="performSearch"
                   placeholder="Tìm kiếm nhanh trong danh sách"
                 />
               </div>
@@ -85,16 +87,18 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import TheTable from '@/components/table/Table.vue'
-// import candidateData from '@/api/candidate-data.json'
 import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/Candidate/form/CandidateForm.vue'
 
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)
+
+// State cho chức năng Sửa
+const candidateToEdit = ref(null)
+const dialogTitle = ref('Thêm ứng viên')
 
 const candidateFields = ref([
   { key: 'CandidateName', label: 'Họ tên' },
@@ -113,17 +117,20 @@ const candidateFields = ref([
   { key: 'AttractivePersonnel', label: 'Nhân sự khai thác' },
 ])
 
+const searchQuery = ref('')
+const masterCandidateList = ref([]) // Đã sửa lỗi typo: masterCadidateList
 const candidateRows = ref([])
-const STORAGE_KEY = 'candidates' // Định nghĩa key cho localStorage
+const STORAGE_KEY = 'candidates'
 
 /**
- * Lấy dữ liệu ứng viên khi component được tải
+ * Lấy dữ liệu ứng viên
  */
 onMounted(() => {
   const storedData = localStorage.getItem(STORAGE_KEY)
-
   if (storedData) {
-    candidateRows.value = JSON.parse(storedData)
+    const data = JSON.parse(storedData)
+    masterCandidateList.value = data
+    candidateRows.value = data
   } else {
     fetchAndStoreCandidates()
   }
@@ -140,6 +147,7 @@ const fetchAndStoreCandidates = async () => {
     }
     const data = await response.json()
 
+    masterCandidateList.value = data
     candidateRows.value = data
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
@@ -149,46 +157,108 @@ const fetchAndStoreCandidates = async () => {
 }
 
 /**
- * Cập nhật hàm thêm ứng viên để lưu vào localStorage
+ * Hàm tìm kiếm
  */
-const handleAddCandidate = (formData) => {
-  const newCandidate = {
-    ...formData,
-    CandidateID: new Date().getTime(), // Tạo ID tạm thời
-    RecruitmentRoundName: 'Ứng tuyển', // Thêm các giá trị mặc định nếu cần
-    Score: 0,
+const performSearch = () => {
+  const query = searchQuery.value.trim().toLowerCase()
+
+  if (query === '') {
+    candidateRows.value = masterCandidateList.value
+    return
   }
 
-  // Thêm vào đầu danh sách
-  candidateRows.value.unshift(newCandidate)
-
-  // Cập nhật lại localStorage
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(candidateRows.value))
-
-  isFormVisible.value = false
+  candidateRows.value = masterCandidateList.value.filter((candidate) => {
+    // Luôn kiểm tra null trước khi gọi .toLowerCase()
+    return (
+      (candidate.CandidateName?.toLowerCase() || '').includes(query) ||
+      (candidate.Mobile?.toLowerCase() || '').includes(query) ||
+      (candidate.Email?.toLowerCase() || '').includes(query) ||
+      (candidate.RecruitmentCampaignNames?.toLowerCase() || '').includes(query) ||
+      (candidate.JobPositionName?.toLowerCase() || '').includes(query) ||
+      (candidate.RecruitmentName?.toLowerCase() || '').includes(query) ||
+      (candidate.RecruitmentRoundName?.toLowerCase() || '').includes(query) ||
+      (candidate.ChannelName?.toLowerCase() || '').includes(query) ||
+      (candidate.EducationDegreeName?.toLowerCase() || '').includes(query) ||
+      (candidate.EducationPlaceName?.toLowerCase() || '').includes(query) ||
+      (candidate.EducationMajorName?.toLowerCase() || '').includes(query) ||
+      (candidate.WorkPlaceRecent?.toLowerCase() || '').includes(query) ||
+      (candidate.AttractivePersonnel?.toLowerCase() || '').includes(query)
+    )
+  })
 }
 
-const handleDelete = (row) => {
-  console.log('Delete:', row)
-  candidateRows.value = candidateRows.value.filter((item) => item.CandidateID !== row.CandidateID)
+// --- Xử lý Dialog (Thêm/Sửa) ---
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(candidateRows.value))
-}
+// const openAddDialog = () => {
+//   candidateToEdit.value = null
+//   dialogTitle.value = 'Thêm ứng viên'
+//   isFormVisible.value = true
+// }
 
 const handleEdit = (row) => {
-  console.log('Edit:', row)
+  candidateToEdit.value = { ...row } // Copy dữ liệu để edit
+  dialogTitle.value = 'Chỉnh sửa thông tin ứng viên'
+  isFormVisible.value = true
 }
 
+const handleCancelForm = () => {
+  isFormVisible.value = false
+  candidateToEdit.value = null
+}
+
+// Gọi hàm submit của form con
 const handleSubmitForm = () => {
   if (candidateFormRef.value) {
     candidateFormRef.value.handleSubmit()
   }
 }
 
-const handleCancelForm = () => {
-  if (candidateFormRef.value) {
-    candidateFormRef.value.handleCancel()
+/**
+ * Hàm Lưu (Thêm mới hoặc Cập nhật)
+ * SỬA LỖI: Phải sửa trên masterCandidateList và chạy lại tìm kiếm
+ */
+const handleSave = (formData) => {
+  if (candidateToEdit.value) {
+    const index = masterCandidateList.value.findIndex(
+      (c) => c.CandidateID === candidateToEdit.value.CandidateID,
+    )
+    if (index !== -1) {
+      masterCandidateList.value[index] = { ...formData }
+    }
+  } else {
+    const newCandidate = {
+      ...formData,
+      CandidateID: new Date().getTime(),
+      Avatar: null,
+      AvatarColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+      RecruitmentRoundName: 'Ứng tuyển',
+      Score: 0,
+    }
+    masterCandidateList.value.unshift(newCandidate)
   }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(masterCandidateList.value))
+  performSearch()
+
+  isFormVisible.value = false
+  candidateToEdit.value = null
+}
+
+/**
+ * Hàm Xóa
+ */
+const handleDelete = (row) => {
+  if (confirm(`Bạn có chắc muốn xóa ứng viên "${row.CandidateName}" không?`)) {
+    masterCandidateList.value = masterCandidateList.value.filter(
+      (item) => item.CandidateID !== row.CandidateID,
+    )
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(masterCandidateList.value))
+    performSearch()
+  }
+}
+
+// *** ĐỔI TÊN HÀM GỌI TỪ FORM ***
+const handleAddCandidate = (formData) => {
+  handleSave(formData)
 }
 </script>
 

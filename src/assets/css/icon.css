@@ -21,24 +21,12 @@
   min-width: 24px;
 }
 
-.icon-logo {
-  -webkit-mask-position: -53px -411px;
-  width: 54px;
-  height: 54px;
-}
-
 .icon-world {
   -webkit-mask-position: -113px 0;
   width: 14px;
   height: 16px;
   display: flex;
   align-items: center;
-}
-
-.icon-cart {
-  -webkit-mask-position: -22px -1266px;
-  width: 16px;
-  height: 16px;
 }
 
 .icon-chat {
@@ -181,4 +169,22 @@
   height: 20px;
   min-width: 20px;
   background-color: #7a8188;
+}
+.icon-chat-box {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
+  -webkit-mask-position: -72px -845px;
+  -webkit-mask-repeat: no-repeat;
+  background-color: #c5ccd5;
+}
+.icon-sb-other {
+  -webkit-mask-image: url(https://amisplatform.misacdn.net/apps/recruit/assets/images/ICON.svg);
+  -webkit-mask-position: -359px -614px;
+  -webkit-mask-repeat: no-repeat;
+  background-color: #c5ccd5;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
 }

@@ -5,7 +5,7 @@ import router from './router'
 // Import các file CSS toàn cục
 import './assets/css/base.css'
 import './assets/css/common.css' // Thêm dòng này
-
+import '@fontsource/inter'
 import './assets/css/icon.css' // Thêm dòng này
 import '@fortawesome/fontawesome-free/css/all.css' // Thêm dòng này để dùng icon font-awesome
 

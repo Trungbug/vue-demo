@@ -94,7 +94,7 @@
 import { ref, onMounted } from 'vue'
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
-import CandidateForm from '@/views/Candidate/form/CandidateForm.vue'
+import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
 
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)

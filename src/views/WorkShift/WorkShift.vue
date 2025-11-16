@@ -89,6 +89,7 @@ import { ref, onMounted } from 'vue'
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
+import ShiftAPI from '@/api/ShiftAPI.js'
 
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)
@@ -96,6 +97,19 @@ const candidateFormRef = ref(null)
 // State cho chức năng Sửa
 const candidateToEdit = ref(null)
 const dialogTitle = ref('Thêm ứng viên')
+
+const shifts = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await ShiftAPI.getPaging(10, 1, '')
+    console.log('📌 FE nhận được API:', res.data)
+    shifts.value = res.data.data.data
+    //   ^ response.data.data.data = theo đúng cấu trúc bạn trả về
+  } catch (err) {
+    console.error('❌ Lỗi gọi API:', err)
+  }
+})
 
 const candidateFields = ref([
   { key: 'CandidateName', label: 'Họ tên' },

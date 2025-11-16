@@ -105,8 +105,8 @@
   cursor: pointer;
 }
 .name-company-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: #262626;
   font-family: 'Inter';
   max-width: 440px;

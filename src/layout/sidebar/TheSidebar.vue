@@ -226,7 +226,7 @@ const menu = [
 
 /* -- Trạng thái Thu gọn (Collapsed) -- */
 .sidebar.collapsed {
-  width: 64px; /* Độ rộng khi thu gọn */
+  width: 72px;
 }
 .sidebar.collapsed .collape-btn {
   justify-content: center; /* Căn giữa icon khi thu gọn */

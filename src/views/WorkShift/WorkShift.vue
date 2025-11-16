@@ -1,11 +1,11 @@
 <template>
   <div class="content">
     <div class="title-header">
-      <div class="title-left">Ứng viên</div>
+      <div class="title-left">Ca làm việc</div>
       <div class="title-right">
         <button class="btn" @click="openAddDialog">
           <div class="icon icon-add"></div>
-          <span class="title-name pl-2">Thêm ứng viên</span>
+          <span class="title-name pl-2">Thêm</span>
         </button>
       </div>
     </div>
@@ -30,30 +30,24 @@
       <div class="toolbar">
         <div class="toolbar-container">
           <div class="toolbar-grid-default">
-            <div class="grid-left"></div>
+            <div class="grid-left">
+              <div class="input-search">
+                <div class="search-container">
+                  <div class="icon icon-search"></div>
+                  <input
+                    type="text"
+                    class="texteditor-input"
+                    v-model="searchQuery"
+                    @keydown.enter.prevent="performSearch"
+                    placeholder="Tìm kiếm "
+                  />
+                </div>
+              </div>
+            </div>
 
             <div class="grid-right">
-              <div class="search-container">
-                <div class="icon icon-search"></div>
-                <input
-                  type="text"
-                  class="texteditor-input"
-                  v-model="searchQuery"
-                  @keydown.enter.prevent="performSearch"
-                  placeholder="Tìm kiếm nhanh trong danh sách"
-                />
-              </div>
               <div class="wrap-icon-button-toolbar" title="Lọc">
                 <div class="icon icon-filter"></div>
-              </div>
-              <div class="wrap-icon-button-toolbar" title="Xuất khẩu">
-                <div class="icon icon-export"></div>
-              </div>
-              <div class="wrap-icon-button-toolbar" title="Lịch sử tương tác">
-                <div class="icon icon-interactive-history"></div>
-              </div>
-              <div class="wrap-icon-button-toolbar" title="Tùy chỉnh cột">
-                <div class="icon icon-setting-column"></div>
               </div>
             </div>
           </div>
@@ -265,17 +259,19 @@ const handleAddCandidate = (formData) => {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  background-color: #f3f4f6;
+
+  background: #e5e7eb;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .title-header {
+  align-items: center;
   padding: 16px 24px 0 24px;
 }
 .candidates-wrapper {
   flex: 1;
-  padding: 24px;
+  padding: 16px 20px 20px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -292,6 +288,7 @@ const handleAddCandidate = (formData) => {
   border-left: 1px solid #e0e0e0;
   border-right: 1px solid #e0e0e0;
   background-color: #fff;
+  height: 0;
 }
 
 .paging {
@@ -306,6 +303,8 @@ const handleAddCandidate = (formData) => {
   border-bottom-right-radius: 4px;
 }
 
+.title-rigtht {
+}
 .title-name {
   font-weight: 500;
   font-size: 14px !important;
@@ -316,14 +315,15 @@ const handleAddCandidate = (formData) => {
   justify-content: space-between;
 }
 .title-left {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
-  padding-top: 8px;
-  padding-bottom: 4px;
+  font-family: 'Inter';
+  color: #111827;
 }
 .toolbar-container {
-  padding: 12px 16px;
-  min-height: 64px;
+  padding: 8px 16px;
+
+  flex-direction: row;
 }
 .toolbar-grid-default {
   display: flex;
@@ -337,61 +337,80 @@ const handleAddCandidate = (formData) => {
   gap: 8px;
 }
 .search-container {
-  display: flex;
-  align-items: center;
-  position: relative;
-  width: 250px;
-  height: 36px;
-  border: 1px solid #dddde4;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
-  transition: border-color 0.3s ease;
+  background-color: #fff;
+  padding: 5px 12px;
+
+  column-gap: 4px;
+  align-items: center;
+  flex: 1 1 0%;
+  display: flex;
+  cursor: pointer;
 }
 .search-container:hover {
-  border-color: #2680eb;
+  border-color: #009b71;
 }
 .icon-search {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  margin: 0 4px 0 0;
+  height: 16px;
+  width: 16px;
+  min-height: 16px;
+  min-width: 16px;
+  position: relative;
+  -webkit-mask-repeat: no-repeat;
+  background-color: #4b5563;
+  mask-position: 0px 0px;
+  -webkit-mask-image: url(./pas.Icon Warehouse-e29a964d.svg?v=3.1.0.6);
 }
+
 .texteditor-input {
-  flex: 1;
-  height: 100%;
-  padding: 6px 16px 6px 36px;
-  border: none;
+  background: #fff;
   outline: none;
-  background-color: transparent;
-  font-size: 14px;
+  border: none;
+  white-space: nowrap;
+  display: flex;
+  width: 100%;
+  font-family: Inter, Helvetica, Arial, sans-serif !important;
+  padding: 0;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 400;
 }
 .wrap-icon-button-toolbar {
+  padding: 6px 12px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e0e6ec;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  color: #111827;
+  background-color: #fff;
+  font-weight: 500;
   border-radius: 4px;
+  position: relative;
+  font-size: 13px;
+  height: 28px;
+  outline: none;
+  transition: all 0.2s ease;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 .wrap-icon-button-toolbar:hover {
   background-color: #f0f0f0;
 }
 .btn {
-  width: auto;
-  font-weight: 500;
-  font-size: 14px !important;
-  height: 36px !important;
-  padding: 8px 12px !important;
-  border-radius: 4px !important;
-  background-color: #2680eb !important;
-  color: #ffffff !important;
-  border: 1px solid #e0e6ec;
-  border-color: transparent !important;
+  background-color: #009b71;
+  color: #fff;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  outline: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  position: relative;
+  font-size: 13px;
+  height: 28px;
+  font-weight: 500;
 }
 .total-records strong {
   color: #1f1f1f;
@@ -442,5 +461,18 @@ const handleAddCandidate = (formData) => {
 }
 .btn-secondary:hover {
   background-color: #f0f0f0;
+}
+.grid-left {
+  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+}
+.input-search {
+  height: auto;
+  width: 200px;
+  padding: 0;
+  gap: 1rem;
+  align-items: center;
+  display: flex;
 }
 </style>

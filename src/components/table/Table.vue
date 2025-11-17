@@ -5,7 +5,12 @@
         <tr>
           <th class="sticky-cell checkbox-cell">
             <div class="ms-th-checkbox">
-              <input type="checkbox" class="ms-checkbox" />
+              <input
+                type="checkbox"
+                class="ms-checkbox"
+                :checked="isAllChecked"
+                @change="handleSelectAll"
+              />
             </div>
           </th>
 
@@ -27,14 +32,24 @@
           </th>
 
           <th class="sticky-cell actions-header">
-            <div class="ms-th-content">Chức năng</div>
+            <div class="ms-th-content"></div>
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.shiftId" class="table-row">
+        <tr
+          v-for="row in rows"
+          :key="row.shiftId"
+          class="table-row"
+          :class="{ 'row-checked': selectedRows.includes(row.shiftId) }"
+        >
           <td class="checkbox-cell">
-            <input type="checkbox" class="ms-checkbox" />
+            <input
+              type="checkbox"
+              class="ms-checkbox"
+              :checked="selectedRows.includes(row.shiftId)"
+              @change="handleRowCheck(row.shiftId)"
+            />
           </td>
           <td v-for="field in fields" :key="field.key">
             {{ handleFormat(row[field.key], field.type || 'text') }}
@@ -54,6 +69,7 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { formatNumber, formatDate, formatText } from '@/ultils/formatter'
 
 //#region Props
@@ -66,6 +82,16 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+})
+//#endregion
+
+//#region State
+const selectedRows = ref([])
+//#endregion
+
+//#region Computed
+const isAllChecked = computed(() => {
+  return props.rows.length > 0 && selectedRows.value.length === props.rows.length
 })
 //#endregion
 
@@ -91,8 +117,21 @@ const handleEdit = (row) => {
   emit('edit', row)
 }
 
-const handleDelete = (row) => {
-  emit('delete', row)
+const handleSelectAll = (event) => {
+  if (event.target.checked) {
+    selectedRows.value = props.rows.map((row) => row.shiftId)
+  } else {
+    selectedRows.value = []
+  }
+}
+
+const handleRowCheck = (shiftId) => {
+  const index = selectedRows.value.indexOf(shiftId)
+  if (index === -1) {
+    selectedRows.value.push(shiftId)
+  } else {
+    selectedRows.value.splice(index, 1)
+  }
 }
 //#endregion
 </script>
@@ -106,7 +145,8 @@ const handleDelete = (row) => {
 }
 
 table {
-  width: 100%;
+  width: auto;
+  min-width: 100%;
   border-collapse: separate; /* Chuyển sang separate để sticky hoạt động tốt */
   border-spacing: 0;
   table-layout: fixed;
@@ -126,6 +166,49 @@ td {
   top: 0;
   z-index: 1;
   background-color: #f1f2f6; /* Bắt buộc phải có màu nền */
+}
+
+/* Cột checkbox - dính ở bên trái */
+.checkbox-cell {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: #f3f4f6;
+}
+
+thead.ms-thead .checkbox-cell {
+  background-color: #f3f4f6;
+  z-index: 11;
+}
+
+tbody .table-row .checkbox-cell {
+  background-color: #ffffff;
+}
+
+tbody .table-row:hover .checkbox-cell {
+  background-color: #f0f8ff;
+}
+
+/* Cột chức năng - dính ở bên phải */
+.actions-header,
+.actions-cell {
+  position: sticky;
+  right: 0;
+  z-index: 10;
+  background-color: #f3f4f6;
+}
+
+thead.ms-thead .actions-header {
+  background-color: #f3f4f6;
+  z-index: 11;
+}
+
+tbody .table-row .actions-cell {
+  background-color: #ffffff;
+}
+
+tbody .table-row:hover .actions-cell {
+  background-color: #f0f8ff;
 }
 
 .ms-th-content {
@@ -156,6 +239,22 @@ th {
 
 .table-row:hover {
   background-color: #f0f8ff;
+}
+
+.table-row.row-checked {
+  background-color: #86efac;
+}
+
+.table-row.row-checked:hover {
+  background-color: #86efac;
+}
+
+.table-row.row-checked .checkbox-cell {
+  background-color: #86efac;
+}
+
+.table-row.row-checked .actions-cell {
+  background-color: #86efac;
 }
 
 .checkbox-cell {
@@ -270,6 +369,19 @@ thead.ms-thead .actions-header .ms-th-content {
 /* Điều này sẽ tạo ra viền ngoài cùng bên trái */
 thead.ms-thead .checkbox-cell {
   border-left: 1px solid #d1d5db;
+  width: 60px;
+}
+
+thead.ms-thead .actions-header {
+  width: 120px;
+}
+
+tbody .table-row .checkbox-cell {
+  width: 60px;
+}
+
+tbody .table-row .actions-cell {
+  width: 120px;
 }
 .ms-td-content {
   overflow: hidden; /* Ẩn nội dung thừa */

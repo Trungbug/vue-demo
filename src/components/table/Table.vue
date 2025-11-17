@@ -4,14 +4,26 @@
       <thead class="ms-thead">
         <tr>
           <th class="sticky-cell checkbox-cell">
-            <input type="checkbox" class="ms-checkbox" />
+            <div class="ms-th-checkbox">
+              <input type="checkbox" class="ms-checkbox" />
+            </div>
           </th>
 
           <th v-for="field in fields" :key="field.key" class="sticky-cell">
-            {{ field.label }}
+            <div class="ms-th-content">
+              <div class="menu-wrapper">
+                <div class="menu-button-container">
+                  <div class="ms-th-title">
+                    {{ field.label }}
+                  </div>
+                </div>
+              </div>
+            </div>
           </th>
 
-          <th class="sticky-cell actions-header">Chức năng</th>
+          <th class="sticky-cell actions-header">
+            <div class="ms-th-content">Chức năng</div>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -110,9 +122,27 @@ td {
   background-color: #f1f2f6; /* Bắt buộc phải có màu nền */
 }
 
+.ms-th-content {
+  max-width: 100%;
+  padding: 0 16px;
+  border-right: 1px solid #d1d5db;
+}
 th {
+  padding: 0; /* Xóa padding khỏi th */
+  border-bottom: 1px solid #d1d5db;
+  height: 36px; /* Đặt chiều cao cố định cho hàng header */
+  font-weight: 600; /* Có thể bạn muốn giữ font-weight ở đây */
+}
+.ms-thead th {
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  font-size: 13px;
+  height: 30px;
   font-weight: 600;
-  color: #1f1f1f;
+  background: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
+  position: sticky;
+  top: 0;
 }
 
 .table-row:hover {
@@ -198,5 +228,38 @@ th {
 
   -moz-user-select: none;
   user-select: none;
+}
+.menu-wrapper {
+  width: 100%;
+  font-weight: 400;
+  cursor: pointer;
+}
+thead.ms-thead th .ms-th-content {
+  border-right: 1px solid #d1d5db;
+}
+.ms-th-title {
+  display: flex;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-items: center;
+  font-weight: 600;
+  width: 100%;
+  position: relative;
+}
+.ms-th-checkbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+thead.ms-thead .checkbox-cell .ms-th-content,
+thead.ms-thead .actions-header .ms-th-content {
+  justify-content: center;
+  padding: 0; /* Các ô này không cần padding trái/phải */
+}
+/* 2. Áp dụng viền trái CHỈ cho cột checkbox (cột đầu tiên) trong thead */
+/* Điều này sẽ tạo ra viền ngoài cùng bên trái */
+thead.ms-thead .checkbox-cell {
+  border-left: 1px solid #d1d5db;
 }
 </style>

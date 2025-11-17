@@ -9,7 +9,12 @@
             </div>
           </th>
 
-          <th v-for="field in fields" :key="field.key" class="sticky-cell">
+          <th
+            v-for="field in fields"
+            :key="field.key"
+            class="sticky-cell"
+            :style="{ width: field.width }"
+          >
             <div class="ms-th-content">
               <div class="menu-wrapper">
                 <div class="menu-button-container">
@@ -104,6 +109,7 @@ table {
   width: 100%;
   border-collapse: separate; /* Chuyển sang separate để sticky hoạt động tốt */
   border-spacing: 0;
+  table-layout: fixed;
 }
 
 th,
@@ -126,6 +132,9 @@ td {
   max-width: 100%;
   padding: 0 16px;
   border-right: 1px solid #d1d5db;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 th {
   padding: 0; /* Xóa padding khỏi th */
@@ -261,5 +270,10 @@ thead.ms-thead .actions-header .ms-th-content {
 /* Điều này sẽ tạo ra viền ngoài cùng bên trái */
 thead.ms-thead .checkbox-cell {
   border-left: 1px solid #d1d5db;
+}
+.ms-td-content {
+  overflow: hidden; /* Ẩn nội dung thừa */
+  text-overflow: ellipsis; /* Hiển thị dấu ... */
+  white-space: nowrap; /* Giữ trên 1 dòng */
 }
 </style>

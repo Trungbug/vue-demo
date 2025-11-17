@@ -104,16 +104,20 @@ const dialogTitle = ref('Thêm ca làm việc')
 // Các key phải khớp với ShiftDto.cs (ví dụ: shiftCode, shiftName)
 //
 const shiftFields = ref([
-  { key: 'shiftCode', label: 'Mã ca' },
-  { key: 'shiftName', label: 'Tên ca' },
-  { key: 'shiftBeginTime', label: 'Giờ vào ca', type: 'text' }, // Dùng 'text' vì formatter có thể xử lý
-  { key: 'shiftEndTime', label: 'Giờ hết ca', type: 'text' },
-  { key: 'shiftBeginBreakTime', label: 'Bắt đầu nghỉ', type: 'text' },
-  { key: 'shiftEndBreakTime', label: 'Kết thúc nghỉ', type: 'text' },
-  { key: 'workTimeHours', label: 'TG Làm việc (giờ)', type: 'number' },
-  { key: 'breakTimeHours', label: 'TG Nghỉ (giờ)', type: 'number' },
+  { key: 'shiftCode', label: 'Mã ca', width: '120px' },
+  { key: 'shiftName', label: 'Tên ca', width: '250px' },
+  { key: 'shiftBeginTime', label: 'Giờ vào ca', type: 'text', width: '130px' }, // Dùng 'text' vì formatter có thể xử lý
+  { key: 'shiftEndTime', label: 'Giờ hết ca', type: 'text', width: '130px' },
+  { key: 'shiftBeginBreakTime', label: 'Bắt đầu nghỉ giữa ca', type: 'text', width: '200px' },
+  { key: 'shiftEndBreakTime', label: 'Kết thúc nghỉ giữa ca', type: 'text', width: '210px' },
+  { key: 'workTimeHours', label: 'Thời gian làm việc (giờ)', type: 'number', width: '210px' },
+  { key: 'breakTimeHours', label: 'Thời gian nghỉ giữa ca (giờ)', type: 'number', width: '230px' },
   // Thêm các trường khác từ file docx nếu muốn (Trạng thái, Người tạo...)
-  // { key: 'shiftStatus', label: 'Trạng thái' },
+  { key: 'shiftStatus', label: 'Trạng thái', width: '200px' },
+  { key: 'createdBy', label: 'Người tạo', width: '160px' },
+  { key: 'createdDate', label: 'Ngày tạo', width: '160px' },
+  { key: 'updatedBy', label: 'Người sửa', width: '16px' },
+  { key: 'updatedDate', label: 'Ngày cập nhật', width: '160px' },
 ])
 
 const searchQuery = ref('')

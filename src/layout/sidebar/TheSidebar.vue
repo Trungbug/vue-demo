@@ -46,15 +46,6 @@ const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
 }
 
-//
-// === CẬP NHẬT QUAN TRỌNG: MẢNG MENU ===
-//
-// Chúng ta định nghĩa 'type' cho mỗi item:
-// - 'link': Click là đi (không có mũi tên)
-// - 'dropdown': Có mũi tên xuống (để mở rộng menu con bên dưới)
-// - 'flyout': Có mũi tên sang phải (để mở menu bay ra)
-// - 'separator': Dùng để vẽ đường kẻ
-//
 const menu = [
   { title: 'Tổng quan', icon: 'fa-solid fa-house', type: 'link' },
   { title: 'Đơn đặt hàng', icon: 'fa-solid fa-file-invoice', type: 'link' },

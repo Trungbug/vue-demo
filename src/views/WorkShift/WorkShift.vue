@@ -38,7 +38,6 @@
                     type="text"
                     class="texteditor-input"
                     v-model="searchQuery"
-                    @keydown.enter.prevent="performSearch"
                     placeholder="Tìm kiếm "
                   />
                 </div>
@@ -85,7 +84,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
 // TODO: Bước sau bạn sẽ cần tạo file WorkShiftForm.vue
@@ -121,6 +120,7 @@ const shiftFields = ref([
 ])
 
 const searchQuery = ref('')
+const searchTimeout = ref(null)
 const shiftRows = ref([]) // Dữ liệu API sẽ được đổ vào đây
 const totalRecords = ref(0) // Để hiển thị tổng số
 
@@ -138,6 +138,7 @@ const loadShifts = async () => {
     //
     //
     if (response.data.success) {
+      // console.log('response.data.data.data', response.data.data.data)
       shiftRows.value = response.data.data.data
       totalRecords.value = response.data.data.totalRecords
     } else {
@@ -157,10 +158,21 @@ const loadShifts = async () => {
 }
 
 // 3. Hàm tìm kiếm
-const performSearch = () => {
-  loadShifts() // Chỉ cần gọi lại API với searchQuery
-}
+// const performSearch = () => {
+//   loadShifts() // Chỉ cần gọi lại API với searchQuery
+// }
 
+watch(searchQuery, (newQuery, oldQuery) => {
+  // Xóa timeout cũ nếu người dùng tiếp tục gõ
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value)
+  }
+
+  // Đặt một timeout mới
+  searchTimeout.value = setTimeout(() => {
+    loadShifts() // Gọi API sau 500ms
+  }, 500) // Bạn có thể điều chỉnh thời gian chờ (ví dụ: 300ms hoặc 500ms)
+})
 // --- PHẦN FORM/DIALOG ---
 
 const openAddDialog = () => {

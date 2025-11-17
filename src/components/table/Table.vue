@@ -23,7 +23,7 @@
             <div class="ms-th-content">
               <div class="menu-wrapper">
                 <div class="menu-button-container">
-                  <div class="ms-th-title">
+                  <div class="ms-th-title" :title="field.label">
                     {{ field.label }}
                   </div>
                 </div>
@@ -52,7 +52,9 @@
             />
           </td>
           <td v-for="field in fields" :key="field.key">
-            {{ handleFormat(row[field.key], field.type || 'text') }}
+            <div class="ms-td-content" :title="handleFormat(row[field.key], field.type || 'text')">
+              {{ handleFormat(row[field.key], field.type || 'text') }}
+            </div>
           </td>
           <td class="actions-cell">
             <div class="action-buttons">

@@ -1,7 +1,7 @@
 <template>
   <div class="table-container">
     <table>
-      <thead>
+      <thead class="ms-thead">
         <tr>
           <th class="sticky-cell checkbox-cell">
             <input type="checkbox" class="ms-checkbox" />
@@ -15,28 +15,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.CandidateID" class="table-row">
+        <tr v-for="row in rows" :key="row.shiftId" class="table-row">
           <td class="checkbox-cell">
             <input type="checkbox" class="ms-checkbox" />
           </td>
           <td v-for="field in fields" :key="field.key">
-            <div v-if="field.key === 'CandidateName'" class="avatar-name-cell">
-              <img v-if="row.Avatar" :src="row.Avatar" alt="Avatar" class="candidate-avatar-img" />
-
-              <div
-                v-else
-                class="candidate-avatar-color"
-                :style="{ backgroundColor: row.AvatarColor || '#ccc' }"
-              >
-                {{ getInitials(row.CandidateName) }}
-              </div>
-
-              <span>{{ handleFormat(row[field.key], field.type || 'text') }}</span>
-            </div>
-
-            <template v-else>
-              {{ handleFormat(row[field.key], field.type || 'text') }}
-            </template>
+            {{ handleFormat(row[field.key], field.type || 'text') }}
           </td>
           <td class="actions-cell">
             <div class="action-buttons">
@@ -53,7 +37,7 @@
 </template>
 
 <script setup>
-import { formatNumber, formatDate, formatText, getInitials } from '@/ultils/formatter'
+import { formatNumber, formatDate, formatText } from '@/ultils/formatter'
 
 //#region Props
 const props = defineProps({
@@ -73,6 +57,9 @@ const emit = defineEmits(['edit', 'delete'])
 
 const handleFormat = (value, type) => {
   if (value === null || value === undefined || value === '') return '--'
+  if (type === 'text' && typeof value === 'string' && value.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    return value.substring(0, 5)
+  }
   switch (type) {
     case 'number':
       return formatNumber(value)
@@ -203,5 +190,13 @@ th {
   font-size: 12px;
   text-transform: uppercase;
   flex-shrink: 0; /* Ngăn avatar bị co lại */
+}
+.ms-thead {
+  height: 30px;
+  color: #262626;
+  -webkit-touch-callout: none;
+
+  -moz-user-select: none;
+  user-select: none;
 }
 </style>

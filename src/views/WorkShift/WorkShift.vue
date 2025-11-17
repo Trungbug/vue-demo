@@ -15,7 +15,7 @@
         ref="candidateFormRef"
         @cancel="handleCancelForm"
         @submit="handleAddCandidate"
-        :initialData="candidateToEdit"
+        :initialData="shiftToEdit"
       />
 
       <template #footer>
@@ -56,8 +56,8 @@
 
       <div class="table-area">
         <TheTable
-          :fields="candidateFields"
-          :rows="candidateRows"
+          :fields="shiftFields"
+          :rows="shiftRows"
           @edit="handleEdit"
           @delete="handleDelete"
         />
@@ -65,7 +65,7 @@
 
       <div class="paging">
         <div class="total-records">
-          Tổng: <strong>{{ candidateRows.length }}</strong> bản ghi
+          Tổng: <strong>{{ totalRecords }}</strong> bản ghi
         </div>
         <div class="pagination-controls">
           <span>Số bản ghi/trang</span>
@@ -75,7 +75,7 @@
             <option value="100">100</option>
           </select>
           <span
-            ><strong>1 - {{ candidateRows.length }}</strong> bản ghi</span
+            ><strong>1 - {{ shiftRows.length }}</strong> bản ghi</span
           >
           <button class="page-nav-btn">&lt;</button>
           <button class="page-nav-btn">&gt;</button>
@@ -88,181 +88,143 @@
 import { ref, onMounted } from 'vue'
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
-import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
+// TODO: Bước sau bạn sẽ cần tạo file WorkShiftForm.vue
+// import WorkShiftForm from '@/views/WorkShift/form/WorkShiftForm.vue'
+import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue' // Tạm thời vẫn dùng form cũ
 import ShiftAPI from '@/api/ShiftAPI.js'
 
 const isFormVisible = ref(false)
-const candidateFormRef = ref(null)
+const candidateFormRef = ref(null) // Sẽ đổi tên sau khi có WorkShiftForm
+const shiftToEdit = ref(null) // Đổi tên từ candidateToEdit
+const dialogTitle = ref('Thêm ca làm việc')
 
-// State cho chức năng Sửa
-const candidateToEdit = ref(null)
-const dialogTitle = ref('Thêm ứng viên')
+// --- PHẦN DỮ LIỆU BẢNG ---
 
-const shifts = ref([])
-
-onMounted(async () => {
-  try {
-    const res = await ShiftAPI.getPaging(10, 1, '')
-    console.log('📌 FE nhận được API:', res.data)
-    shifts.value = res.data.data.data
-    //   ^ response.data.data.data = theo đúng cấu trúc bạn trả về
-  } catch (err) {
-    console.error('❌ Lỗi gọi API:', err)
-  }
-})
-
-const candidateFields = ref([
-  { key: 'CandidateName', label: 'Họ tên' },
-  { key: 'Mobile', label: 'Số điện thoại' },
-  { key: 'Email', label: 'Email' },
-  { key: 'RecruitmentCampaignNames', label: 'Chiến dịch tuyển dụng' },
-  { key: 'JobPositionName', label: 'Vị trí tuyển dụng' },
-  { key: 'RecruitmentName', label: 'Tin tuyển dụng' },
-  { key: 'RecruitmentRoundName', label: 'Vòng tuyển dụng' },
-  { key: 'Score', label: 'Đánh giá', type: 'number' },
-  { key: 'ChannelName', label: 'Nguồn ứng viên' },
-  { key: 'EducationDegreeName', label: 'Trình độ đào tạo' },
-  { key: 'EducationPlaceName', label: 'Nơi đào tạo' },
-  { key: 'EducationMajorName', label: 'Chuyên ngành' },
-  { key: 'WorkPlaceRecent', label: 'Nơi làm việc gần đây' },
-  { key: 'AttractivePersonnel', label: 'Nhân sự khai thác' },
+// 1. Định nghĩa các cột cho Bảng Ca làm việc
+// Các key phải khớp với ShiftDto.cs (ví dụ: shiftCode, shiftName)
+//
+const shiftFields = ref([
+  { key: 'shiftCode', label: 'Mã ca' },
+  { key: 'shiftName', label: 'Tên ca' },
+  { key: 'shiftBeginTime', label: 'Giờ vào ca', type: 'text' }, // Dùng 'text' vì formatter có thể xử lý
+  { key: 'shiftEndTime', label: 'Giờ hết ca', type: 'text' },
+  { key: 'shiftBeginBreakTime', label: 'Bắt đầu nghỉ', type: 'text' },
+  { key: 'shiftEndBreakTime', label: 'Kết thúc nghỉ', type: 'text' },
+  { key: 'workTimeHours', label: 'TG Làm việc (giờ)', type: 'number' },
+  { key: 'breakTimeHours', label: 'TG Nghỉ (giờ)', type: 'number' },
+  // Thêm các trường khác từ file docx nếu muốn (Trạng thái, Người tạo...)
+  // { key: 'shiftStatus', label: 'Trạng thái' },
 ])
 
 const searchQuery = ref('')
-const masterCandidateList = ref([]) // Đã sửa lỗi typo: masterCadidateList
-const candidateRows = ref([])
-const STORAGE_KEY = 'candidates'
+const shiftRows = ref([]) // Dữ liệu API sẽ được đổ vào đây
+const totalRecords = ref(0) // Để hiển thị tổng số
 
-/**
- * Lấy dữ liệu ứng viên
- */
+// 2. Hàm gọi API
 onMounted(() => {
-  const storedData = localStorage.getItem(STORAGE_KEY)
-  if (storedData) {
-    const data = JSON.parse(storedData)
-    masterCandidateList.value = data
-    candidateRows.value = data
-  } else {
-    fetchAndStoreCandidates()
-  }
+  loadShifts()
 })
 
-/**
- * Hàm fetch dữ liệu từ file JSON và lưu vào localStorage
- */
-const fetchAndStoreCandidates = async () => {
+const loadShifts = async () => {
   try {
-    const response = await fetch('/api/candidate-data.json')
-    if (!response.ok) {
-      throw new Error('Không thể tải dữ liệu')
+    const response = await ShiftAPI.getPaging(20, 1, searchQuery.value)
+
+    // BE trả về cấu trúc { success: true, data: { totalRecords: ..., data: [...] } }
+    //
+    //
+    //
+    if (response.data.success) {
+      shiftRows.value = response.data.data.data
+      totalRecords.value = response.data.data.totalRecords
+    } else {
+      console.error('Lỗi từ API:', response.data.message)
     }
-    const data = await response.json()
-
-    masterCandidateList.value = data
-    candidateRows.value = data
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch (error) {
-    console.error('Lỗi khi fetch dữ liệu ứng viên:', error)
+  } catch (err) {
+    console.error('❌ Lỗi gọi API:', err)
+    // Xử lý lỗi (ví dụ: hiển thị toast message)
+    if (err.code === 'ERR_CERT_AUTHORITY_INVALID') {
+      alert(
+        'LỖI SSL: Bạn chưa chấp nhận chứng chỉ HTTPS (self-signed) của BE. Hãy mở BE URL (https://localhost:7248/api/Shift) trên tab mới và nhấn "Proceed".',
+      )
+    } else if (err.code === 'ERR_CONNECTION_REFUSED') {
+      alert('LỖI KẾT NỐI: Backend của bạn chưa chạy?')
+    }
   }
 }
 
-/**
- * Hàm tìm kiếm
- */
+// 3. Hàm tìm kiếm
 const performSearch = () => {
-  const query = searchQuery.value.trim().toLowerCase()
-
-  if (query === '') {
-    candidateRows.value = masterCandidateList.value
-    return
-  }
-
-  candidateRows.value = masterCandidateList.value.filter((candidate) => {
-    return (
-      (candidate.CandidateName?.toLowerCase() || '').includes(query) ||
-      (candidate.Mobile?.toLowerCase() || '').includes(query) ||
-      (candidate.Email?.toLowerCase() || '').includes(query) ||
-      (candidate.RecruitmentCampaignNames?.toLowerCase() || '').includes(query) ||
-      (candidate.JobPositionName?.toLowerCase() || '').includes(query) ||
-      (candidate.RecruitmentName?.toLowerCase() || '').includes(query) ||
-      (candidate.RecruitmentRoundName?.toLowerCase() || '').includes(query) ||
-      (candidate.ChannelName?.toLowerCase() || '').includes(query) ||
-      (candidate.EducationDegreeName?.toLowerCase() || '').includes(query) ||
-      (candidate.EducationPlaceName?.toLowerCase() || '').includes(query) ||
-      (candidate.EducationMajorName?.toLowerCase() || '').includes(query) ||
-      (candidate.WorkPlaceRecent?.toLowerCase() || '').includes(query) ||
-      (candidate.AttractivePersonnel?.toLowerCase() || '').includes(query)
-    )
-  })
+  loadShifts() // Chỉ cần gọi lại API với searchQuery
 }
+
+// --- PHẦN FORM/DIALOG ---
 
 const openAddDialog = () => {
-  candidateToEdit.value = null // <-- Quan trọng: Đặt về null
-  dialogTitle.value = 'Thêm ứng viên'
+  shiftToEdit.value = null
+  dialogTitle.value = 'Thêm ca làm việc'
   isFormVisible.value = true
 }
 
 const handleEdit = (row) => {
-  candidateToEdit.value = { ...row }
-  dialogTitle.value = 'Chỉnh sửa thông tin ứng viên'
+  shiftToEdit.value = { ...row }
+  dialogTitle.value = 'Sửa ca làm việc'
   isFormVisible.value = true
 }
 
 const handleCancelForm = () => {
   isFormVisible.value = false
-  candidateToEdit.value = null // <-- Quan trọng: Reset khi hủy
+  shiftToEdit.value = null
 }
 
 // Gọi hàm submit của form con
 const handleSubmitForm = () => {
   if (candidateFormRef.value) {
-    candidateFormRef.value.handleSubmit()
+    candidateFormRef.value.handleSubmit() // Sẽ cập nhật khi có WorkShiftForm
   }
 }
 
 /**
  * Hàm Lưu (Thêm mới hoặc Cập nhật)
  */
-const handleSave = (formData) => {
-  if (candidateToEdit.value) {
-    // Chế độ Sửa
-    const index = masterCandidateList.value.findIndex(
-      (c) => c.CandidateID === candidateToEdit.value.CandidateID,
-    )
-    if (index !== -1) {
-      masterCandidateList.value[index] = { ...masterCandidateList.value[index], ...formData }
+const handleSave = async (formData) => {
+  try {
+    if (shiftToEdit.value) {
+      // Chế độ Sửa
+      await ShiftAPI.update(shiftToEdit.value.shiftId, formData)
+    } else {
+      // Chế độ Thêm mới
+      await ShiftAPI.insert(formData)
     }
-  } else {
-    const newCandidate = {
-      ...formData,
-      CandidateID: new Date().getTime(),
-      Avatar: null,
-      AvatarColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      RecruitmentRoundName: 'Ứng tuyển',
-      Score: 0,
+    loadShifts() // Tải lại dữ liệu
+    handleCancelForm() // Đóng form
+  } catch (error) {
+    console.error('Lỗi khi lưu:', error)
+    if (error.response && error.response.status === 400) {
+      //
+      alert(`Lỗi: ${error.response.data.message}`)
+    } else {
+      alert('Có lỗi xảy ra, vui lòng thử lại.')
     }
-    masterCandidateList.value.unshift(newCandidate)
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(masterCandidateList.value))
-
-  performSearch()
-
-  handleCancelForm()
 }
 
 /**
  * Hàm Xóa
  */
-const handleDelete = (row) => {
-  if (confirm(`Bạn có chắc muốn xóa ứng viên "${row.CandidateName}" không?`)) {
-    masterCandidateList.value = masterCandidateList.value.filter(
-      (item) => item.CandidateID !== row.CandidateID,
-    )
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(masterCandidateList.value))
-    performSearch()
+const handleDelete = async (row) => {
+  try {
+    //
+    if (confirm(`Bạn có chắc muốn xóa ca "${row.shiftName}" không?`)) {
+      await ShiftAPI.delete(row.shiftId)
+      loadShifts()
+    }
+  } catch (error) {
+    console.error('Lỗi khi xóa:', error)
+    alert('Có lỗi xảy ra, không thể xóa.')
   }
 }
+
+// Đây là hàm emit từ Form (sẽ đổi tên handleAddShift sau)
 const handleAddCandidate = (formData) => {
   handleSave(formData)
 }

@@ -3,75 +3,84 @@
     <div class="form-content">
       <div class="form-layout">
         <BaseInput
+          class="inline"
           v-model="formData.shiftCode"
           label="Mã ca"
           :required="true"
           placeholder="Nhập mã ca"
           :error="errors.shiftCode"
-          class="span-1"
         />
 
         <BaseInput
+          class="inline"
           v-model="formData.shiftName"
           label="Tên ca"
           :required="true"
           placeholder="Nhập tên ca"
           :error="errors.shiftName"
-          class="span-1"
         />
 
-        <BaseInput
-          v-model="formData.shiftBeginTime"
-          label="Giờ vào ca"
-          :required="true"
-          type="time"
-          :error="errors.shiftBeginTime"
-          class="span-1"
-        />
+        <div class="form-row">
+          <BaseInput
+            class="inline half"
+            v-model="formData.shiftBeginTime"
+            label="Giờ vào ca"
+            :required="true"
+            type="time"
+            :error="errors.shiftBeginTime"
+          />
 
-        <BaseInput
-          v-model="formData.shiftEndTime"
-          label="Giờ hết ca"
-          :required="true"
-          type="time"
-          :error="errors.shiftEndTime"
-          class="span-1"
-        />
+          <BaseInput
+            class="inline half"
+            v-model="formData.shiftEndTime"
+            label="Giờ hết ca"
+            :required="true"
+            type="time"
+            :error="errors.shiftEndTime"
+          />
+        </div>
 
-        <BaseInput
-          v-model="formData.shiftBeginBreakTime"
-          label="Bắt đầu nghỉ giữa ca"
-          type="time"
-          class="span-1"
-        />
+        <div class="form-row">
+          <BaseInput
+            class="inline half"
+            v-model="formData.shiftBeginBreakTime"
+            label="Bắt đầu nghỉ giữa ca"
+            type="time"
+          />
 
-        <BaseInput
-          v-model="formData.shiftEndBreakTime"
-          label="Kết thúc nghỉ giữa ca"
-          type="time"
-          class="span-1"
-        />
+          <BaseInput
+            class="inline half"
+            v-model="formData.shiftEndBreakTime"
+            label="Kết thúc nghỉ giữa ca"
+            type="time"
+          />
+        </div>
 
-        <BaseInput
-          v-model="workTimeHours"
-          label="Thời gian làm việc (giờ)"
-          :disabled="true"
-          class="span-1"
-        />
+        <div class="form-row">
+          <BaseInput
+            class="inline half"
+            v-model="workTimeHours"
+            label="Thời gian làm việc (giờ)"
+            :disabled="true"
+          />
+          <BaseInput
+            class="inline half"
+            v-model="breakTimeHours"
+            label="Thời gian nghỉ giữa ca (giờ)"
+            :disabled="true"
+          />
+        </div>
 
-        <BaseInput
-          v-model="breakTimeHours"
-          label="Thời gian nghỉ giữa ca (giờ)"
-          :disabled="true"
-          class="span-1"
-        />
-
-        <BaseInput
-          v-model="formData.shiftDescription"
-          label="Mô tả"
-          placeholder="Nhập mô tả"
-          class="span-2"
-        />
+        <div class="form-group span-row-4 inline">
+          <label class="form-label">Mô tả</label>
+          <div class="control-wrapper">
+            <textarea
+              v-model="formData.shiftDescription"
+              class="text-input"
+              placeholder="Nhập mô tả"
+            ></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </form>
@@ -110,12 +119,10 @@ const errors = ref({})
  */
 const parseTime = (timeString) => {
   if (!timeString) return 0
-  try {
-    const [hours, minutes] = timeString.split(':').map(Number)
-    return hours * 60 + minutes
-  } catch (e) {
-    return 0
-  }
+  const parts = String(timeString).split(':').map(Number)
+  if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0
+  const [hours, minutes] = parts
+  return hours * 60 + minutes
 }
 
 /**
@@ -194,12 +201,14 @@ watch(
 
 /**
  * Validate form trước khi submit
- * [cite_start]Các rule dựa trên Đề đánh giá và Shift.cs [cite: 25, 27, 28]
+ * Các rule dựa trên Đề đánh giá và Shift.cs
  */
 const validateForm = () => {
   errors.value = {}
   let isValid = true
-  const data = formData.value[cite_start] // 1. Mã ca [cite: 25, 27]
+  const data = formData.value
+
+  // 1. Mã ca
   if (!data.shiftCode?.trim()) {
     errors.value.shiftCode = 'Mã ca không được để trống'
     isValid = false
@@ -208,7 +217,7 @@ const validateForm = () => {
     isValid = false
   }
 
-  ;[cite_start] // 2. Tên ca [cite: 25, 28]
+  // 2. Tên ca
   if (!data.shiftName?.trim()) {
     errors.value.shiftName = 'Tên ca không được để trống'
     isValid = false
@@ -217,13 +226,13 @@ const validateForm = () => {
     isValid = false
   }
 
-  ;[cite_start] // 3. Giờ vào ca [cite: 25]
+  // 3. Giờ vào ca
   if (!data.shiftBeginTime) {
     errors.value.shiftBeginTime = 'Giờ vào ca không được để trống'
     isValid = false
   }
 
-  ;[cite_start] // 4. Giờ hết ca [cite: 25]
+  // 4. Giờ hết ca
   if (!data.shiftEndTime) {
     errors.value.shiftEndTime = 'Giờ hết ca không được để trống'
     isValid = false
@@ -238,7 +247,7 @@ const validateForm = () => {
  */
 const handleSubmit = () => {
   if (validateForm()) {
-    ;[cite_start] // Thêm các giá trị tính toán vào object trước khi gửi đi [cite: 23]
+    // Thêm các giá trị tính toán vào object trước khi gửi đi
     const dataToSubmit = {
       ...formData.value,
       workTimeHours: parseFloat(workTimeHours.value),
@@ -277,19 +286,79 @@ defineExpose({
 .form-content {
   flex: 1;
   overflow-y: auto;
-  /* padding-right: 24px; Đã có padding ở dialog rồi */
   padding: 16px 24px;
 }
 
+/* Sử dụng CSS Grid cho layout 3 cột */
 .form-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 cột bằng nhau */
-  gap: 16px 24px; /* 16px theo chiều dọc, 24px theo chiều ngang */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   width: 100%;
 }
 
-/* class tiện ích để 1 trường chiếm 2 cột */
-.span-2 {
-  grid-column: span 2;
+/* Custom styling cho <textarea>
+  (Sao chép từ BaseInput để nhất quán)
+*/
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.form-group.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.form-group.inline .form-label {
+  width: 160px;
+  margin-bottom: 0;
+}
+.form-group.inline .texteditor-input {
+  width: 100%;
+}
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+.form-row .form-group.half {
+  flex: 1 1 0;
+}
+.form-label {
+  font-weight: 500;
+  color: #1f1f1f;
+}
+.control-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+}
+.text-input {
+  border: 1px solid #dddde4;
+  border-radius: 4px;
+  padding: 9px 12px;
+  height: 100%; /* Quan trọng: làm textarea co giãn */
+  min-height: 100px; /* Đặt chiều cao tối thiểu */
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical; /* Cho phép thay đổi kích thước theo chiều dọc */
+}
+.text-input:hover {
+  border-color: #2680eb;
+}
+.text-input:focus {
+  border-color: #2680eb;
+  outline: none;
+}
+/* ----- Hết phần custom ----- */
+
+/* Lớp tiện ích để "Mô tả" chiếm 4 hàng */
+.span-row-4 {
+  grid-row: span 4;
+  display: flex; /* Cần thiết để textarea bên trong co giãn 100% */
+  flex-direction: column;
 }
 </style>

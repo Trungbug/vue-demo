@@ -156,7 +156,9 @@ table {
 
 th,
 td {
-  padding: 12px 16px;
+  position: relative;
+  height: 32px;
+  padding: 0 16px;
   text-align: left;
   border-bottom: 1px solid #e0e6ec;
   white-space: nowrap; /* Ngăn text xuống dòng */

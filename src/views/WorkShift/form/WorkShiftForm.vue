@@ -21,38 +21,42 @@
         />
 
         <div class="form-row">
-          <BaseInput
+          <DatetimePicker
             class="inline half"
             v-model="formData.shiftBeginTime"
             label="Giờ vào ca"
             :required="true"
-            type="time"
+            placeholder="HH:MM"
+            :minute-step="30"
             :error="errors.shiftBeginTime"
           />
 
-          <BaseInput
+          <DatetimePicker
             class="inline half"
             v-model="formData.shiftEndTime"
             label="Giờ hết ca"
             :required="true"
-            type="time"
+            placeholder="HH:MM"
+            :minute-step="30"
             :error="errors.shiftEndTime"
           />
         </div>
 
         <div class="form-row">
-          <BaseInput
+          <DatetimePicker
             class="inline half"
             v-model="formData.shiftBeginBreakTime"
             label="Bắt đầu nghỉ giữa ca"
-            type="time"
+            placeholder="HH:MM"
+            :minute-step="30"
           />
 
-          <BaseInput
+          <DatetimePicker
             class="inline half"
             v-model="formData.shiftEndBreakTime"
             label="Kết thúc nghỉ giữa ca"
-            type="time"
+            placeholder="HH:MM"
+            :minute-step="30"
           />
         </div>
 
@@ -89,7 +93,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import BaseInput from '@/components/input/Input.vue'
-
+import DatetimePicker from '@/components/datetime/DatetimePicker.vue'
 const props = defineProps({
   initialData: {
     type: Object,
@@ -103,7 +107,7 @@ const emit = defineEmits(['submit', 'cancel'])
 const createEmptyForm = () => ({
   shiftCode: '',
   shiftName: '',
-  shiftBeginTime: null, // Dùng null cho input time
+  shiftBeginTime: null,
   shiftEndTime: null,
   shiftBeginBreakTime: null,
   shiftEndBreakTime: null,
@@ -305,6 +309,11 @@ defineExpose({
   flex-direction: column;
   gap: 8px;
   width: 100%;
+}
+.form-group.inline :deep(.form-label) {
+  width: 160px;
+  margin-bottom: 0;
+  flex-shrink: 0; /* Đảm bảo label không bị co lại */
 }
 .form-group.inline {
   flex-direction: row;

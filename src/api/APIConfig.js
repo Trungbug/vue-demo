@@ -1,7 +1,16 @@
+/**
+ * API axios instance cấu hình chung cho toàn bộ project
+ * @module APIConfig
+ * Created By NMDUC - 18/11/2025
+ */
 import axios from 'axios'
 
 const baseURL = 'https://localhost:7248/api'
 
+/**
+ * Tạo instance axios với cấu hình mặc định
+ * @type {import('axios').AxiosInstance}
+ */
 let api = axios.create({
   baseURL: baseURL,
   headers: {
@@ -9,10 +18,11 @@ let api = axios.create({
   },
 })
 
+// Thêm interceptor để xử lý response chung (nếu cần xử lý error/generic)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // ...
+    // có thể log hoặc xử lý các mã lỗi chung ở đây
     return Promise.reject(error)
   },
 )

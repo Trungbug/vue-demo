@@ -87,14 +87,12 @@
 import { ref, onMounted, watch } from 'vue'
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
-// TODO: Bước sau bạn sẽ cần tạo file WorkShiftForm.vue
-// import WorkShiftForm from '@/views/WorkShift/form/WorkShiftForm.vue'
-import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue' // Tạm thời vẫn dùng form cũ
+import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
 import ShiftAPI from '@/api/ShiftAPI.js'
 
 const isFormVisible = ref(false)
-const candidateFormRef = ref(null) // Sẽ đổi tên sau khi có WorkShiftForm
-const shiftToEdit = ref(null) // Đổi tên từ candidateToEdit
+const candidateFormRef = ref(null)
+const shiftToEdit = ref(null)
 const dialogTitle = ref('Thêm ca làm việc')
 
 // --- PHẦN DỮ LIỆU BẢNG ---
@@ -121,8 +119,8 @@ const shiftFields = ref([
 
 const searchQuery = ref('')
 const searchTimeout = ref(null)
-const shiftRows = ref([]) // Dữ liệu API sẽ được đổ vào đây
-const totalRecords = ref(0) // Để hiển thị tổng số
+const shiftRows = ref([])
+const totalRecords = ref(0)
 
 // 2. Hàm gọi API
 onMounted(() => {
@@ -134,11 +132,7 @@ const loadShifts = async () => {
     const response = await ShiftAPI.getPaging(20, 1, searchQuery.value)
 
     // BE trả về cấu trúc { success: true, data: { totalRecords: ..., data: [...] } }
-    //
-    //
-    //
     if (response.data.success) {
-      // console.log('response.data.data.data', response.data.data.data)
       shiftRows.value = response.data.data.data
       totalRecords.value = response.data.data.totalRecords
     } else {
@@ -146,7 +140,7 @@ const loadShifts = async () => {
     }
   } catch (err) {
     console.error('❌ Lỗi gọi API:', err)
-    // Xử lý lỗi (ví dụ: hiển thị toast message)
+    // Xử lý lỗi
     if (err.code === 'ERR_CERT_AUTHORITY_INVALID') {
       alert(
         'LỖI SSL: Bạn chưa chấp nhận chứng chỉ HTTPS (self-signed) của BE. Hãy mở BE URL (https://localhost:7248/api/Shift) trên tab mới và nhấn "Proceed".',
@@ -157,10 +151,7 @@ const loadShifts = async () => {
   }
 }
 
-// 3. Hàm tìm kiếm
-// const performSearch = () => {
-//   loadShifts() // Chỉ cần gọi lại API với searchQuery
-// }
+// 3. Hàm tìm kiếm (debounced)
 
 watch(searchQuery, (newQuery, oldQuery) => {
   // Xóa timeout cũ nếu người dùng tiếp tục gõ
@@ -168,10 +159,10 @@ watch(searchQuery, (newQuery, oldQuery) => {
     clearTimeout(searchTimeout.value)
   }
 
-  // Đặt một timeout mới
+  // Debounce: gọi API sau 500ms
   searchTimeout.value = setTimeout(() => {
-    loadShifts() // Gọi API sau 500ms
-  }, 500) // Bạn có thể điều chỉnh thời gian chờ (ví dụ: 300ms hoặc 500ms)
+    loadShifts()
+  }, 500)
 })
 // --- PHẦN FORM/DIALOG ---
 
@@ -195,7 +186,7 @@ const handleCancelForm = () => {
 // Gọi hàm submit của form con
 const handleSubmitForm = () => {
   if (candidateFormRef.value) {
-    candidateFormRef.value.handleSubmit() // Sẽ cập nhật khi có WorkShiftForm
+    candidateFormRef.value.handleSubmit()
   }
 }
 
@@ -240,7 +231,7 @@ const handleDelete = async (row) => {
   }
 }
 
-// Đây là hàm emit từ Form (sẽ đổi tên handleAddShift sau)
+// Hàm emit từ form
 const handleAddCandidate = (formData) => {
   handleSave(formData)
 }

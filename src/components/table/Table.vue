@@ -368,7 +368,7 @@ thead.ms-thead .actions-header .ms-th-content {
   padding: 0; /* Các ô này không cần padding trái/phải */
 }
 /* 2. Áp dụng viền trái CHỈ cho cột checkbox (cột đầu tiên) trong thead */
-/* Điều này sẽ tạo ra viền ngoài cùng bên trái */
+/* Viền trái cho checkbox header */
 thead.ms-thead .checkbox-cell {
   border-left: 1px solid #d1d5db;
   width: 60px;

@@ -1,3 +1,7 @@
+/**
+ * Router configuration cho ứng dụng
+ * Created By NMDUC - 18/11/2025
+ */
 import { createRouter, createWebHistory } from 'vue-router'
 import WorkShift from '@/views/WorkShift/WorkShift.vue'
 
@@ -12,9 +16,7 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
+      // lazy-loaded route component
       component: () => import('@/views/WorkShift/WorkShift.vue'),
     },
   ],

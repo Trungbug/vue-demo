@@ -1,172 +1,75 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="candidate-form-container">
+  <form class="workshift-form-container">
     <div class="form-content">
-      <div class="avatar-candidate">
-        <div class="form-group avatar-section">
-          <div class="avatar-placeholder" @click="triggerAvatarUpload">
-            <span>Ảnh</span>
-            <input
-              type="file"
-              ref="avatarInput"
-              @change="handleAvatarChange"
-              style="display: none"
-              accept="image/*"
-            />
-          </div>
-        </div>
-      </div>
       <div class="form-layout">
         <BaseInput
-          v-model="formData.CandidateName"
-          label="Họ và tên"
+          v-model="formData.shiftCode"
+          label="Mã ca"
           :required="true"
-          class="full-width"
-          placeholder="Nhập họ và tên"
-          :error="errors.CandidateName"
-        />
-        <div class="form-row">
-          <BaseDatePicker
-            v-model="formData.Birthday"
-            label="Ngày sinh"
-            placeholder="Chọn ngày sinh"
-          />
-
-          <BaseInput
-            v-model="formData.Gender"
-            label="Giới tính"
-            placeholder="Chọn giới tính"
-            class="half-width"
-          />
-        </div>
-
-        <BaseInput
-          v-model="formData.Area"
-          label="Khu vực"
-          placeholder="Chọn giá trị"
+          placeholder="Nhập mã ca"
+          :error="errors.shiftCode"
           class="span-1"
         />
-        <div class="form-row">
-          <BaseInput
-            v-model="formData.Mobile"
-            label="Số điện thoại"
-            placeholder="Nhập số điện thoại"
-            class="half-width"
-            :error="errors.Mobile"
-          />
-          <BaseInput
-            v-model="formData.Email"
-            label="Email"
-            type="email"
-            placeholder="Nhập Email"
-            class="half-width"
-            :error="errors.Email"
-          />
-        </div>
 
         <BaseInput
-          v-model="formData.Address"
-          label="Địa chỉ"
-          placeholder="Nhập địa chỉ"
-          class="span-4"
-        />
-
-        <div class="form-section-header span-4">HỌC VẤN</div>
-
-        <BaseInput
-          v-model="formData.EducationDegreeName"
-          label="Trình độ đào tạo"
-          placeholder="Nhập trình độ đào tạo"
-          class="span-2"
-        />
-        <BaseInput
-          v-model="formData.EducationPlaceName"
-          label="Nơi đào tạo"
-          placeholder="Nhập nơi đào tạo"
-          class="span-2"
+          v-model="formData.shiftName"
+          label="Tên ca"
+          :required="true"
+          placeholder="Nhập tên ca"
+          :error="errors.shiftName"
+          class="span-1"
         />
 
         <BaseInput
-          v-model="formData.EducationMajorName"
-          label="Chuyên ngành"
-          placeholder="Nhập chuyên ngành"
-          class="span-2"
-        />
-        <div class="form-section-header span-4"></div>
-        <BaseDatePicker
-          v-model="formData.Birthday"
-          label="Ngày sinh"
-          placeholder="Chọn ngày sinh"
+          v-model="formData.shiftBeginTime"
+          label="Giờ vào ca"
+          :required="true"
+          type="time"
+          :error="errors.shiftBeginTime"
+          class="span-1"
         />
 
         <BaseInput
-          v-model="formData.ChannelName"
-          label="Nguồn ứng viên"
-          placeholder="Chọn nguồn ứng viên"
-          class="span-2"
+          v-model="formData.shiftEndTime"
+          label="Giờ hết ca"
+          :required="true"
+          type="time"
+          :error="errors.shiftEndTime"
+          class="span-1"
         />
 
         <BaseInput
-          v-model="formData.AttractivePersonnel"
-          label="Nhân sự khai thác"
-          placeholder="Chọn nhân sự"
-          class="span-2"
-        />
-        <BaseInput
-          v-model="formData.Collaborator"
-          label="Cộng tác viên"
-          placeholder="Chọn cộng tác viên"
-          class="span-2"
+          v-model="formData.shiftBeginBreakTime"
+          label="Bắt đầu nghỉ giữa ca"
+          type="time"
+          class="span-1"
         />
 
         <BaseInput
-          v-model="formData.WorkPlaceRecent"
-          label="Nơi làm việc gần đây"
-          placeholder="Nhập nơi làm việc gần đây"
-          class="span-4"
+          v-model="formData.shiftEndBreakTime"
+          label="Kết thúc nghỉ giữa ca"
+          type="time"
+          class="span-1"
         />
 
-        <div class="form-section-header span-4">KINH NGHIỆM LÀM VIỆC</div>
         <BaseInput
-          v-model="formData.ExperienceWorkplace"
-          label="Nơi làm việc"
-          placeholder="Nhập nơi làm việc"
-          class="span-2"
+          v-model="workTimeHours"
+          label="Thời gian làm việc (giờ)"
+          :disabled="true"
+          class="span-1"
         />
-        <div class="form-group span-2">
-          <label class="form-label">Thời gian</label>
-          <div class="date-range">
-            <BaseDatePicker
-              v-model="formData.ExperienceFrom"
-              placeholder="Từ tháng/năm"
-              type="month"
-              format="MM/YYYY"
-            />
-            <span>-</span>
-            <BaseDatePicker
-              v-model="formData.ExperienceTo"
-              placeholder="Đến tháng/năm"
-              type="month"
-              format="MM/YYYY"
-            />
-            <BaseDatePicker
-              v-model="formData.ExperienceTo"
-              placeholder="Đến tháng/năm"
-              type="month"
-              format="MM/YYYY"
-            />
-          </div>
-        </div>
 
         <BaseInput
-          v-model="formData.ExperienceJobTitle"
-          label="Vị trí công việc"
-          placeholder="Nhập vị trí công việc"
-          class="span-2"
+          v-model="breakTimeHours"
+          label="Thời gian nghỉ giữa ca (giờ)"
+          :disabled="true"
+          class="span-1"
         />
+
         <BaseInput
-          v-model="formData.ExperienceDescription"
-          label="Mô tả công việc"
-          placeholder="Nhập mô tả công việc"
+          v-model="formData.shiftDescription"
+          label="Mô tả"
+          placeholder="Nhập mô tả"
           class="span-2"
         />
       </div>
@@ -175,10 +78,8 @@
 </template>
 
 <script setup>
-// *** THÊM 'watch' VÀO ĐÂY ***
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import BaseInput from '@/components/input/Input.vue'
-import BaseDatePicker from '@/components/datetime/DateTimePicker.vue'
 
 const props = defineProps({
   initialData: {
@@ -189,98 +90,175 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// Hàm tạo form rỗng
+// Hàm tạo form rỗng (đúng với Shift)
 const createEmptyForm = () => ({
-  CandidateName: '',
-  Birthday: '',
-  Gender: '',
-  Area: '',
-  Mobile: '',
-  Email: '',
-  Address: '',
-  EducationDegreeName: '',
-  EducationPlaceName: '',
-  EducationMajorName: '',
-  ApplyDate: '',
-  ChannelName: '',
-  AttractivePersonnel: '',
-  Collaborator: '',
-  WorkPlaceRecent: '',
-  ExperienceWorkplace: '',
-  ExperienceFrom: '',
-  ExperienceTo: '',
-  ExperienceJobTitle: '',
-  ExperienceDescription: '',
+  shiftCode: '',
+  shiftName: '',
+  shiftBeginTime: null, // Dùng null cho input time
+  shiftEndTime: null,
+  shiftBeginBreakTime: null,
+  shiftEndBreakTime: null,
+  shiftDescription: '',
 })
 
 const formData = ref(createEmptyForm())
 const errors = ref({})
 
-// *** THÊM WATCHER ĐỂ CẬP NHẬT FORMDATA KHI PROP THAY ĐỔI ***
+/**
+ * Hàm parse chuỗi "HH:mm" sang số phút trong ngày
+ * @param {string} timeString - Chuỗi thời gian (ví dụ: "08:30")
+ */
+const parseTime = (timeString) => {
+  if (!timeString) return 0
+  try {
+    const [hours, minutes] = timeString.split(':').map(Number)
+    return hours * 60 + minutes
+  } catch (e) {
+    return 0
+  }
+}
+
+/**
+ * Tính toán thời gian làm việc (có xử lý qua đêm)
+ * Trả về số giờ (dạng 8.5)
+ */
+const workTimeHours = computed(() => {
+  const start = parseTime(formData.value.shiftBeginTime)
+  const end = parseTime(formData.value.shiftEndTime)
+  if (start === 0 || end === 0) return 0
+
+  let durationMin = 0
+  if (end >= start) {
+    // Ca trong ngày
+    durationMin = end - start
+  } else {
+    // Ca qua đêm (ví dụ: 22:00 - 06:00)
+    const minutesInDay = 24 * 60
+    durationMin = minutesInDay - start + end
+  }
+  return (durationMin / 60).toFixed(1) // Làm tròn 1 chữ số thập phân
+})
+
+/**
+ * Tính toán thời gian nghỉ (có xử lý qua đêm)
+ * Trả về số giờ (dạng 1.0)
+ */
+const breakTimeHours = computed(() => {
+  const start = parseTime(formData.value.shiftBeginBreakTime)
+  const end = parseTime(formData.value.shiftEndBreakTime)
+  if (start === 0 || end === 0) return 0
+
+  let durationMin = 0
+  if (end >= start) {
+    // Ca trong ngày
+    durationMin = end - start
+  } else {
+    // Ca qua đêm
+    const minutesInDay = 24 * 60
+    durationMin = minutesInDay - start + end
+  }
+  return (durationMin / 60).toFixed(1)
+})
+
+// Watcher để cập nhật formdata khi prop initialData thay đổi (chế độ Sửa)
 watch(
   () => props.initialData,
   (newData) => {
     if (newData) {
       formData.value = { ...newData }
+
+      // Backend (Shift.cs) dùng TimeSpan, nó có thể trả về "HH:mm:ss"
+      // Cần cắt bỏ ":ss" nếu có để input time (HH:mm) hiểu
+      if (formData.value.shiftBeginTime && formData.value.shiftBeginTime.length > 5) {
+        formData.value.shiftBeginTime = formData.value.shiftBeginTime.substring(0, 5)
+      }
+      if (formData.value.shiftEndTime && formData.value.shiftEndTime.length > 5) {
+        formData.value.shiftEndTime = formData.value.shiftEndTime.substring(0, 5)
+      }
+      if (formData.value.shiftBeginBreakTime && formData.value.shiftBeginBreakTime.length > 5) {
+        formData.value.shiftBeginBreakTime = formData.value.shiftBeginBreakTime.substring(0, 5)
+      }
+      if (formData.value.shiftEndBreakTime && formData.value.shiftEndBreakTime.length > 5) {
+        formData.value.shiftEndBreakTime = formData.value.shiftEndBreakTime.substring(0, 5)
+      }
     } else {
       formData.value = createEmptyForm()
       errors.value = {}
     }
   },
   {
-    immediate: true, // Chạy ngay khi component được tạo
-    deep: true, // Cần thiết nếu `initialData` có object lồng nhau (mặc dù ở đây không)
+    immediate: true,
+    deep: true,
   },
 )
 
+/**
+ * Validate form trước khi submit
+ * [cite_start]Các rule dựa trên Đề đánh giá và Shift.cs [cite: 25, 27, 28]
+ */
 const validateForm = () => {
   errors.value = {}
   let isValid = true
-
-  if (!formData.value.CandidateName?.trim()) {
-    errors.value.CandidateName = 'Họ và tên không được để trống'
+  const data = formData.value[cite_start] // 1. Mã ca [cite: 25, 27]
+  if (!data.shiftCode?.trim()) {
+    errors.value.shiftCode = 'Mã ca không được để trống'
+    isValid = false
+  } else if (data.shiftCode.length > 20) {
+    errors.value.shiftCode = 'Mã ca không được vượt quá 20 ký tự'
     isValid = false
   }
 
-  if (formData.value.Email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.value.Email)) {
-      errors.value.Email = 'Email không đúng định dạng'
-      isValid = false
-    }
+  ;[cite_start] // 2. Tên ca [cite: 25, 28]
+  if (!data.shiftName?.trim()) {
+    errors.value.shiftName = 'Tên ca không được để trống'
+    isValid = false
+  } else if (data.shiftName.length > 50) {
+    errors.value.shiftName = 'Tên ca không được vượt quá 50 ký tự'
+    isValid = false
   }
 
-  if (formData.value.Mobile) {
-    const phoneRegex = /^[0-9\s+]{10,15}$/
-    if (!phoneRegex.test(formData.value.Mobile.replace(/ /g, ''))) {
-      errors.value.Mobile = 'Số điện thoại không đúng định dạng'
-      isValid = false
-    }
+  ;[cite_start] // 3. Giờ vào ca [cite: 25]
+  if (!data.shiftBeginTime) {
+    errors.value.shiftBeginTime = 'Giờ vào ca không được để trống'
+    isValid = false
   }
-  if (formData.value.Birthday) {
-    const birthday = new Date(formData.value.Birthday)
-    const today = new Date()
-    if (birthday > today) {
-      errors.value.Birthday = 'Ngày sinh không thể lớn hơn ngày hiện tại'
-      isValid = false
-    }
+
+  ;[cite_start] // 4. Giờ hết ca [cite: 25]
+  if (!data.shiftEndTime) {
+    errors.value.shiftEndTime = 'Giờ hết ca không được để trống'
+    isValid = false
   }
 
   return isValid
 }
 
+/**
+ * Hàm này được gọi từ component cha (WorkShift.vue)
+ * Nó sẽ validate, nếu OK thì emit 'submit'
+ */
 const handleSubmit = () => {
   if (validateForm()) {
-    emit('submit', formData.value)
+    ;[cite_start] // Thêm các giá trị tính toán vào object trước khi gửi đi [cite: 23]
+    const dataToSubmit = {
+      ...formData.value,
+      workTimeHours: parseFloat(workTimeHours.value),
+      breakTimeHours: parseFloat(breakTimeHours.value),
+    }
+    emit('submit', dataToSubmit)
   } else {
+    console.log('Validate thất bại', errors.value)
     alert('Vui lòng kiểm tra lại thông tin nhập liệu!')
   }
 }
 
+/**
+ * Hàm này cũng được gọi từ cha
+ */
 const handleCancel = () => {
   emit('cancel')
 }
 
+// Expose các hàm để component cha gọi
 defineExpose({
   handleSubmit,
   handleCancel,
@@ -288,7 +266,7 @@ defineExpose({
 </script>
 
 <style scoped>
-.candidate-form-container {
+.workshift-form-container {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -297,98 +275,21 @@ defineExpose({
 }
 
 .form-content {
-  display: flex;
   flex: 1;
   overflow-y: auto;
-  padding-right: 24px;
+  /* padding-right: 24px; Đã có padding ở dialog rồi */
+  padding: 16px 24px;
 }
 
 .form-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 cột bằng nhau */
+  gap: 16px 24px; /* 16px theo chiều dọc, 24px theo chiều ngang */
   width: 100%;
 }
 
-.avatar-candidate {
-  margin-right: 24px;
-}
-
-.span-1 {
-  grid-column: span 1;
-}
+/* class tiện ích để 1 trường chiếm 2 cột */
 .span-2 {
   grid-column: span 2;
-}
-.span-3 {
-  grid-column: span 3;
-}
-.span-4 {
-  grid-column: span 4;
-}
-
-.form-section-header {
-  grid-column: span 4;
-  font-size: 16px;
-  font-weight: 700;
-  color: #1f1f1f;
-  margin-top: 16px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 8px;
-}
-
-.date-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.date-range span {
-  flex-shrink: 0;
-}
-
-.avatar-section {
-  flex: 0 0 120px;
-}
-
-.avatar-placeholder {
-  width: 63px;
-  height: 63px;
-  border: 2px dashed #dddde4;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-align: center;
-  color: #999;
-  padding: 8px;
-  box-sizing: border-box;
-}
-.avatar-placeholder:hover {
-  border-color: #2680eb;
-}
-.avatar-placeholder i {
-  font-size: 40px;
-  color: #c5ccd5;
-}
-.avatar-placeholder span {
-  font-size: 12px;
-  margin-top: 8px;
-}
-.full-width {
-  width: 100%;
-}
-.form-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px; /* khoảng cách giữa 2 input */
-  width: 100%;
-}
-
-.half-width {
-  flex: 1;
-  width: 50%;
 }
 </style>

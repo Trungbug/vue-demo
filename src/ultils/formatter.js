@@ -1,4 +1,13 @@
-// very small utils
+/**
+ * Utils định dạng hiển thị nhỏ
+ * Created By NMDUC - 18/11/2025
+ */
+
+/**
+ * Chuyển giá trị về chuỗi số có phân cách hàng nghìn
+ * @param {number|string|null|undefined} v Giá trị đầu vào
+ * @returns {string|number} Trả về chuỗi đã format hoặc '-' nếu không có giá trị
+ */
 export const formatNumber = (v) => {
   if (v === null || v === undefined || v === '') return '-'
   const n = Number(v)
@@ -6,6 +15,11 @@ export const formatNumber = (v) => {
   return n.toLocaleString()
 }
 
+/**
+ * Định dạng ngày giờ thành `dd/mm/yyyy hh:MM`
+ * @param {string|Date|number} v Giá trị ngày (ISO string, timestamp hoặc Date)
+ * @returns {string} Chuỗi định dạng ngày hoặc '-' nếu không có giá trị
+ */
 export const formatDate = (v) => {
   if (!v) return '-'
   // accept ISO string like "2025-08-27T09:33:43.000+07:00"
@@ -20,10 +34,16 @@ export const formatDate = (v) => {
   return `${dd}/${mm}/${yy} ${hh}:${min}`
 }
 
+/**
+ * Đảm bảo trả về chuỗi, xử lý null/undefined
+ * @param {any} v Giá trị bất kỳ
+ * @returns {string} Chuỗi hoặc '-' nếu không có giá trị
+ */
 export const formatText = (v) => {
   if (v === null || v === undefined || v === '') return '-'
   return String(v)
 }
+
 /**
  * Hàm lấy 2 chữ cái đầu của tên
  * @param {string} name Tên đầy đủ

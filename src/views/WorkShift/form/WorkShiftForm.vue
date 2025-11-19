@@ -257,6 +257,8 @@ const handleSubmit = () => {
       workTimeHours: parseFloat(workTimeHours.value),
       breakTimeHours: parseFloat(breakTimeHours.value),
     }
+    // Thêm .value vào formData
+    console.log('Dữ liệu gửi đi:', JSON.stringify(formData.value, null, 2))
     emit('submit', dataToSubmit)
   } else {
     console.log('Validate thất bại', errors.value)
@@ -271,10 +273,25 @@ const handleCancel = () => {
   emit('cancel')
 }
 
-// Expose các hàm để component cha gọi
+// Expose methods to parent (handleSubmit, handleCancel, setErrors)
+
+// Cho phép component cha gán lỗi validation từ server
+const setErrors = (serverErrors) => {
+  const mapped = {}
+  if (serverErrors && typeof serverErrors === 'object') {
+    Object.keys(serverErrors).forEach((key) => {
+      const val = serverErrors[key]
+      if (Array.isArray(val) && val.length > 0) mapped[key] = String(val[0])
+      else mapped[key] = String(val)
+    })
+  }
+  errors.value = mapped
+}
+
 defineExpose({
   handleSubmit,
   handleCancel,
+  setErrors,
 })
 </script>
 

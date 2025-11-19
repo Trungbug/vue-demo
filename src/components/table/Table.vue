@@ -3,7 +3,7 @@
     <table>
       <thead class="ms-thead">
         <tr>
-          <th class="sticky-cell checkbox-cell">
+          <th class="sticky-cell checkbox-cell" v-if="showCheckbox">
             <div class="ms-th-checkbox">
               <input
                 type="checkbox"
@@ -18,52 +18,60 @@
             v-for="field in fields"
             :key="field.key"
             class="sticky-cell"
-            :style="{ width: field.width }"
+            :style="{ width: field.width, minWidth: field.width }"
+            :class="field.class"
           >
             <div class="ms-th-content">
-              <div class="menu-wrapper">
-                <div class="menu-button-container">
-                  <div class="ms-th-title" :title="field.label">
-                    {{ field.label }}
-                  </div>
-                </div>
+              <div class="ms-th-title" :title="field.label">
+                {{ field.label }}
               </div>
             </div>
           </th>
 
-          <th class="sticky-cell actions-header">
-            <div class="ms-th-content"></div>
+          <th class="sticky-cell actions-header" v-if="showActions">
+            <div class="ms-th-content">Chức năng</div>
           </th>
         </tr>
       </thead>
+
       <tbody>
         <tr
           v-for="row in rows"
-          :key="row.shiftId"
+          :key="row[rowKey]"
           class="table-row"
-          :class="{ 'row-checked': selectedRows.includes(row.shiftId) }"
+          :class="{ 'row-checked': selectedIds.includes(row[rowKey]) }"
         >
-          <td class="checkbox-cell">
+          <td class="checkbox-cell" v-if="showCheckbox">
             <input
               type="checkbox"
               class="ms-checkbox"
-              :checked="selectedRows.includes(row.shiftId)"
-              @change="handleRowCheck(row.shiftId)"
+              :checked="selectedIds.includes(row[rowKey])"
+              @change="handleRowCheck(row[rowKey])"
             />
           </td>
+
           <td v-for="field in fields" :key="field.key">
-            <div class="ms-td-content" :title="handleFormat(row[field.key], field.type || 'text')">
-              {{ handleFormat(row[field.key], field.type || 'text') }}
+            <div class="ms-td-content" :title="row[field.key]">
+              <slot :name="`cell-${field.key}`" :row="row" :value="row[field.key]">
+                {{ row[field.key] || '--' }}
+              </slot>
             </div>
           </td>
-          <td class="actions-cell">
+
+          <td class="actions-cell" v-if="showActions">
             <div class="action-buttons">
-              <button class="edit-text-btn" @click="handleEdit(row)">Sửa</button>
-              <button class="context-menu-btn" @click.stop="">
-                <i class="fas fa-ellipsis-h"></i>
-              </button>
+              <slot name="actions" :row="row">
+                <button class="edit-text-btn" @click="$emit('edit', row)">Sửa</button>
+                <button class="context-menu-btn" @click="$emit('delete', row)">
+                  <i class="fas fa-trash text-red"></i>
+                </button>
+              </slot>
             </div>
           </td>
+        </tr>
+
+        <tr v-if="rows.length === 0">
+          <td :colspan="totalColumns" class="text-center py-4 text-gray">Không có dữ liệu</td>
         </tr>
       </tbody>
     </table>
@@ -71,71 +79,53 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { formatNumber, formatDate, formatText } from '@/ultils/formatter'
+import { computed } from 'vue'
 
-//#region Props
 const props = defineProps({
-  fields: {
-    type: Array,
-    required: true,
-  },
-  rows: {
-    type: Array,
-    required: true,
-  },
+  fields: { type: Array, required: true }, // Cấu hình cột
+  rows: { type: Array, default: () => [] }, // Dữ liệu
+  rowKey: { type: String, default: 'id' }, // Tên trường ID (vd: shiftId, employeeId)
+  selectedIds: { type: Array, default: () => [] }, // Danh sách ID đang chọn (v-model)
+  showCheckbox: { type: Boolean, default: true },
+  showActions: { type: Boolean, default: true },
 })
-//#endregion
 
-//#region State
-const selectedRows = ref([])
-//#endregion
+const emit = defineEmits(['update:selectedIds', 'edit', 'delete'])
 
-//#region Computed
+// Tính toán tổng số cột để merge cell khi empty
+const totalColumns = computed(() => {
+  let count = props.fields.length
+  if (props.showCheckbox) count++
+  if (props.showActions) count++
+  return count
+})
+
+// Kiểm tra đã chọn hết chưa
 const isAllChecked = computed(() => {
-  return props.rows.length > 0 && selectedRows.value.length === props.rows.length
+  return props.rows.length > 0 && props.selectedIds.length === props.rows.length
 })
-//#endregion
 
-//#region Emits
-const emit = defineEmits(['edit', 'delete'])
-
-const handleFormat = (value, type) => {
-  if (value === null || value === undefined || value === '') return '--'
-  if (type === 'text' && typeof value === 'string' && value.match(/^\d{2}:\d{2}:\d{2}$/)) {
-    return value.substring(0, 5)
+// Xử lý chọn 1 dòng
+const handleRowCheck = (id) => {
+  const newSelected = [...props.selectedIds]
+  const index = newSelected.indexOf(id)
+  if (index === -1) {
+    newSelected.push(id)
+  } else {
+    newSelected.splice(index, 1)
   }
-  switch (type) {
-    case 'number':
-      return formatNumber(value)
-    case 'date':
-      return formatDate(value)
-    default:
-      return formatText(value)
-  }
+  emit('update:selectedIds', newSelected)
 }
 
-const handleEdit = (row) => {
-  emit('edit', row)
-}
-
+// Xử lý chọn tất cả
 const handleSelectAll = (event) => {
   if (event.target.checked) {
-    selectedRows.value = props.rows.map((row) => row.shiftId)
+    const allIds = props.rows.map((row) => row[props.rowKey])
+    emit('update:selectedIds', allIds)
   } else {
-    selectedRows.value = []
+    emit('update:selectedIds', [])
   }
 }
-
-const handleRowCheck = (shiftId) => {
-  const index = selectedRows.value.indexOf(shiftId)
-  if (index === -1) {
-    selectedRows.value.push(shiftId)
-  } else {
-    selectedRows.value.splice(index, 1)
-  }
-}
-//#endregion
 </script>
 
 <style scoped>

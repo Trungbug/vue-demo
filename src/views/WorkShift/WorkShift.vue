@@ -21,7 +21,7 @@
       <template #footer>
         <button type="button" class="btn-secondary" @click="handleCancelForm">Hủy</button>
         <button type="button" class="btn-primary" @click="handleSubmitForm">
-          {{ candidateToEdit ? 'Lưu' : 'Thêm' }}
+          {{ shiftToEdit ? 'Lưu' : 'Thêm' }}
         </button>
       </template>
     </BaseDialog>
@@ -206,12 +206,46 @@ const handleSave = async (formData) => {
     handleCancelForm() // Đóng form
   } catch (error) {
     console.error('Lỗi khi lưu:', error)
-    if (error.response && error.response.status === 400) {
-      //
-      alert(`Lỗi: ${error.response.data.message}`)
-    } else {
-      alert('Có lỗi xảy ra, vui lòng thử lại.')
+    // Cố gắng lấy thông tin lỗi có ý nghĩa từ response
+    let errMsg = 'Có lỗi xảy ra, vui lòng thử lại.'
+    if (error && error.response) {
+      const resp = error.response
+      const respData = resp.data
+      // Nếu backend gửi validation errors (ASP.NET style)
+      if (respData && respData.errors) {
+        // Map errors (take first message for each field)
+        const mapped = {}
+        Object.keys(respData.errors).forEach((k) => {
+          const v = respData.errors[k]
+          if (Array.isArray(v) && v.length > 0) mapped[k] = String(v[0])
+          else mapped[k] = String(v)
+        })
+        // Nếu form con tồn tại, gán lỗi để hiển thị theo field
+        if (candidateFormRef.value && candidateFormRef.value.setErrors) {
+          candidateFormRef.value.setErrors(mapped)
+        }
+        errMsg = respData.title || 'Có lỗi validate, vui lòng kiểm tra form.'
+      } else if (respData) {
+        if (typeof respData === 'string') {
+          errMsg = respData
+        } else if (respData.message) {
+          errMsg = respData.message
+        } else if (respData.title) {
+          errMsg = respData.title
+        } else {
+          try {
+            errMsg = JSON.stringify(respData)
+          } catch {
+            errMsg = String(respData)
+          }
+        }
+      } else {
+        errMsg = resp.statusText || errMsg
+      }
+    } else if (error && error.message) {
+      errMsg = error.message
     }
+    alert(`Lỗi: ${errMsg}`)
   }
 }
 

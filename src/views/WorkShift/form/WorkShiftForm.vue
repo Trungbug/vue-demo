@@ -85,6 +85,30 @@
             ></textarea>
           </div>
         </div>
+        <div class="form-group span-row-4 inline" v-if="formData.shiftId">
+          <label class="form-label">Trạng thái</label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input
+                type="radio"
+                :value="WorkShiftStatus.ACTIVE"
+                v-model="formData.shiftStatus"
+                name="shiftStatus"
+              />
+              <span class="radio-label">Đang sử dụng</span>
+            </label>
+
+            <label class="radio-item">
+              <input
+                type="radio"
+                :value="WorkShiftStatus.INACTIVE"
+                v-model="formData.shiftStatus"
+                name="shiftStatus"
+              />
+              <span class="radio-label">Ngưng sử dụng</span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   </form>
@@ -93,6 +117,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import BaseInput from '@/components/input/Input.vue'
+import { WorkShiftStatus } from '@/ultils/enums.js'
 import DatetimePicker from '@/components/datetime/DatetimePicker.vue'
 const props = defineProps({
   initialData: {
@@ -386,5 +411,50 @@ defineExpose({
   grid-row: span 4;
   display: flex; /* Cần thiết để textarea bên trong co giãn 100% */
   flex-direction: column;
+}
+
+/* Thêm CSS cho Radio Button */
+.radio-group {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 36px; /* Cùng chiều cao với input để căn giữa đẹp */
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.radio-item input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #009b71; /* Màu xanh giống ảnh */
+  cursor: pointer;
+  margin: 0;
+}
+
+.radio-label {
+  font-size: 14px;
+  color: #1f1f1f;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.status-active {
+  color: #009b71; /* Màu xanh giống radio button */
+  background-color: #edfdf8;
+}
+
+.status-inactive {
+  color: #6b7280;
+  background-color: #f3f4f6;
 }
 </style>

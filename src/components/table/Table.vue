@@ -40,6 +40,7 @@
           :key="row[rowKey]"
           class="table-row"
           :class="{ 'row-checked': selectedIds.includes(row[rowKey]) }"
+          @dblclick="$emit('row-dblclick', row)"
         >
           <td class="checkbox-cell" v-if="showCheckbox">
             <input
@@ -90,7 +91,7 @@ const props = defineProps({
   showActions: { type: Boolean, default: true },
 })
 
-const emit = defineEmits(['update:selectedIds', 'edit', 'delete'])
+const emit = defineEmits(['update:selectedIds', 'edit', 'delete', 'row-dblclick'])
 
 // Tính toán tổng số cột để merge cell khi empty
 const totalColumns = computed(() => {

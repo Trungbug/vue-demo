@@ -12,9 +12,12 @@ import './assets/css/common.css'
 import '@fontsource/inter'
 import './assets/css/icon.css'
 import '@fortawesome/fontawesome-free/css/all.css'
+import 'element-plus/dist/index.css'
+import ElementPlus from 'element-plus'
 
 const app = createApp(App)
 
+app.use(ElementPlus)
 app.use(router)
 
 app.mount('#app')

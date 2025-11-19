@@ -56,10 +56,17 @@
       <div class="table-area">
         <TheTable
           :fields="shiftFields"
-          :rows="shiftRows"
+          :rows="paginatedShifts"
           @edit="handleEdit"
           @delete="handleDelete"
-        />
+          @row-dblclick="handleEdit"
+        >
+          <template #cell-shiftStatus="{ value }">
+            <div class="status-badge" :class="value === 1 ? 'status-active' : 'status-inactive'">
+              {{ WorkShiftStatusText[value] ?? value }}
+            </div>
+          </template>
+        </TheTable>
       </div>
 
       <div class="paging">
@@ -68,30 +75,47 @@
         </div>
         <div class="pagination-controls">
           <span>Số bản ghi/trang</span>
-          <select>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
+          <select v-model="pageSize">
+            <option :value="25">25</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
           </select>
           <span
-            ><strong>1 - {{ shiftRows.length }}</strong> bản ghi</span
+            ><strong>{{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalRecords) }}</strong> bản ghi</span
           >
-          <button class="page-nav-btn">&lt;</button>
-          <button class="page-nav-btn">&gt;</button>
+          <button 
+            class="page-nav-btn" 
+            @click="currentPage > 1 && currentPage--"
+            :disabled="currentPage === 1"
+          >&lt;</button>
+          <button 
+            class="page-nav-btn" 
+            @click="currentPage * pageSize < totalRecords && currentPage++"
+            :disabled="currentPage * pageSize >= totalRecords"
+          >&gt;</button>
         </div>
       </div>
     </div>
+    <Notification ref="notificationRef" />
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
+import Notification from '@/components/notification/Notification.vue'
 import ShiftAPI from '@/api/ShiftAPI.js'
-
+import { WorkShiftStatusText } from '@/ultils/enums.js'
+import {
+  mapShiftsFromBackend,
+  mapShiftFromBackend,
+  mapShiftToBackend,
+} from '@/ultils/formatters.js'
+import { ElMessageBox, ElMessage } from 'element-plus'
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)
+const notificationRef = ref(null)
 const shiftToEdit = ref(null)
 const dialogTitle = ref('Thêm ca làm việc')
 
@@ -118,51 +142,81 @@ const shiftFields = ref([
 ])
 
 const searchQuery = ref('')
-const searchTimeout = ref(null)
-const shiftRows = ref([])
+const shiftRows = ref([]) // Giữ lại để tránh lỗi reference nếu có, nhưng sẽ dùng paginatedShifts
+const allShifts = ref([]) // Chứa toàn bộ dữ liệu
 const totalRecords = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
 
-// 2. Hàm gọi API
+// 2. Hàm gọi API - Lấy TOÀN BỘ dữ liệu để filter client-side
 onMounted(() => {
   loadShifts()
 })
 
 const loadShifts = async () => {
   try {
-    const response = await ShiftAPI.getPaging(20, 1, searchQuery.value)
+    // Lấy số lượng lớn bản ghi để filter ở client
+    const response = await ShiftAPI.getPaging(10000, 1, '')
 
-    // BE trả về cấu trúc { success: true, data: { totalRecords: ..., data: [...] } }
     if (response.data.success) {
-      shiftRows.value = response.data.data.data
-      totalRecords.value = response.data.data.totalRecords
+      const mappedData = mapShiftsFromBackend(response.data.data.data)
+      allShifts.value = mappedData
+      // totalRecords sẽ được tính từ filteredShifts
     } else {
       console.error('Lỗi từ API:', response.data.message)
     }
   } catch (err) {
     console.error('❌ Lỗi gọi API:', err)
-    // Xử lý lỗi
     if (err.code === 'ERR_CERT_AUTHORITY_INVALID') {
-      alert(
+      notificationRef.value.error(
         'LỖI SSL: Bạn chưa chấp nhận chứng chỉ HTTPS (self-signed) của BE. Hãy mở BE URL (https://localhost:7248/api/Shift) trên tab mới và nhấn "Proceed".',
       )
     } else if (err.code === 'ERR_CONNECTION_REFUSED') {
-      alert('LỖI KẾT NỐI: Backend của bạn chưa chạy?')
+      notificationRef.value.error('LỖI KẾT NỐI: Backend của bạn chưa chạy?')
     }
   }
 }
 
-// 3. Hàm tìm kiếm (debounced)
+// Computed: Filter dữ liệu
+const filteredShifts = computed(() => {
+  if (!searchQuery.value) return allShifts.value
 
+  const query = searchQuery.value.toLowerCase()
+  return allShifts.value.filter((shift) => {
+    // 1. Tìm theo các trường text thông thường
+    const textFields = ['shiftCode', 'shiftName', 'createdBy', 'updatedBy']
+    const hasTextMatch = textFields.some((field) => {
+      const value = shift[field]
+      return value && String(value).toLowerCase().includes(query)
+    })
+
+    if (hasTextMatch) return true
+
+    // 2. Tìm theo text của trạng thái (VD: "Đang sử dụng")
+    const statusText = WorkShiftStatusText[shift.shiftStatus]
+    if (statusText && statusText.toLowerCase().includes(query)) {
+      return true
+    }
+
+    return false
+  })
+})
+
+// Computed: Phân trang dữ liệu đã filter
+const paginatedShifts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + parseInt(pageSize.value)
+  return filteredShifts.value.slice(start, end)
+})
+
+// Update totalRecords dựa trên kết quả filter
+watch(filteredShifts, (newVal) => {
+  totalRecords.value = newVal.length
+})
+
+// Reset về trang 1 khi search thay đổi
 watch(searchQuery, () => {
-  // Xóa timeout cũ nếu người dùng tiếp tục gõ
-  if (searchTimeout.value) {
-    clearTimeout(searchTimeout.value)
-  }
-
-  // Debounce: gọi API sau 500ms
-  searchTimeout.value = setTimeout(() => {
-    loadShifts()
-  }, 500)
+  currentPage.value = 1
 })
 // --- PHẦN FORM/DIALOG ---
 
@@ -173,6 +227,7 @@ const openAddDialog = () => {
 }
 
 const handleEdit = (row) => {
+  // Row đã được map từ API, không cần map lại
   shiftToEdit.value = { ...row }
   dialogTitle.value = 'Sửa ca làm việc'
   isFormVisible.value = true
@@ -228,7 +283,9 @@ const handleSave = async (formData) => {
       payload.shiftId = shiftToEdit.value.shiftId || payload.shiftId
       payload.modifiedBy = payload.modifiedBy || 'admin'
       payload.modifiedDate = now
-      await ShiftAPI.update(payload.shiftId, payload)
+      // Map sang backend format trước khi gửi
+      const backendPayload = mapShiftToBackend(payload)
+      await ShiftAPI.update(payload.shiftId, backendPayload)
     } else {
       // Chế độ Thêm mới: thêm mặc định
       payload.shiftId = payload.shiftId || generateUUID()
@@ -237,10 +294,13 @@ const handleSave = async (formData) => {
       payload.createdDate = payload.createdDate || now
       payload.modifiedBy = payload.modifiedBy || 'admin'
       payload.modifiedDate = payload.modifiedDate || now
-      await ShiftAPI.insert(payload)
+      // Map sang backend format trước khi gửi
+      const backendPayload = mapShiftToBackend(payload)
+      await ShiftAPI.insert(backendPayload)
     }
     loadShifts() // Tải lại dữ liệu
     handleCancelForm() // Đóng form
+    notificationRef.value.success(shiftToEdit.value ? 'Cập nhật thành công!' : 'Thêm mới thành công!')
   } catch (error) {
     console.error('Lỗi khi lưu:', error)
     // Cố gắng lấy thông tin lỗi có ý nghĩa từ response
@@ -282,24 +342,48 @@ const handleSave = async (formData) => {
     } else if (error && error.message) {
       errMsg = error.message
     }
-    alert(`Lỗi: ${errMsg}`)
+    notificationRef.value.error(`Lỗi: ${errMsg}`)
   }
 }
 
 /**
  * Hàm Xóa
  */
-const handleDelete = async (row) => {
-  try {
-    //
-    if (confirm(`Bạn có chắc muốn xóa ca "${row.shiftName}" không?`)) {
-      await ShiftAPI.delete(row.shiftId)
-      loadShifts()
-    }
-  } catch (error) {
-    console.error('Lỗi khi xóa:', error)
-    alert('Có lỗi xảy ra, không thể xóa.')
-  }
+
+
+/**
+ * Hàm Xóa
+ */
+const handleDelete = (row) => {
+  ElMessageBox.confirm(
+    `Ca làm việc ${row.shiftName} sau khi bị xóa sẽ không thể khôi phục. Bạn có muốn tiếp tục xóa không?`,
+    'Xóa ca làm việc',
+    {
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy',
+      type: 'warning',
+      confirmButtonClass: 'el-button--danger', // Optional: style the delete button red
+    },
+  )
+    .then(async () => {
+      try {
+        await ShiftAPI.delete(row.shiftId)
+        loadShifts()
+        ElMessage({
+          type: 'success',
+          message: 'Xóa thành công!',
+        })
+      } catch (error) {
+        console.error('Lỗi khi xóa:', error)
+        ElMessage({
+          type: 'error',
+          message: 'Có lỗi xảy ra, không thể xóa.',
+        })
+      }
+    })
+    .catch(() => {
+      // User clicked Cancel
+    })
 }
 
 // Hàm emit từ form
@@ -529,5 +613,26 @@ const handleAddCandidate = (formData) => {
   gap: 1rem;
   align-items: center;
   display: flex;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.status-active {
+  color: #009b71;
+  background-color: #edfdf8;
+  border: 1px solid #009b71;
+}
+
+.status-inactive {
+  color: #6b7280;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
 }
 </style>

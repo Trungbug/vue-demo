@@ -153,7 +153,7 @@ const loadShifts = async () => {
 
 // 3. Hàm tìm kiếm (debounced)
 
-watch(searchQuery, (newQuery, oldQuery) => {
+watch(searchQuery, () => {
   // Xóa timeout cũ nếu người dùng tiếp tục gõ
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value)
@@ -185,22 +185,59 @@ const handleCancelForm = () => {
 
 // Gọi hàm submit của form con
 const handleSubmitForm = () => {
-  if (candidateFormRef.value) {
+  if (candidateFormRef.value && candidateFormRef.value.handleSubmit) {
     candidateFormRef.value.handleSubmit()
   }
 }
 
+// Helper: đảm bảo time string có định dạng HH:mm:ss
+const formatTimePayload = (timeStr) => {
+  if (!timeStr) return null
+  // Nếu có dạng HH:mm => thêm :00
+  if (timeStr.length === 5) return `${timeStr}:00`
+  // Nếu đã có giây hoặc khác, trả về nguyên bản
+  return timeStr
+}
+
+// Simple UUID v4 generator for shiftId (frontend can generate if backend expects)
+const generateUUID = () => {
+  // RFC4122 version 4 compliant-ish
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
 /**
  * Hàm Lưu (Thêm mới hoặc Cập nhật)
  */
 const handleSave = async (formData) => {
   try {
+    // Chuẩn bị payload (định dạng thời gian, các trường mặc định)
+    const payload = { ...formData }
+
+    // Format times to HH:mm:ss (backend dùng TimeSpan)
+    payload.shiftBeginTime = formatTimePayload(payload.shiftBeginTime)
+    payload.shiftEndTime = formatTimePayload(payload.shiftEndTime)
+    payload.shiftBeginBreakTime = formatTimePayload(payload.shiftBeginBreakTime)
+    payload.shiftEndBreakTime = formatTimePayload(payload.shiftEndBreakTime)
+
+    const now = new Date().toISOString()
     if (shiftToEdit.value) {
-      // Chế độ Sửa
-      await ShiftAPI.update(shiftToEdit.value.shiftId, formData)
+      // Chế độ Sửa: giữ shiftId từ shiftToEdit (nếu có)
+      payload.shiftId = shiftToEdit.value.shiftId || payload.shiftId
+      payload.modifiedBy = payload.modifiedBy || 'admin'
+      payload.modifiedDate = now
+      await ShiftAPI.update(payload.shiftId, payload)
     } else {
-      // Chế độ Thêm mới
-      await ShiftAPI.insert(formData)
+      // Chế độ Thêm mới: thêm mặc định
+      payload.shiftId = payload.shiftId || generateUUID()
+      payload.shiftStatus = payload.shiftStatus ?? 1
+      payload.createdBy = payload.createdBy || 'admin'
+      payload.createdDate = payload.createdDate || now
+      payload.modifiedBy = payload.modifiedBy || 'admin'
+      payload.modifiedDate = payload.modifiedDate || now
+      await ShiftAPI.insert(payload)
     }
     loadShifts() // Tải lại dữ liệu
     handleCancelForm() // Đóng form
@@ -320,8 +357,7 @@ const handleAddCandidate = (formData) => {
   border-bottom-right-radius: 4px;
 }
 
-.title-rigtht {
-}
+/* removed empty rule .title-rigtht */
 .title-name {
   font-weight: 500;
   font-size: 14px !important;
@@ -375,10 +411,12 @@ const handleAddCandidate = (formData) => {
   min-height: 16px;
   min-width: 16px;
   position: relative;
+  mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
   background-color: #4b5563;
   mask-position: 0px 0px;
-  -webkit-mask-image: url(./pas.Icon Warehouse-e29a964d.svg?v=3.1.0.6);
+  mask-image: url('./pas.Icon Warehouse-e29a964d.svg?v=3.1.0.6');
+  -webkit-mask-image: url('./pas.Icon Warehouse-e29a964d.svg?v=3.1.0.6');
 }
 
 .texteditor-input {

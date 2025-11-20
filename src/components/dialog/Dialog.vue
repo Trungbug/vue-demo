@@ -52,13 +52,14 @@ const close = () => {
   display: flex; /* Đảm bảo layout flex */
   flex-direction: column;
   width: 680px;
-  height: 445px;
+  height: auto;
+  max-height: 90vh;
 }
 .dialog-header {
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 24px 16px 0 24px;
 }
 .dialog-title {
   font-size: 24px;
@@ -74,7 +75,7 @@ const close = () => {
 .dialog-body {
   flex: 1; /* Cho phép body co dãn */
   overflow-y: auto; /* Thêm thanh cuộn khi nội dung dài */
-  padding: 24px;
+  padding: 20px;
 }
 
 .dialog-footer {

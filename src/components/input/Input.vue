@@ -10,9 +10,11 @@
       :placeholder="placeholder"
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
+      @blur="$emit('blur', $event)"
       :class="{ 'input-error': error }"
+      :disabled="disabled"
+      :maxlength="maxLength"
     />
-    <span v-if="error" class="error-message">{{ error }}</span>
   </div>
 </template>
 
@@ -43,9 +45,17 @@ defineProps({
     type: String,
     default: '',
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  maxLength: {
+    type: [Number, String],
+    default: null,
+  },
 })
 
-defineEmits(['update:modelValue'])
+defineEmits(['update:modelValue', 'blur'])
 </script>
 
 <style scoped>
@@ -70,7 +80,7 @@ defineEmits(['update:modelValue'])
 /* Style cho ô input */
 .texteditor-input {
   width: 100%;
-  height: 36px;
+  height: 25px;
   padding: 6px 12px;
   border: 1px solid #dddde4;
   border-radius: 4px;
@@ -99,5 +109,15 @@ defineEmits(['update:modelValue'])
   font-size: 12px;
   color: #e53935;
   margin-top: 4px;
+}
+.texteditor-input:disabled {
+  background-color: #eff1f3; /* Màu nền xám nhạt */
+  color: #586074; /* Màu chữ xám đậm hơn */
+  cursor: not-allowed; /* Con trỏ chuột hiển thị cấm */
+  border-color: #e0e0e0;
+}
+
+.texteditor-input:disabled:hover {
+  border-color: #e0e0e0; /* Không đổi màu viền khi hover */
 }
 </style>

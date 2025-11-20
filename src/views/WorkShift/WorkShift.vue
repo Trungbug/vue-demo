@@ -20,9 +20,8 @@
 
       <template #footer>
         <button type="button" class="btn-secondary" @click="handleCancelForm">Hủy</button>
-        <button type="button" class="btn-primary" @click="handleSubmitForm">
-          {{ shiftToEdit ? 'Lưu' : 'Thêm' }}
-        </button>
+        <button type="button" class="btn-secondary" @click="handleSaveAndAdd">Lưu và Thêm</button>
+        <button type="button" class="btn-primary" @click="handleSaveOnly">Lưu</button>
       </template>
     </BaseDialog>
 
@@ -43,11 +42,13 @@
                 </div>
               </div>
               <div class="bulk-actions" v-if="selectedIds.length > 0">
-                <span class="selected-count">Đã chọn <strong>{{ selectedIds.length }}</strong></span>
+                <span class="selected-count"
+                  >Đã chọn <strong>{{ selectedIds.length }}</strong></span
+                >
                 <span class="unselect-link" @click="handleUnselect">Bỏ chọn</span>
-                
-                <button 
-                  class="btn-bulk btn-bulk-active" 
+
+                <button
+                  class="btn-bulk btn-bulk-active"
                   v-if="showActiveButton"
                   @click="handleBulkUpdate(WorkShiftStatus.ACTIVE)"
                 >
@@ -55,8 +56,8 @@
                   <span>Sử dụng</span>
                 </button>
 
-                <button 
-                  class="btn-bulk btn-bulk-inactive" 
+                <button
+                  class="btn-bulk btn-bulk-inactive"
                   v-if="showInactiveButton"
                   @click="handleBulkUpdate(WorkShiftStatus.INACTIVE)"
                 >
@@ -69,11 +70,9 @@
                   <span>Xóa</span>
                 </button>
               </div>
-
             </div>
 
             <div class="grid-right">
-              
               <div class="wrap-icon-button-toolbar" title="Lọc" v-if="selectedIds.length === 0">
                 <div class="icon icon-filter"></div>
               </div>
@@ -97,6 +96,39 @@
               {{ WorkShiftStatusText[value] ?? value }}
             </div>
           </template>
+
+          <!-- Custom Actions Column -->
+          <template #actions="{ row }">
+            <div class="action-buttons-container">
+              <!-- Edit Button -->
+              <button class="btn-circle btn-edit" @click="handleEdit(row)" title="Sửa">
+                <div class="icon-edit"></div>
+              </button>
+
+              <!-- More Options Dropdown -->
+              <el-dropdown trigger="click">
+                <button class="btn-circle btn-more" title="Thêm">
+                  <el-icon><MoreFilled /></el-icon>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="handleDuplicate(row)">
+                      <el-icon><CopyDocument /></el-icon>
+                      <span>Nhân bản</span>
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="handleStopUsing(row)">
+                      <el-icon><CircleClose /></el-icon>
+                      <span>Ngừng sử dụng</span>
+                    </el-dropdown-item>
+                    <el-dropdown-item divided @click="handleDelete(row)" class="text-red">
+                      <el-icon class="text-red"><Delete /></el-icon>
+                      <span class="text-red">Xóa</span>
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
+          </template>
         </TheTable>
       </div>
 
@@ -112,18 +144,26 @@
             <option :value="100">100</option>
           </select>
           <span
-            ><strong>{{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalRecords) }}</strong> bản ghi</span
+            ><strong
+              >{{ (currentPage - 1) * pageSize + 1 }} -
+              {{ Math.min(currentPage * pageSize, totalRecords) }}</strong
+            >
+            bản ghi</span
           >
-          <button 
-            class="page-nav-btn" 
+          <button
+            class="page-nav-btn"
             @click="currentPage > 1 && currentPage--"
             :disabled="currentPage === 1"
-          >&lt;</button>
-          <button 
-            class="page-nav-btn" 
+          >
+            &lt;
+          </button>
+          <button
+            class="page-nav-btn"
             @click="currentPage * pageSize < totalRecords && currentPage++"
             :disabled="currentPage * pageSize >= totalRecords"
-          >&gt;</button>
+          >
+            &gt;
+          </button>
         </div>
       </div>
     </div>
@@ -144,13 +184,14 @@ import {
   mapShiftToBackend,
 } from '@/ultils/formatters.js'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import { EditPen, MoreFilled, CopyDocument, CircleClose, Delete } from '@element-plus/icons-vue'
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)
 const notificationRef = ref(null)
 const shiftToEdit = ref(null)
 const dialogTitle = ref('Thêm ca làm việc')
 const selectedIds = ref([]) // Danh sách ID các dòng được chọn
-
+const isSaveAndAdd = ref(false)
 
 // --- PHẦN DỮ LIỆU BẢNG ---
 
@@ -255,14 +296,14 @@ watch(searchQuery, () => {
 
 const openAddDialog = () => {
   shiftToEdit.value = null
-  dialogTitle.value = 'Thêm ca làm việc'
+  dialogTitle.value = 'Thêm Ca làm việc'
   isFormVisible.value = true
 }
 
 const handleEdit = (row) => {
   // Row đã được map từ API, không cần map lại
   shiftToEdit.value = { ...row }
-  dialogTitle.value = 'Sửa ca làm việc'
+  dialogTitle.value = 'Sửa Ca làm việc'
   isFormVisible.value = true
 }
 
@@ -272,7 +313,15 @@ const handleCancelForm = () => {
 }
 
 // Gọi hàm submit của form con
-const handleSubmitForm = () => {
+const handleSaveOnly = () => {
+  isSaveAndAdd.value = false
+  if (candidateFormRef.value && candidateFormRef.value.handleSubmit) {
+    candidateFormRef.value.handleSubmit()
+  }
+}
+
+const handleSaveAndAdd = () => {
+  isSaveAndAdd.value = true
   if (candidateFormRef.value && candidateFormRef.value.handleSubmit) {
     candidateFormRef.value.handleSubmit()
   }
@@ -332,8 +381,28 @@ const handleSave = async (formData) => {
       await ShiftAPI.insert(backendPayload)
     }
     loadShifts() // Tải lại dữ liệu
-    handleCancelForm() // Đóng form
-    notificationRef.value.success(shiftToEdit.value ? 'Cập nhật thành công!' : 'Thêm mới thành công!')
+
+    if (isSaveAndAdd.value) {
+      // Nếu là Save & Add
+      notificationRef.value.success(
+        shiftToEdit.value ? 'Cập nhật thành công!' : 'Thêm mới thành công!',
+      )
+
+      // Reset form để thêm mới tiếp
+      if (candidateFormRef.value && candidateFormRef.value.resetForm) {
+        candidateFormRef.value.resetForm()
+      }
+      // Chuyển về chế độ thêm mới (nếu đang sửa)
+      shiftToEdit.value = null
+      dialogTitle.value = 'Thêm Ca làm việc'
+      // Không đóng form
+    } else {
+      // Nếu là Save thường
+      handleCancelForm() // Đóng form
+      notificationRef.value.success(
+        shiftToEdit.value ? 'Cập nhật thành công!' : 'Thêm mới thành công!',
+      )
+    }
   } catch (error) {
     console.error('Lỗi khi lưu:', error)
     // Cố gắng lấy thông tin lỗi có ý nghĩa từ response
@@ -382,7 +451,6 @@ const handleSave = async (formData) => {
 /**
  * Hàm Xóa
  */
-
 
 /**
  * Hàm Xóa
@@ -450,11 +518,11 @@ const handleUnselect = () => {
 const handleBulkUpdate = async (newStatus) => {
   try {
     const rowsToUpdate = selectedRows.value.filter((row) => row.shiftStatus !== newStatus)
-    
+
     if (rowsToUpdate.length === 0) return
 
-    const idsToUpdate = rowsToUpdate.map(row => row.shiftId)
-    
+    const idsToUpdate = rowsToUpdate.map((row) => row.shiftId)
+
     await ShiftAPI.bulkUpdateStatus(idsToUpdate, newStatus)
 
     notificationRef.value.success('Cập nhật trạng thái thành công!')
@@ -464,28 +532,37 @@ const handleBulkUpdate = async (newStatus) => {
     console.error('Lỗi bulk update:', error)
     let msg = 'Có lỗi xảy ra khi cập nhật trạng thái.'
     if (error.response && error.response.data) {
-        msg = error.response.data.userMsg || error.response.data.devMsg || JSON.stringify(error.response.data)
+      msg =
+        error.response.data.userMsg ||
+        error.response.data.devMsg ||
+        JSON.stringify(error.response.data)
     } else if (error.message) {
-        msg = error.message
+      msg = error.message
     }
     notificationRef.value.error(msg)
   }
 }
 
+const handleDuplicate = (row) => {
+  console.log('Duplicate', row)
+  // TODO: Implement duplicate logic
+}
+
+const handleStopUsing = (row) => {
+  console.log('Stop using', row)
+  // TODO: Implement stop using logic
+}
+
 const handleBulkDelete = () => {
-  ElMessageBox.confirm(
-    `Bạn có chắc chắn muốn xóa các bản ghi đã chọn không?`,
-    'Xóa hàng loạt',
-    {
-      confirmButtonText: 'Xóa',
-      cancelButtonText: 'Hủy',
-      type: 'warning',
-      confirmButtonClass: 'el-button--danger',
-    },
-  )
+  ElMessageBox.confirm(`Bạn có chắc chắn muốn xóa các bản ghi đã chọn không?`, 'Xóa hàng loạt', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning',
+    confirmButtonClass: 'el-button--danger',
+  })
     .then(async () => {
       try {
-       await ShiftAPI.deleteMany(selectedIds.value)
+        await ShiftAPI.deleteMany(selectedIds.value)
         notificationRef.value.success('Xóa thành công!')
         loadShifts()
         handleUnselect()
@@ -493,9 +570,12 @@ const handleBulkDelete = () => {
         console.error('Lỗi bulk delete:', error)
         let msg = 'Có lỗi xảy ra khi xóa.'
         if (error.response && error.response.data) {
-            msg = error.response.data.userMsg || error.response.data.devMsg || JSON.stringify(error.response.data)
+          msg =
+            error.response.data.userMsg ||
+            error.response.data.devMsg ||
+            JSON.stringify(error.response.data)
         } else if (error.message) {
-            msg = error.message
+          msg = error.message
         }
         notificationRef.value.error(msg)
       }
@@ -698,12 +778,12 @@ const handleBulkDelete = () => {
   font-size: 14px;
 }
 .btn-primary {
-  background-color: #2680eb;
+  background-color: #009b71;
   color: white;
-  border-color: #2680eb;
+  border-color: #009b71;
 }
 .btn-primary:hover {
-  background-color: #1a6fd1;
+  background-color: #008a62;
 }
 .btn-secondary {
   background-color: #fff;
@@ -775,14 +855,77 @@ const handleBulkDelete = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
-  padding: 0 12px;
+  padding: 6px 12px;
   border-radius: 4px;
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+  cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
+  color: #111827;
+  transition: all 0.2s;
+}
+
+.btn-bulk:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-bulk-active {
+  /* color: #009b71; */
+}
+
+.btn-bulk-inactive {
+  /* color: #6b7280; */
+}
+
+.btn-bulk-delete {
+  color: #ef4444;
+  border-color: #fca5a5;
+  background-color: #fef2f2;
+}
+.btn-bulk-delete:hover {
+  background-color: #fee2e2;
+  border-color: #f87171;
+}
+
+/* Action Buttons Styles */
+.action-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
   background-color: #fff;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #4b5563;
+}
+
+.btn-circle:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.btn-edit {
+  /* Custom style for edit button if needed */
+}
+
+.btn-more {
+  /* Custom style for more button if needed */
+}
+
+.text-red {
+  color: #ef4444 !important;
 }
 
 .btn-bulk-active {
@@ -843,5 +986,13 @@ const handleBulkDelete = () => {
   -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" /></svg>');
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
+}
+.icon-edit {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -35px -50px;
+  mask-repeat: no-repeat;
+  background-color: #4b5563;
 }
 </style>

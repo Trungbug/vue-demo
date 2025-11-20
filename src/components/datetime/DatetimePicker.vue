@@ -18,12 +18,6 @@
       @keydown="onKeydown"
       @blur="onBlur"
     />
-
-    <div class="icon-time-wrapper">
-      <i class="fa-regular fa-clock"></i>
-    </div>
-
-    <span v-if="error" class="error-message">{{ error }}</span>
   </div>
 </template>
 
@@ -43,7 +37,7 @@ const props = defineProps({
   minuteStep: { type: Number, default: 30 },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'blur'])
 
 const internalValue = ref(props.modelValue)
 
@@ -116,6 +110,7 @@ const onBlur = (e) => {
 
   internalValue.value = finalTime
   e.target.value = finalTime
+  emit('blur', e)
 }
 </script>
 
@@ -152,7 +147,8 @@ const onBlur = (e) => {
   box-shadow: none !important;
   border: 1px solid #dddde4;
   border-radius: 4px;
-  height: 36px;
+  height: 25px !important; /* Force height */
+  min-height: 25px !important;
   padding: 0 30px 0 12px;
   transition: border-color 0.3s;
   width: 100%;
@@ -170,10 +166,12 @@ const onBlur = (e) => {
 
 /* Input Text bên trong */
 :deep(.el-input__inner) {
-  font-size: 14px;
+  font-size: 13px;
   color: #1f1f1f;
-  height: 100%;
+  height: 25px !important;
+  line-height: 25px !important; /* Ensure text is centered vertically */
   font-family: inherit;
+  padding: 0 !important; /* Remove default padding */
 }
 
 /* Ẩn icon mặc định bên trái của Element Plus */
@@ -193,13 +191,13 @@ const onBlur = (e) => {
 .icon-time-wrapper {
   position: absolute;
   right: 10px;
-  top: 38px; /* Dựa trên chiều cao label + padding */
+  top: 32px; /* Adjusted for 25px height (was 38px) */
   pointer-events: none;
   color: #666;
   font-size: 14px;
 }
 .form-group:not(:has(.form-label)) .icon-time-wrapper {
-  top: 10px;
+  top: 5px; /* Adjusted for 25px height (was 10px) */
 }
 </style>
 

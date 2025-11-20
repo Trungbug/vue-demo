@@ -7,8 +7,10 @@
           v-model="formData.shiftCode"
           label="Mã ca"
           :required="true"
-          placeholder="Nhập mã ca"
+          placeholder=""
           :error="errors.shiftCode"
+          maxLength="20"
+          @blur="handleBlur('shiftCode')"
         />
 
         <BaseInput
@@ -16,8 +18,10 @@
           v-model="formData.shiftName"
           label="Tên ca"
           :required="true"
-          placeholder="Nhập tên ca"
+          placeholder=""
           :error="errors.shiftName"
+          maxLength="50"
+          @blur="handleBlur('shiftName')"
         />
 
         <div class="form-row">
@@ -29,6 +33,7 @@
             placeholder="HH:MM"
             :minute-step="30"
             :error="errors.shiftBeginTime"
+            @blur="handleBlur('shiftBeginTime')"
           />
 
           <DatetimePicker
@@ -39,6 +44,7 @@
             placeholder="HH:MM"
             :minute-step="30"
             :error="errors.shiftEndTime"
+            @blur="handleBlur('shiftEndTime')"
           />
         </div>
 
@@ -81,7 +87,7 @@
             <textarea
               v-model="formData.shiftDescription"
               class="text-input"
-              placeholder="Nhập mô tả"
+              placeholder=""
             ></textarea>
           </div>
         </div>
@@ -119,6 +125,7 @@ import { ref, watch, computed } from 'vue'
 import BaseInput from '@/components/input/Input.vue'
 import { WorkShiftStatus } from '@/ultils/enums.js'
 import DatetimePicker from '@/components/datetime/DatetimePicker.vue'
+import { ElMessageBox } from 'element-plus'
 const props = defineProps({
   initialData: {
     type: Object,
@@ -161,7 +168,7 @@ const parseTime = (timeString) => {
 const workTimeHours = computed(() => {
   const start = parseTime(formData.value.shiftBeginTime)
   const end = parseTime(formData.value.shiftEndTime)
-  if (start === 0 || end === 0) return 0
+  if (start === 0 || end === 0) return ''
 
   let durationMin = 0
   if (end >= start) {
@@ -172,7 +179,7 @@ const workTimeHours = computed(() => {
     const minutesInDay = 24 * 60
     durationMin = minutesInDay - start + end
   }
-  return (durationMin / 60).toFixed(1) // Làm tròn 1 chữ số thập phân
+  return Math.round(durationMin / 60) // Làm tròn số tự nhiên
 })
 
 /**
@@ -182,7 +189,7 @@ const workTimeHours = computed(() => {
 const breakTimeHours = computed(() => {
   const start = parseTime(formData.value.shiftBeginBreakTime)
   const end = parseTime(formData.value.shiftEndBreakTime)
-  if (start === 0 || end === 0) return 0
+  if (start === 0 || end === 0) return ''
 
   let durationMin = 0
   if (end >= start) {
@@ -193,7 +200,7 @@ const breakTimeHours = computed(() => {
     const minutesInDay = 24 * 60
     durationMin = minutesInDay - start + end
   }
-  return (durationMin / 60).toFixed(1)
+  return Math.round(durationMin / 60)
 })
 
 // Watcher để cập nhật formdata khi prop initialData thay đổi (chế độ Sửa)
@@ -241,17 +248,11 @@ const validateForm = () => {
   if (!data.shiftCode?.trim()) {
     errors.value.shiftCode = 'Mã ca không được để trống'
     isValid = false
-  } else if (data.shiftCode.length > 20) {
-    errors.value.shiftCode = 'Mã ca không được vượt quá 20 ký tự'
-    isValid = false
   }
 
   // 2. Tên ca
   if (!data.shiftName?.trim()) {
     errors.value.shiftName = 'Tên ca không được để trống'
-    isValid = false
-  } else if (data.shiftName.length > 50) {
-    errors.value.shiftName = 'Tên ca không được vượt quá 50 ký tự'
     isValid = false
   }
 
@@ -267,7 +268,72 @@ const validateForm = () => {
     isValid = false
   }
 
+  // 5. Validate Giờ nghỉ giữa ca phải nằm trong khoảng làm việc
+  if (data.shiftBeginBreakTime && data.shiftBeginTime && data.shiftEndTime) {
+    const start = parseTime(data.shiftBeginTime)
+    const end = parseTime(data.shiftEndTime)
+    const breakStart = parseTime(data.shiftBeginBreakTime)
+
+    let isBreakValid = false
+    if (end >= start) {
+      // Ca trong ngày: Start <= Break <= End
+      if (breakStart >= start && breakStart <= end) {
+        isBreakValid = true
+      }
+    } else {
+      // Ca qua đêm: Break >= Start OR Break <= End
+      if (breakStart >= start || breakStart <= end) {
+        isBreakValid = true
+      }
+    }
+
+    if (!isBreakValid) {
+      errors.value.shiftBeginBreakTime =
+        'Thời gian bắt đầu nghỉ phải nằm trong khoảng thời gian làm việc'
+      isValid = false
+    }
+  }
+
   return isValid
+}
+
+const handleBlur = (field) => {
+  if (!field) return
+  const data = formData.value
+
+  if (field === 'shiftCode' && !data.shiftCode?.trim()) {
+    errors.value.shiftCode = 'Mã ca không được để trống'
+  } else if (field === 'shiftCode') {
+    delete errors.value.shiftCode
+  }
+
+  if (field === 'shiftName' && !data.shiftName?.trim()) {
+    errors.value.shiftName = 'Tên ca không được để trống'
+  } else if (field === 'shiftName') {
+    delete errors.value.shiftName
+  }
+
+  if (field === 'shiftBeginTime' && !data.shiftBeginTime) {
+    errors.value.shiftBeginTime = 'Giờ vào ca không được để trống'
+  } else if (field === 'shiftBeginTime') {
+    delete errors.value.shiftBeginTime
+  }
+
+  if (field === 'shiftEndTime' && !data.shiftEndTime) {
+    errors.value.shiftEndTime = 'Giờ hết ca không được để trống'
+  } else if (field === 'shiftEndTime') {
+    delete errors.value.shiftEndTime
+  }
+
+  // Clear lỗi logic khi blur khỏi các ô liên quan
+  if (
+    ['shiftBeginTime', 'shiftEndTime', 'shiftBeginBreakTime'].includes(field) &&
+    errors.value.shiftBeginBreakTime ===
+      'Thời gian bắt đầu nghỉ phải nằm trong khoảng thời gian làm việc'
+  ) {
+    // Tạm thời xóa lỗi để user nhập lại, hoặc có thể gọi lại validateForm() nếu muốn strict
+    delete errors.value.shiftBeginBreakTime
+  }
 }
 
 /**
@@ -287,7 +353,16 @@ const handleSubmit = () => {
     emit('submit', dataToSubmit)
   } else {
     console.log('Validate thất bại', errors.value)
-    alert('Vui lòng kiểm tra lại thông tin nhập liệu!')
+    // Lấy thông báo lỗi đầu tiên
+    const firstErrorKey = Object.keys(errors.value)[0]
+    const firstErrorMessage = errors.value[firstErrorKey]
+
+    if (firstErrorMessage) {
+      ElMessageBox.alert(firstErrorMessage, 'Cảnh báo', {
+        confirmButtonText: 'Đóng',
+        type: 'warning',
+      })
+    }
   }
 }
 
@@ -313,10 +388,16 @@ const setErrors = (serverErrors) => {
   errors.value = mapped
 }
 
+const resetForm = () => {
+  formData.value = createEmptyForm()
+  errors.value = {}
+}
+
 defineExpose({
   handleSubmit,
   handleCancel,
   setErrors,
+  resetForm,
 })
 </script>
 
@@ -324,101 +405,142 @@ defineExpose({
 .workshift-form-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  /* height: 100%; Bỏ height 100% để form tự co giãn theo content */
+  /* overflow: hidden; */
   font-size: 14px;
 }
 
-.form-content {
+/* .form-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 24px;
+  padding: 24px; 
+} */
+
+/* Scrollbar custom */
+.form-content::-webkit-scrollbar {
+  width: 8px;
+}
+.form-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.form-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+.form-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
-/* Sử dụng CSS Grid cho layout 3 cột */
 .form-layout {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px; /* Tăng khoảng cách giữa các dòng */
   width: 100%;
 }
 
-/* Custom styling cho <textarea>
-  (Sao chép từ BaseInput để nhất quán)
-*/
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
 }
-.form-group.inline :deep(.form-label) {
-  width: 160px;
-  margin-bottom: 0;
-  flex-shrink: 0; /* Đảm bảo label không bị co lại */
-}
+
+/* Style cho layout ngang (label bên trái input) */
 .form-group.inline {
   flex-direction: row;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start; /* Căn trên cùng để handle textarea */
+  gap: 16px;
 }
+
+/* Label cố định width */
+.form-group.inline :deep(.form-label),
 .form-group.inline .form-label {
-  width: 160px;
-  margin-bottom: 0;
+  width: 140px; /* Giảm width label một chút cho cân đối */
+  /* margin-bottom: 0; */
+  flex-shrink: 0;
+  /* padding-top: 9px; Căn giữa text label với input height 36px */
+  font-weight: 500;
+  color: #1f1f1f;
+  font-size: 13px;
 }
-.form-group.inline .texteditor-input {
+
+/* Input chiếm hết phần còn lại */
+.form-group.inline :deep(.texteditor-input),
+.form-group.inline .control-wrapper,
+.form-group.inline .text-input,
+.form-group.inline :deep(.custom-time-select),
+.form-group.inline :deep(.el-date-editor) {
+  flex: 1;
   width: 100%;
 }
+
+/* Layout 2 cột (Giờ vào/ra, Thời gian làm việc...) */
 .form-row {
   display: flex;
-  gap: 12px;
+  gap: 24px; /* Khoảng cách giữa 2 cột lớn hơn */
 }
+
 .form-row .form-group.half {
-  flex: 1 1 0;
+  flex: 1;
 }
+
+/* Label trong 2 cột cũng cần width cố định nhưng nhỏ hơn hoặc auto? 
+   Theo ảnh thì label "Giờ hết ca" nằm ngay trước input.
+   Để đẹp thì nên chia đều: [Label Input] -gap- [Label Input]
+*/
+.form-row .form-group.inline {
+  /* gap: 12px; */
+}
+.form-row .form-group.inline :deep(.form-label) {
+  width: 140px; /* Để label co giãn tự nhiên trong cột hẹp */
+  /* min-width: 140px; Đảm bảo tối thiểu */
+}
+
+/* Readonly input style */
+:deep(.texteditor-input:disabled),
+.text-input:disabled {
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}
+
 .form-label {
   font-weight: 500;
   color: #1f1f1f;
 }
+
 .control-wrapper {
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: 100%;
 }
+
 .text-input {
-  border: 1px solid #dddde4;
+  border: 1px solid #e0e0e0;
   border-radius: 4px;
-  padding: 9px 12px;
-  height: 100%; /* Quan trọng: làm textarea co giãn */
-  min-height: 100px; /* Đặt chiều cao tối thiểu */
+  padding: 8px 12px;
+  min-height: 65px;
   box-sizing: border-box;
   font-family: inherit;
-  font-size: 14px;
-  resize: vertical; /* Cho phép thay đổi kích thước theo chiều dọc */
+  font-size: 13px;
+  resize: none; /* Không cho resize để giữ layout đẹp */
+  transition: border-color 0.2s;
 }
-.text-input:hover {
-  border-color: #2680eb;
-}
+
+.text-input:hover,
 .text-input:focus {
-  border-color: #2680eb;
+  border-color: #009b71; /* Màu xanh chủ đạo */
   outline: none;
 }
-/* ----- Hết phần custom ----- */
 
-/* Lớp tiện ích để "Mô tả" chiếm 4 hàng */
-.span-row-4 {
-  grid-row: span 4;
-  display: flex; /* Cần thiết để textarea bên trong co giãn 100% */
-  flex-direction: column;
-}
-
-/* Thêm CSS cho Radio Button */
+/* Radio Group */
 .radio-group {
   display: flex;
   align-items: center;
-  gap: 24px;
-  height: 36px; /* Cùng chiều cao với input để căn giữa đẹp */
+  gap: 32px;
+  height: 36px;
+  padding-top: 2px;
 }
 
 .radio-item {
@@ -431,7 +553,7 @@ defineExpose({
 .radio-item input[type='radio'] {
   width: 18px;
   height: 18px;
-  accent-color: #009b71; /* Màu xanh giống ảnh */
+  accent-color: #009b71;
   cursor: pointer;
   margin: 0;
 }
@@ -439,22 +561,5 @@ defineExpose({
 .radio-label {
   font-size: 14px;
   color: #1f1f1f;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.status-active {
-  color: #009b71; /* Màu xanh giống radio button */
-  background-color: #edfdf8;
-}
-
-.status-inactive {
-  color: #6b7280;
-  background-color: #f3f4f6;
 }
 </style>

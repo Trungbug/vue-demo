@@ -20,7 +20,7 @@
           </div>
         </div>
         <div class="nav-item-content-right">
-          <div class="icon-cart"></div>
+          <div class="icon-download"></div>
           <div class="nav-separator"></div>
           <div class="icon-package"></div>
 
@@ -202,6 +202,17 @@
   min-width: 24px;
   position: relative;
   margin-right: 12px;
+}
+.icon-download {
+  height: 24px;
+  width: 24px;
+  min-height: 24px;
+  min-width: 24px;
+  margin-right: 12px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -44px -428px;
+  mask-repeat: no-repeat;
+  background-color: #4b5563;
 }
 .icon-know {
   margin-left: 12px;

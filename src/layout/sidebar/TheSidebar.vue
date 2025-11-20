@@ -5,24 +5,23 @@
         <template v-for="item in menu" :key="item.title || item.type">
           <div v-if="item.type === 'separator'" class="menu-separator"></div>
 
-          <div v-else class="menu-item-container" :class="{ active: item.active }">
-            <div class="w-full block">
-              <div class="menu-item-admin">
-                <div class="menu-item-icon">
-                  <i :class="item.icon"></i>
-                </div>
-                <div class="menu-item-title title">{{ item.title }}</div>
+          <router-link v-else :to="item.path" custom v-slot="{ navigate, isActive }">
+            <div class="menu-item-container" :class="{ active: isActive }" @click="navigate">
+              <div class="w-full block">
+                <div class="menu-item-admin">
+                  <div class="menu-item-icon">
+                    <i :class="item.icon"></i>
+                  </div>
+                  <div class="menu-item-title title">{{ item.title }}</div>
 
-                <div v-if="!isCollapsed" class="flex flex-end pr-1">
-                  <i
-                    v-if="item.type === 'dropdown'"
-                    class="fa-solid fa-chevron-down icon-arrow"
-                  ></i>
-                  <i v-if="item.type === 'flyout'" class="fa-solid fa-chevron-right icon-arrow"></i>
+                  <div v-if="!isCollapsed" class="flex flex-end pr-1">
+                    <i v-if="item.type === 'dropdown'" class="icon-dropdown"></i>
+                    <i v-if="item.type === 'flyout'" class="icon-flyout"></i>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </router-link>
         </template>
         <div class="bottom-area">
           <div class="menu-item-admin collape-btn" title="Thu gọn sidebar" @click="toggleSidebar">
@@ -47,29 +46,79 @@ const toggleSidebar = () => {
 }
 
 const menu = [
-  { title: 'Tổng quan', icon: 'fa-solid fa-house', type: 'link' },
-  { title: 'Đơn đặt hàng', icon: 'fa-solid fa-file-invoice', type: 'link' },
-  { title: 'Kế hoạch sản xuất', icon: 'fa-solid fa-calendar-days', type: 'dropdown' },
-  { title: 'Điều phối và thực thi', icon: 'fa-solid fa-truck-fast', type: 'dropdown' },
-  { title: 'Kiểm tra chất lượng', icon: 'fa-solid fa-check-double', type: 'link' },
-  { title: 'Kho vật tư', icon: 'fa-solid fa-warehouse', type: 'dropdown' },
+  {
+    title: 'Tổng quan',
+    icon: 'icon-dashboard',
+    type: 'link',
+    path: '/dashboard',
+  },
+  {
+    title: 'Đơn đặt hàng',
+    icon: 'ms-icon-cart',
+    type: 'link',
+    path: '/orders',
+  },
+  {
+    title: 'Kế hoạch sản xuất',
+    icon: 'ms-icon-product',
+    type: 'dropdown',
+    path: '/production-plan',
+  },
+  {
+    title: 'Điều phối và thực thi',
+    icon: 'ms-icon-codinination',
+    type: 'dropdown',
+    path: '/coordination',
+  },
+  {
+    title: 'Kiểm tra chất lượng',
+    icon: 'ms-icon-quality',
+    type: 'link',
+    path: '/quality-check',
+  },
+  {
+    title: 'Kho vật tư',
+    icon: 'icon-warehouse',
+    type: 'dropdown',
+    path: '/warehouse',
+  },
 
   { type: 'separator' }, // <-- Đường kẻ 1
 
-  { title: 'Báo cáo', icon: 'fa-solid fa-flag', type: 'link' },
+  { title: 'Báo cáo', icon: 'icon-rp', type: 'link', path: '/reports' },
 
   { type: 'separator' }, // <-- Đường kẻ 2
 
-  { title: 'Sản phẩm, NVL', icon: 'fa-solid fa-box', type: 'dropdown' },
-  { title: 'Quy trình sản xuất', icon: 'fa-solid fa-diagram-project', type: 'dropdown' },
-  { title: 'Năng lực sản xuất', icon: 'fa-solid fa-bolt', type: 'dropdown' },
+  {
+    title: 'Sản phẩm, NVL',
+    icon: 'icon-production-process',
+    type: 'dropdown',
+    path: '/products',
+  },
+  {
+    title: 'Quy trình sản xuất',
+    icon: 'icon-process',
+    type: 'dropdown',
+    path: '/production-process',
+  },
+  {
+    title: 'Năng lực sản xuất',
+    icon: 'icon-production-capacity',
+    type: 'dropdown',
+    path: '/production-capacity',
+  },
   {
     title: 'Danh mục khác',
-    icon: 'icon icon-list', // icon-list từ file icon.css của bạn
+    icon: 'icon-others', // icon-list từ file icon.css của bạn
     type: 'flyout', // <-- Loại "sang phải"
-    active: true, // <-- Đang được chọn
+    path: '/others',
   },
-  { title: 'Thiết lập', icon: 'fa-solid fa-gear', type: 'flyout' }, // <-- Loại "sang phải"
+  {
+    title: 'Thiết lập',
+    icon: 'icon-setting',
+    type: 'flyout', // <-- Loại "sang phải"
+    path: '/settings',
+  },
 ]
 </script>
 
@@ -148,7 +197,6 @@ const menu = [
 }
 
 .sidebar .title {
-  margin-left: 8px;
 }
 
 /* -- Trạng thái Active và Hover -- */
@@ -162,13 +210,16 @@ const menu = [
 .menu-item-container.active .menu-item-title {
   color: #fff; /* Chữ/icon trắng khi active */
 }
+.menu-item-container.active .menu-item-icon i {
+  background-color: #fff;
+}
 
 /* Hover (không phải active) */
 .menu-item-container:not(.active) .menu-item-admin:hover {
   background-color: #374151; /* Màu xám đậm khi hover */
 }
 .menu-item-container:not(.active) .menu-item-admin:hover .menu-item-icon i {
-  color: #fff;
+  background-color: #fff;
 }
 .menu-item-container:not(.active) .menu-item-admin:hover .menu-item-title {
   color: #fff;
@@ -283,25 +334,139 @@ const menu = [
 }
 
 /* Style cho icon mũi tên (chung) */
-.icon-arrow {
-  font-size: 12px;
-  color: #9ca3af;
+.icon-dropdown,
+.icon-flyout {
   transition: transform 0.2s;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0; /* Không bị co lại */
 }
-.
+
 /* Màu mũi tên khi active */
-.menu-item-container.active .icon-arrow {
-  color: #fff;
+.menu-item-container.active .icon-dropdown,
+.menu-item-container.active .icon-flyout {
+  background-color: #fff;
+}
+
+/* Màu mũi tên khi hover */
+.menu-item-container:not(.active) .menu-item-admin:hover .icon-dropdown,
+.menu-item-container:not(.active) .menu-item-admin:hover .icon-flyout {
+  background-color: #fff;
 }
 
 /* Ẩn mũi tên khi sidebar thu gọn */
-.sidebar.collapsed .icon-arrow {
+.sidebar.collapsed .icon-dropdown,
+.sidebar.collapsed .icon-flyout {
   display: none;
+}
+.icon-dashboard {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -6px -7px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.ms-icon-cart {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -344px -86px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.ms-icon-product {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -32px -7px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-warehouse {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -84px -6px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.ms-icon-codinination {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -57px -7px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-rp {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -214px -7px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.ms-icon-quality {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -110px -6px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+
+.icon-production-process {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -40px -193px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-process {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -162px -6px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-production-capacity {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -189px -6px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-others {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -240px -6px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-setting {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -266px -6px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-dropdown {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -63px -33px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-flyout {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -39px -31px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
 }
 </style>

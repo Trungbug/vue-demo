@@ -63,3 +63,117 @@ export const getInitials = (name) => {
 
   return '?'
 }
+
+/**
+ * Định dạng giờ phút `HH:mm`
+ * @param {string} timeStr Chuỗi giờ (HH:mm:ss hoặc HH:mm)
+ * @returns {string} Giờ phút
+ */
+export const formatTime = (timeStr) => {
+  if (!timeStr) return ''
+  if (timeStr.length >= 5) {
+    return timeStr.substring(0, 5)
+  }
+  return timeStr
+}
+
+/**
+ * Định dạng ngày `dd/mm/yyyy`
+ * @param {string|Date} dateStr Giá trị ngày
+ * @returns {string} Ngày tháng năm
+ */
+export const formatDateOnly = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return dateStr
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+/**
+ * Định dạng số nguyên (làm tròn)
+ * @param {number|string} v Giá trị
+ * @returns {string} Số nguyên hoặc '-'
+ */
+export const formatInteger = (v) => {
+  if (v === null || v === undefined || v === '') return '-'
+  const n = Number(v)
+  if (Number.isNaN(n)) return v
+  return Math.round(n).toString()
+}
+
+/**
+ * Mapper để chuyển đổi response từ Backend sang frontend format
+ * Backend trả về các trường với naming convention khác (ví dụ: ShiftCode, Inactive, BeginShiftTime)
+ * Frontend mong đợi: shiftCode, shiftStatus, shiftBeginTime
+ */
+
+/**
+ * Map một Shift object từ backend sang frontend format
+ * @param {Object} backendShift - Object từ API backend
+ * @returns {Object} - Object với tên trường đúng cho frontend
+ */
+export const mapShiftFromBackend = (backendShift) => {
+  if (!backendShift) return null
+
+  return {
+    // Map các trường chính
+    shiftId: backendShift.ShiftID || backendShift.shiftId,
+    shiftCode: backendShift.ShiftCode || backendShift.shiftCode,
+    shiftName: backendShift.ShiftName || backendShift.shiftName,
+    shiftBeginTime: backendShift.BeginShiftTime || backendShift.shiftBeginTime,
+    shiftEndTime: backendShift.EndShiftTime || backendShift.shiftEndTime,
+    shiftBeginBreakTime: backendShift.BeginBreakTime || backendShift.shiftBeginBreakTime,
+    shiftEndBreakTime: backendShift.EndBreakTime || backendShift.shiftEndBreakTime,
+    shiftDescription: backendShift.Description || backendShift.shiftDescription || '',
+    shiftStatus:
+      backendShift.Inactive !== undefined
+        ? backendShift.Inactive
+          ? 0
+          : 1
+        : backendShift.shiftStatus,
+    workTimeHours: backendShift.WorkingTime || backendShift.workTimeHours,
+    breakTimeHours: backendShift.BreakingTime || backendShift.breakTimeHours,
+    createdBy: backendShift.CreatedBy || backendShift.createdBy,
+    createdDate: backendShift.CreatedDate || backendShift.createdDate,
+    modifiedBy: backendShift.ModifiedBy || backendShift.modifiedBy,
+    modifiedDate: backendShift.ModifiedDate || backendShift.modifiedDate,
+  }
+}
+
+/**
+ * Map một danh sách Shifts từ backend
+ * @param {Array} backendShifts - Mảng từ API backend
+ * @returns {Array} - Mảng với format frontend
+ */
+export const mapShiftsFromBackend = (backendShifts) => {
+  if (!Array.isArray(backendShifts)) return []
+  return backendShifts.map(mapShiftFromBackend)
+}
+
+/**
+ * Map một Shift object từ frontend sang backend format để gửi API
+ * @param {Object} frontendShift - Object từ form
+ * @returns {Object} - Object với tên trường đúng cho backend
+ */
+export const mapShiftToBackend = (frontendShift) => {
+  if (!frontendShift) return null
+
+  return {
+    shiftId: frontendShift.shiftId,
+    shiftCode: frontendShift.shiftCode,
+    shiftName: frontendShift.shiftName,
+    shiftBeginTime: frontendShift.shiftBeginTime,
+    shiftEndTime: frontendShift.shiftEndTime,
+    shiftBeginBreakTime: frontendShift.shiftBeginBreakTime,
+    shiftEndBreakTime: frontendShift.shiftEndBreakTime,
+    shiftDescription: frontendShift.shiftDescription || '',
+    shiftStatus: Number(frontendShift.shiftStatus),
+    createdBy: frontendShift.createdBy,
+    createdDate: frontendShift.createdDate,
+    modifiedBy: frontendShift.modifiedBy,
+    modifiedDate: frontendShift.modifiedDate,
+  }
+}

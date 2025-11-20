@@ -73,8 +73,13 @@
             </div>
 
             <div class="grid-right">
-              <div class="wrap-icon-button-toolbar" title="Lọc" v-if="selectedIds.length === 0">
-                <div class="icon icon-filter"></div>
+              <div
+                class="wrap-icon-button-toolbar"
+                title="Lọc"
+                v-if="selectedIds.length === 0"
+                @click="loadShifts"
+              >
+                <div class="icon-reload"></div>
               </div>
             </div>
           </div>
@@ -84,7 +89,7 @@
       <div class="table-area">
         <TheTable
           :fields="shiftFields"
-          :rows="paginatedShifts"
+          :rows="shiftRows"
           v-model:selectedIds="selectedIds"
           rowKey="shiftId"
           @edit="handleEdit"
@@ -116,54 +121,94 @@
                       <el-icon><CopyDocument /></el-icon>
                       <span>Nhân bản</span>
                     </el-dropdown-item>
-                    <el-dropdown-item @click="handleStopUsing(row)">
+                    <el-dropdown-item
+                      v-if="row.shiftStatus === WorkShiftStatus.ACTIVE"
+                      @click="handleToggleStatus(row, WorkShiftStatus.INACTIVE)"
+                    >
                       <el-icon><CircleClose /></el-icon>
                       <span>Ngừng sử dụng</span>
                     </el-dropdown-item>
-                    <el-dropdown-item divided @click="handleDelete(row)" class="text-red">
+                    <el-dropdown-item
+                      v-else
+                      @click="handleToggleStatus(row, WorkShiftStatus.ACTIVE)"
+                    >
+                      <el-icon><CircleCheck /></el-icon>
+                      <span>Sử dụng</span>
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="handleDelete(row)" class="text-red">
                       <el-icon class="text-red"><Delete /></el-icon>
-                      <span class="text-red">Xóa</span>
+                      <span class="text-redd">Xóa</span>
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
             </div>
           </template>
+
+          <!-- Time Columns Formatting -->
+          <template #cell-shiftBeginTime="{ value }">
+            {{ formatTime(value) }}
+          </template>
+          <template #cell-shiftEndTime="{ value }">
+            {{ formatTime(value) }}
+          </template>
+          <template #cell-shiftBeginBreakTime="{ value }">
+            {{ formatTime(value) }}
+          </template>
+          <template #cell-shiftEndBreakTime="{ value }">
+            {{ formatTime(value) }}
+          </template>
+
+          <!-- Duration Columns Formatting -->
+          <template #cell-workTimeHours="{ value }">
+            {{ formatInteger(value) }}
+          </template>
+          <template #cell-breakTimeHours="{ value }">
+            {{ formatInteger(value) }}
+          </template>
+
+          <!-- Date Columns Formatting -->
+          <template #cell-createdDate="{ value }">
+            {{ formatDateOnly(value) }}
+          </template>
+          <template #cell-updatedDate="{ value }">
+            {{ formatDateOnly(value) }}
+          </template>
         </TheTable>
       </div>
 
       <div class="paging">
-        <div class="total-records">
-          Tổng: <strong>{{ totalRecords }}</strong> bản ghi
+        <div class="paging-left">
+          Tổng số: <strong>{{ totalRecords }}</strong> bản ghi
         </div>
-        <div class="pagination-controls">
-          <span>Số bản ghi/trang</span>
-          <select v-model="pageSize">
-            <option :value="25">25</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
-          <span
-            ><strong
-              >{{ (currentPage - 1) * pageSize + 1 }} -
-              {{ Math.min(currentPage * pageSize, totalRecords) }}</strong
+        <div class="paging-right">
+          <span class="text-label">Số dòng/trang</span>
+          <el-select v-model="pageSize" class="page-size-select">
+            <el-option :value="5" label="5" />
+            <el-option :value="20" label="20" />
+            <el-option :value="30" label="30" />
+            <el-option :value="50" label="50" />
+            <el-option :value="100" label="100" />
+          </el-select>
+          <span class="record-range">{{ rangeStart }} - {{ rangeEnd }}</span>
+          <div class="pagination-buttons">
+            <button :disabled="currentPage === 1" @click="currentPage = 1" class="nav-btn">
+              <el-icon><DArrowLeft /></el-icon>
+            </button>
+            <button :disabled="currentPage === 1" @click="currentPage--" class="nav-btn">
+              <el-icon><ArrowLeft /></el-icon>
+            </button>
+            <button :disabled="currentPage === totalPages" @click="currentPage++" class="nav-btn">
+              <el-icon><ArrowRight /></el-icon>
+            </button>
+            <button
+              :disabled="currentPage === totalPages"
+              @click="currentPage = totalPages"
+              class="nav-btn"
             >
-            bản ghi</span
-          >
-          <button
-            class="page-nav-btn"
-            @click="currentPage > 1 && currentPage--"
-            :disabled="currentPage === 1"
-          >
-            &lt;
-          </button>
-          <button
-            class="page-nav-btn"
-            @click="currentPage * pageSize < totalRecords && currentPage++"
-            :disabled="currentPage * pageSize >= totalRecords"
-          >
-            &gt;
-          </button>
+              <el-icon><DArrowRight /></el-icon>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -182,9 +227,23 @@ import {
   mapShiftsFromBackend,
   mapShiftFromBackend,
   mapShiftToBackend,
-} from '@/ultils/formatters.js'
+  formatTime,
+  formatDateOnly,
+  formatInteger,
+} from '@/ultils/formatter.js'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { EditPen, MoreFilled, CopyDocument, CircleClose, Delete } from '@element-plus/icons-vue'
+import {
+  EditPen,
+  MoreFilled,
+  CopyDocument,
+  CircleClose,
+  Delete,
+  CircleCheck,
+  DArrowLeft,
+  DArrowRight,
+  ArrowLeft,
+  ArrowRight,
+} from '@element-plus/icons-vue'
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)
 const notificationRef = ref(null)
@@ -216,26 +275,37 @@ const shiftFields = ref([
 ])
 
 const searchQuery = ref('')
-const shiftRows = ref([]) // Giữ lại để tránh lỗi reference nếu có, nhưng sẽ dùng paginatedShifts
-const allShifts = ref([]) // Chứa toàn bộ dữ liệu
+const shiftRows = ref([])
 const totalRecords = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(20)
 
-// 2. Hàm gọi API - Lấy TOÀN BỘ dữ liệu để filter client-side
+const rangeStart = computed(() => {
+  if (totalRecords.value === 0) return 0
+  return (currentPage.value - 1) * pageSize.value + 1
+})
+
+const rangeEnd = computed(() => {
+  return Math.min(currentPage.value * pageSize.value, totalRecords.value)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(totalRecords.value / pageSize.value)
+})
+
+// 2. Hàm gọi API - Lấy dữ liệu theo trang
 onMounted(() => {
   loadShifts()
 })
 
 const loadShifts = async () => {
   try {
-    // Lấy số lượng lớn bản ghi để filter ở client
-    const response = await ShiftAPI.getPaging(10000, 1, '')
+    const response = await ShiftAPI.getPaging(pageSize.value, currentPage.value, searchQuery.value)
 
     if (response.data.success) {
-      const mappedData = mapShiftsFromBackend(response.data.data.data)
-      allShifts.value = mappedData
-      // totalRecords sẽ được tính từ filteredShifts
+      const data = response.data.data
+      shiftRows.value = mapShiftsFromBackend(data.data)
+      totalRecords.value = data.totalRecords
     } else {
       console.error('Lỗi từ API:', response.data.message)
     }
@@ -251,46 +321,18 @@ const loadShifts = async () => {
   }
 }
 
-// Computed: Filter dữ liệu
-const filteredShifts = computed(() => {
-  if (!searchQuery.value) return allShifts.value
-
-  const query = searchQuery.value.toLowerCase()
-  return allShifts.value.filter((shift) => {
-    // 1. Tìm theo các trường text thông thường
-    const textFields = ['shiftCode', 'shiftName', 'createdBy', 'updatedBy']
-    const hasTextMatch = textFields.some((field) => {
-      const value = shift[field]
-      return value && String(value).toLowerCase().includes(query)
-    })
-
-    if (hasTextMatch) return true
-
-    // 2. Tìm theo text của trạng thái (VD: "Đang sử dụng")
-    const statusText = WorkShiftStatusText[shift.shiftStatus]
-    if (statusText && statusText.toLowerCase().includes(query)) {
-      return true
-    }
-
-    return false
-  })
+// Watchers
+watch([currentPage, pageSize], () => {
+  loadShifts()
 })
 
-// Computed: Phân trang dữ liệu đã filter
-const paginatedShifts = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + parseInt(pageSize.value)
-  return filteredShifts.value.slice(start, end)
-})
-
-// Update totalRecords dựa trên kết quả filter
-watch(filteredShifts, (newVal) => {
-  totalRecords.value = newVal.length
-})
-
-// Reset về trang 1 khi search thay đổi
+let searchTimeout
 watch(searchQuery, () => {
-  currentPage.value = 1
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1
+    loadShifts()
+  }, 500)
 })
 // --- PHẦN FORM/DIALOG ---
 
@@ -303,7 +345,7 @@ const openAddDialog = () => {
 const handleEdit = (row) => {
   // Row đã được map từ API, không cần map lại
   shiftToEdit.value = { ...row }
-  dialogTitle.value = 'Sửa Ca làm việc'
+  dialogTitle.value = 'Sửa ca làm việc'
   isFormVisible.value = true
 }
 
@@ -346,105 +388,134 @@ const generateUUID = () => {
   })
 }
 /**
+ * Chuẩn bị payload
+ */
+const preparePayload = (formData) => {
+  const payload = { ...formData }
+  payload.shiftBeginTime = formatTimePayload(payload.shiftBeginTime)
+  payload.shiftEndTime = formatTimePayload(payload.shiftEndTime)
+  payload.shiftBeginBreakTime = formatTimePayload(payload.shiftBeginBreakTime)
+  payload.shiftEndBreakTime = formatTimePayload(payload.shiftEndBreakTime)
+  return payload
+}
+
+/**
+ * Xử lý thêm mới
+ */
+const createShift = async (payload) => {
+  const now = new Date().toISOString()
+  payload.shiftId = payload.shiftId || generateUUID()
+  payload.shiftStatus = payload.shiftStatus ?? 1
+  payload.createdBy = payload.createdBy || 'admin'
+  payload.createdDate = payload.createdDate || now
+  payload.modifiedBy = payload.modifiedBy || 'admin'
+  payload.modifiedDate = payload.modifiedDate || now
+
+  const backendPayload = mapShiftToBackend(payload)
+  await ShiftAPI.insert(backendPayload)
+}
+
+/**
+ * Xử lý cập nhật
+ */
+const updateShift = async (payload) => {
+  const now = new Date().toISOString()
+  // shiftToEdit.value chắc chắn tồn tại và có ID ở đây
+  payload.shiftId = shiftToEdit.value.shiftId || payload.shiftId
+  payload.modifiedBy = payload.modifiedBy || 'admin'
+  payload.modifiedDate = now
+
+  const backendPayload = mapShiftToBackend(payload)
+  await ShiftAPI.update(payload.shiftId, backendPayload)
+}
+
+/**
+ * Xử lý khi lưu thành công
+ */
+const handleSaveSuccess = () => {
+  loadShifts()
+
+  const isEdit = shiftToEdit.value && shiftToEdit.value.shiftId
+  const message = isEdit ? 'Cập nhật thành công!' : 'Thêm mới thành công!'
+
+  if (isSaveAndAdd.value) {
+    notificationRef.value.success(message)
+
+    if (candidateFormRef.value && candidateFormRef.value.resetForm) {
+      candidateFormRef.value.resetForm()
+    }
+    // Reset về chế độ thêm mới
+    shiftToEdit.value = null
+    dialogTitle.value = 'Thêm ca làm việc'
+  } else {
+    handleCancelForm()
+    notificationRef.value.success(message)
+  }
+}
+
+/**
+ * Xử lý lỗi khi lưu
+ */
+const handleSaveError = (error) => {
+  console.error('Lỗi khi lưu:', error)
+  let errMsg = 'Có lỗi xảy ra, vui lòng thử lại.'
+
+  if (error && error.response) {
+    const resp = error.response
+    const respData = resp.data
+
+    if (respData && respData.errors) {
+      const mapped = {}
+      Object.keys(respData.errors).forEach((k) => {
+        const v = respData.errors[k]
+        if (Array.isArray(v) && v.length > 0) mapped[k] = String(v[0])
+        else mapped[k] = String(v)
+      })
+
+      if (candidateFormRef.value && candidateFormRef.value.setErrors) {
+        candidateFormRef.value.setErrors(mapped)
+      }
+      errMsg = respData.title || 'Có lỗi validate, vui lòng kiểm tra form.'
+    } else if (respData) {
+      if (typeof respData === 'string') {
+        errMsg = respData
+      } else if (respData.message) {
+        errMsg = respData.message
+      } else if (respData.title) {
+        errMsg = respData.title
+      } else {
+        try {
+          errMsg = JSON.stringify(respData)
+        } catch {
+          errMsg = String(respData)
+        }
+      }
+    } else {
+      errMsg = resp.statusText || errMsg
+    }
+  } else if (error && error.message) {
+    errMsg = error.message
+  }
+
+  notificationRef.value.error(`Lỗi: ${errMsg}`)
+}
+
+/**
  * Hàm Lưu (Thêm mới hoặc Cập nhật)
  */
 const handleSave = async (formData) => {
   try {
-    // Chuẩn bị payload (định dạng thời gian, các trường mặc định)
-    const payload = { ...formData }
+    const payload = preparePayload(formData)
 
-    // Format times to HH:mm:ss (backend dùng TimeSpan)
-    payload.shiftBeginTime = formatTimePayload(payload.shiftBeginTime)
-    payload.shiftEndTime = formatTimePayload(payload.shiftEndTime)
-    payload.shiftBeginBreakTime = formatTimePayload(payload.shiftBeginBreakTime)
-    payload.shiftEndBreakTime = formatTimePayload(payload.shiftEndBreakTime)
-
-    const now = new Date().toISOString()
-    if (shiftToEdit.value) {
-      // Chế độ Sửa: giữ shiftId từ shiftToEdit (nếu có)
-      payload.shiftId = shiftToEdit.value.shiftId || payload.shiftId
-      payload.modifiedBy = payload.modifiedBy || 'admin'
-      payload.modifiedDate = now
-      // Map sang backend format trước khi gửi
-      const backendPayload = mapShiftToBackend(payload)
-      await ShiftAPI.update(payload.shiftId, backendPayload)
+    if (shiftToEdit.value && shiftToEdit.value.shiftId) {
+      await updateShift(payload)
     } else {
-      // Chế độ Thêm mới: thêm mặc định
-      payload.shiftId = payload.shiftId || generateUUID()
-      payload.shiftStatus = payload.shiftStatus ?? 1
-      payload.createdBy = payload.createdBy || 'admin'
-      payload.createdDate = payload.createdDate || now
-      payload.modifiedBy = payload.modifiedBy || 'admin'
-      payload.modifiedDate = payload.modifiedDate || now
-      // Map sang backend format trước khi gửi
-      const backendPayload = mapShiftToBackend(payload)
-      await ShiftAPI.insert(backendPayload)
+      await createShift(payload)
     }
-    loadShifts() // Tải lại dữ liệu
 
-    if (isSaveAndAdd.value) {
-      // Nếu là Save & Add
-      notificationRef.value.success(
-        shiftToEdit.value ? 'Cập nhật thành công!' : 'Thêm mới thành công!',
-      )
-
-      // Reset form để thêm mới tiếp
-      if (candidateFormRef.value && candidateFormRef.value.resetForm) {
-        candidateFormRef.value.resetForm()
-      }
-      // Chuyển về chế độ thêm mới (nếu đang sửa)
-      shiftToEdit.value = null
-      dialogTitle.value = 'Thêm Ca làm việc'
-      // Không đóng form
-    } else {
-      // Nếu là Save thường
-      handleCancelForm() // Đóng form
-      notificationRef.value.success(
-        shiftToEdit.value ? 'Cập nhật thành công!' : 'Thêm mới thành công!',
-      )
-    }
+    handleSaveSuccess()
   } catch (error) {
-    console.error('Lỗi khi lưu:', error)
-    // Cố gắng lấy thông tin lỗi có ý nghĩa từ response
-    let errMsg = 'Có lỗi xảy ra, vui lòng thử lại.'
-    if (error && error.response) {
-      const resp = error.response
-      const respData = resp.data
-      // Nếu backend gửi validation errors (ASP.NET style)
-      if (respData && respData.errors) {
-        // Map errors (take first message for each field)
-        const mapped = {}
-        Object.keys(respData.errors).forEach((k) => {
-          const v = respData.errors[k]
-          if (Array.isArray(v) && v.length > 0) mapped[k] = String(v[0])
-          else mapped[k] = String(v)
-        })
-        // Nếu form con tồn tại, gán lỗi để hiển thị theo field
-        if (candidateFormRef.value && candidateFormRef.value.setErrors) {
-          candidateFormRef.value.setErrors(mapped)
-        }
-        errMsg = respData.title || 'Có lỗi validate, vui lòng kiểm tra form.'
-      } else if (respData) {
-        if (typeof respData === 'string') {
-          errMsg = respData
-        } else if (respData.message) {
-          errMsg = respData.message
-        } else if (respData.title) {
-          errMsg = respData.title
-        } else {
-          try {
-            errMsg = JSON.stringify(respData)
-          } catch {
-            errMsg = String(respData)
-          }
-        }
-      } else {
-        errMsg = resp.statusText || errMsg
-      }
-    } else if (error && error.message) {
-      errMsg = error.message
-    }
-    notificationRef.value.error(`Lỗi: ${errMsg}`)
+    handleSaveError(error)
   }
 }
 
@@ -497,7 +568,7 @@ const handleAddCandidate = (formData) => {
 // Lấy danh sách object đầy đủ của các dòng đang chọn
 const selectedRows = computed(() => {
   if (!selectedIds.value.length) return []
-  return allShifts.value.filter((shift) => selectedIds.value.includes(shift.shiftId))
+  return shiftRows.value.filter((shift) => selectedIds.value.includes(shift.shiftId))
 })
 
 // Logic hiển thị nút
@@ -544,13 +615,37 @@ const handleBulkUpdate = async (newStatus) => {
 }
 
 const handleDuplicate = (row) => {
-  console.log('Duplicate', row)
-  // TODO: Implement duplicate logic
+  const duplicatedData = { ...row }
+  duplicatedData.shiftId = null
+  duplicatedData.shiftCode = ''
+  // duplicatedData.shiftName = ''
+  // duplicatedData.createdBy = null
+  // duplicatedData.createdDate = null
+  // duplicatedData.modifiedBy = null
+  // duplicatedData.modifiedDate = null
+  shiftToEdit.value = duplicatedData
+  dialogTitle.value = 'Thêm ca làm việc'
+  isFormVisible.value = true
 }
 
-const handleStopUsing = (row) => {
-  console.log('Stop using', row)
-  // TODO: Implement stop using logic
+const handleToggleStatus = async (row, newStatus) => {
+  try {
+    await ShiftAPI.bulkUpdateStatus([row.shiftId], newStatus)
+    notificationRef.value.success('Cập nhật trạng thái thành công!')
+    loadShifts()
+  } catch (error) {
+    console.error('Lỗi cập nhật trạng thái:', error)
+    let msg = 'Có lỗi xảy ra khi cập nhật trạng thái.'
+    if (error.response && error.response.data) {
+      msg =
+        error.response.data.userMsg ||
+        error.response.data.devMsg ||
+        JSON.stringify(error.response.data)
+    } else if (error.message) {
+      msg = error.message
+    }
+    notificationRef.value.error(msg)
+  }
 }
 
 const handleBulkDelete = () => {
@@ -633,7 +728,66 @@ const handleBulkDelete = () => {
   border-bottom-right-radius: 4px;
 }
 
-/* removed empty rule .title-rigtht */
+.paging-left {
+  font-size: 14px;
+  color: #1f1f1f;
+}
+
+.paging-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.text-label {
+  font-size: 14px;
+  color: #1f1f1f;
+}
+
+.page-size-select {
+  width: 70px;
+}
+
+.page-size-select :deep(.el-input__wrapper) {
+  padding: 0 8px;
+}
+
+.record-range {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f1f1f;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9e9e9e;
+  padding: 0;
+}
+
+.nav-btn:hover:not(:disabled) {
+  color: #1f1f1f;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.nav-btn:disabled {
+  color: #e0e0e0;
+  cursor: not-allowed;
+}
 .title-name {
   font-weight: 500;
   font-size: 14px !important;
@@ -991,7 +1145,15 @@ const handleBulkDelete = () => {
   width: 20px;
   height: 20px;
   mask-image: url(@/assets/icon/iconn.svg);
-  mask-position: -35px -50px;
+  mask-position: -33px -48px;
+  mask-repeat: no-repeat;
+  background-color: #4b5563;
+}
+.icon-reload {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-position: -8px -48px;
   mask-repeat: no-repeat;
   background-color: #4b5563;
 }

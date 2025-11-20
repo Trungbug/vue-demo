@@ -50,4 +50,16 @@ export default class BaseAPI {
   delete(id) {
     return APIConfig.delete(`${this.controller}/${id}`)
   }
+   /**
+     * Cập nhật trạng thái hàng loạt
+     * @param {Array} ids Danh sách ID
+     * @param {int} status Trạng thái mới (0 hoặc 1)
+     */
+    deleteMany(ids) {
+      return APIConfig.delete(`${this.controller}/delete-many`, {
+        data: { ids: ids }
+      })
+    }
+  
+    // Các hàm insert, update, delete đã được kế thừa từ BaseAPI
 }

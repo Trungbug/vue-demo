@@ -474,7 +474,7 @@ const handleBulkUpdate = async (newStatus) => {
 
 const handleBulkDelete = () => {
   ElMessageBox.confirm(
-    `Bạn có chắc chắn muốn xóa ${selectedIds.value.length} bản ghi đã chọn không?`,
+    `Bạn có chắc chắn muốn xóa các bản ghi đã chọn không?`,
     'Xóa hàng loạt',
     {
       confirmButtonText: 'Xóa',
@@ -485,15 +485,19 @@ const handleBulkDelete = () => {
   )
     .then(async () => {
       try {
-        const promises = selectedIds.value.map((id) => ShiftAPI.delete(id))
-        await Promise.all(promises)
-        
+       await ShiftAPI.deleteMany(selectedIds.value)
         notificationRef.value.success('Xóa thành công!')
         loadShifts()
         handleUnselect()
       } catch (error) {
         console.error('Lỗi bulk delete:', error)
-        notificationRef.value.error('Có lỗi xảy ra khi xóa.')
+        let msg = 'Có lỗi xảy ra khi xóa.'
+        if (error.response && error.response.data) {
+            msg = error.response.data.userMsg || error.response.data.devMsg || JSON.stringify(error.response.data)
+        } else if (error.message) {
+            msg = error.message
+        }
+        notificationRef.value.error(msg)
       }
     })
     .catch(() => {})

@@ -22,21 +22,14 @@ export const mapShiftFromBackend = (backendShift) => {
     shiftBeginBreakTime: backendShift.BeginBreakTime || backendShift.shiftBeginBreakTime,
     shiftEndBreakTime: backendShift.EndBreakTime || backendShift.shiftEndBreakTime,
     shiftDescription: backendShift.Description || backendShift.shiftDescription || '',
-
-    // Map trạng thái: backend gửi "Inactive" (boolean), FE dùng shiftStatus (0/1)
-    // Inactive: false => status: 1 (đang sử dụng), Inactive: true => status: 0 (ngưng sử dụng)
     shiftStatus:
       backendShift.Inactive !== undefined
         ? backendShift.Inactive
           ? 0
           : 1
         : backendShift.shiftStatus,
-
-    // Map thời gian làm việc và nghỉ
     workTimeHours: backendShift.WorkingTime || backendShift.workTimeHours,
     breakTimeHours: backendShift.BreakingTime || backendShift.breakTimeHours,
-
-    // Map người tạo/sửa
     createdBy: backendShift.CreatedBy || backendShift.createdBy,
     createdDate: backendShift.CreatedDate || backendShift.createdDate,
     modifiedBy: backendShift.ModifiedBy || backendShift.modifiedBy,
@@ -63,24 +56,18 @@ export const mapShiftToBackend = (frontendShift) => {
   if (!frontendShift) return null
 
   return {
-    ShiftID: frontendShift.shiftId,
-    ShiftCode: frontendShift.shiftCode,
-    ShiftName: frontendShift.shiftName,
-    BeginShiftTime: frontendShift.shiftBeginTime,
-    EndShiftTime: frontendShift.shiftEndTime,
-    BeginBreakTime: frontendShift.shiftBeginBreakTime,
-    EndBreakTime: frontendShift.shiftEndBreakTime,
-    Description: frontendShift.shiftDescription || '',
-    // Map status (0/1) => Inactive (boolean)
-    // status 1 (đang sử dụng) => Inactive: false
-    // status 0 (ngưng sử dụng) => Inactive: true
-    Inactive: Number(frontendShift.shiftStatus) === 0,
-    ShiftStatus: Number(frontendShift.shiftStatus),
-    WorkingTime: frontendShift.workTimeHours,
-    BreakingTime: frontendShift.breakTimeHours,
-    CreatedBy: frontendShift.createdBy,
-    CreatedDate: frontendShift.createdDate,
-    ModifiedBy: frontendShift.modifiedBy,
-    ModifiedDate: frontendShift.modifiedDate,
+    shiftId: frontendShift.shiftId,
+    shiftCode: frontendShift.shiftCode,
+    shiftName: frontendShift.shiftName,
+    shiftBeginTime: frontendShift.shiftBeginTime,
+    shiftEndTime: frontendShift.shiftEndTime,
+    shiftBeginBreakTime: frontendShift.shiftBeginBreakTime,
+    shiftEndBreakTime: frontendShift.shiftEndBreakTime,
+    shiftDescription: frontendShift.shiftDescription || '',
+    shiftStatus: Number(frontendShift.shiftStatus),
+    createdBy: frontendShift.createdBy,
+    createdDate: frontendShift.createdDate,
+    modifiedBy: frontendShift.modifiedBy,
+    modifiedDate: frontendShift.modifiedDate,
   }
 }

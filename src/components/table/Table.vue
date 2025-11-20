@@ -237,19 +237,19 @@ th {
 }
 
 .table-row.row-checked {
-  background-color: #86efac;
+  background-color: #e6f9f4; /* Lighter green to match design */
 }
 
 .table-row.row-checked:hover {
-  background-color: #86efac;
+  background-color: #dcfce7;
 }
 
 .table-row.row-checked .checkbox-cell {
-  background-color: #86efac;
+  background-color: #e6f9f4;
 }
 
 .table-row.row-checked .actions-cell {
-  background-color: #86efac;
+  background-color: #e6f9f4;
 }
 
 .checkbox-cell {
@@ -291,9 +291,40 @@ th {
 }
 
 .ms-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
   width: 18px;
   height: 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.ms-checkbox:checked {
+  background-color: #009b71;
+  border-color: #009b71;
+}
+
+.ms-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ms-checkbox:hover {
+  border-color: #009b71;
 }
 
 /* Style cho cột Tên + Avatar */

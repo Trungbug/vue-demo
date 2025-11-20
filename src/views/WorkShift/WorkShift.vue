@@ -42,10 +42,39 @@
                   />
                 </div>
               </div>
+              <div class="bulk-actions" v-if="selectedIds.length > 0">
+                <span class="selected-count">Đã chọn <strong>{{ selectedIds.length }}</strong></span>
+                <span class="unselect-link" @click="handleUnselect">Bỏ chọn</span>
+                
+                <button 
+                  class="btn-bulk btn-bulk-active" 
+                  v-if="showActiveButton"
+                  @click="handleBulkUpdate(WorkShiftStatus.ACTIVE)"
+                >
+                  <div class="icon icon-check-circle"></div>
+                  <span>Sử dụng</span>
+                </button>
+
+                <button 
+                  class="btn-bulk btn-bulk-inactive" 
+                  v-if="showInactiveButton"
+                  @click="handleBulkUpdate(WorkShiftStatus.INACTIVE)"
+                >
+                  <div class="icon icon-ban"></div>
+                  <span>Ngừng sử dụng</span>
+                </button>
+
+                <button class="btn-bulk btn-bulk-delete" @click="handleBulkDelete">
+                  <div class="icon icon-trash"></div>
+                  <span>Xóa</span>
+                </button>
+              </div>
+
             </div>
 
             <div class="grid-right">
-              <div class="wrap-icon-button-toolbar" title="Lọc">
+              
+              <div class="wrap-icon-button-toolbar" title="Lọc" v-if="selectedIds.length === 0">
                 <div class="icon icon-filter"></div>
               </div>
             </div>
@@ -57,6 +86,8 @@
         <TheTable
           :fields="shiftFields"
           :rows="paginatedShifts"
+          v-model:selectedIds="selectedIds"
+          rowKey="shiftId"
           @edit="handleEdit"
           @delete="handleDelete"
           @row-dblclick="handleEdit"
@@ -106,7 +137,7 @@ import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
 import Notification from '@/components/notification/Notification.vue'
 import ShiftAPI from '@/api/ShiftAPI.js'
-import { WorkShiftStatusText } from '@/ultils/enums.js'
+import { WorkShiftStatusText, WorkShiftStatus } from '@/ultils/enums.js'
 import {
   mapShiftsFromBackend,
   mapShiftFromBackend,
@@ -118,6 +149,8 @@ const candidateFormRef = ref(null)
 const notificationRef = ref(null)
 const shiftToEdit = ref(null)
 const dialogTitle = ref('Thêm ca làm việc')
+const selectedIds = ref([]) // Danh sách ID các dòng được chọn
+
 
 // --- PHẦN DỮ LIỆU BẢNG ---
 
@@ -390,6 +423,81 @@ const handleDelete = (row) => {
 const handleAddCandidate = (formData) => {
   handleSave(formData)
 }
+
+// --- BULK ACTIONS ---
+
+// Lấy danh sách object đầy đủ của các dòng đang chọn
+const selectedRows = computed(() => {
+  if (!selectedIds.value.length) return []
+  return allShifts.value.filter((shift) => selectedIds.value.includes(shift.shiftId))
+})
+
+// Logic hiển thị nút
+const showActiveButton = computed(() => {
+  // Hiển thị nút "Sử dụng" nếu có ít nhất 1 dòng đang là "Ngừng sử dụng"
+  return selectedRows.value.some((row) => row.shiftStatus === WorkShiftStatus.INACTIVE)
+})
+
+const showInactiveButton = computed(() => {
+  // Hiển thị nút "Ngừng sử dụng" nếu có ít nhất 1 dòng đang là "Đang sử dụng"
+  return selectedRows.value.some((row) => row.shiftStatus === WorkShiftStatus.ACTIVE)
+})
+
+const handleUnselect = () => {
+  selectedIds.value = []
+}
+
+const handleBulkUpdate = async (newStatus) => {
+  try {
+    const rowsToUpdate = selectedRows.value.filter((row) => row.shiftStatus !== newStatus)
+    
+    if (rowsToUpdate.length === 0) return
+
+    const idsToUpdate = rowsToUpdate.map(row => row.shiftId)
+    
+    await ShiftAPI.bulkUpdateStatus(idsToUpdate, newStatus)
+
+    notificationRef.value.success('Cập nhật trạng thái thành công!')
+    loadShifts()
+    handleUnselect()
+  } catch (error) {
+    console.error('Lỗi bulk update:', error)
+    let msg = 'Có lỗi xảy ra khi cập nhật trạng thái.'
+    if (error.response && error.response.data) {
+        msg = error.response.data.userMsg || error.response.data.devMsg || JSON.stringify(error.response.data)
+    } else if (error.message) {
+        msg = error.message
+    }
+    notificationRef.value.error(msg)
+  }
+}
+
+const handleBulkDelete = () => {
+  ElMessageBox.confirm(
+    `Bạn có chắc chắn muốn xóa ${selectedIds.value.length} bản ghi đã chọn không?`,
+    'Xóa hàng loạt',
+    {
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy',
+      type: 'warning',
+      confirmButtonClass: 'el-button--danger',
+    },
+  )
+    .then(async () => {
+      try {
+        const promises = selectedIds.value.map((id) => ShiftAPI.delete(id))
+        await Promise.all(promises)
+        
+        notificationRef.value.success('Xóa thành công!')
+        loadShifts()
+        handleUnselect()
+      } catch (error) {
+        console.error('Lỗi bulk delete:', error)
+        notificationRef.value.error('Có lỗi xảy ra khi xóa.')
+      }
+    })
+    .catch(() => {})
+}
 </script>
 
 <style scoped>
@@ -634,5 +742,102 @@ const handleAddCandidate = (formData) => {
   color: #6b7280;
   background-color: #f3f4f6;
   border: 1px solid #d1d5db;
+}
+
+/* Bulk Actions Toolbar */
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.selected-count {
+  font-size: 14px;
+  color: #111827;
+}
+
+.unselect-link {
+  font-size: 14px;
+  color: #009b71; /* Green color */
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.unselect-link:hover {
+  text-decoration: underline;
+}
+
+.btn-bulk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: #fff;
+  transition: all 0.2s ease;
+}
+
+.btn-bulk-active {
+  border: 1px solid #009b71;
+  color: #009b71;
+}
+
+.btn-bulk-active:hover {
+  background-color: #edfdf8;
+}
+
+.btn-bulk-inactive {
+  border: 1px solid #ef4444; /* Red color */
+  color: #ef4444;
+}
+
+.btn-bulk-inactive:hover {
+  background-color: #fef2f2;
+}
+
+.btn-bulk-delete {
+  border: 1px solid #ef4444;
+  color: #ef4444;
+}
+
+.btn-bulk-delete:hover {
+  background-color: #fef2f2;
+}
+
+/* Icons for bulk buttons (using font awesome or similar if available, otherwise placeholders) */
+/* Assuming icons are handled via class or background image similar to existing icons */
+.icon-check-circle {
+  width: 16px;
+  height: 16px;
+  /* Replace with actual icon path or font class */
+  background-color: #009b71;
+  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>');
+  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>');
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.icon-ban {
+  width: 16px;
+  height: 16px;
+  background-color: #ef4444;
+  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" /></svg>'); /* Using x-circle as ban placeholder */
+  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" /></svg>');
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.icon-trash {
+  width: 16px;
+  height: 16px;
+  background-color: #ef4444;
+  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" /></svg>');
+  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" /></svg>');
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
 }
 </style>

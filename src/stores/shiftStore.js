@@ -1,0 +1,183 @@
+import { defineStore } from 'pinia'
+import ShiftAPI from '@/api/ShiftAPI.js'
+import {
+  mapShiftsFromBackend,
+  mapShiftToBackend,
+  generateUUID,
+  formatTimeForPayload,
+} from '@/ultils/formatter.js'
+
+export const useShiftStore = defineStore('shift', {
+  // 1. State: Chứa dữ liệu
+  state: () => ({
+    shifts: [], // Danh sách ca làm việc
+    totalRecords: 0, // Tổng số bản ghi
+    isLoading: false, // Trạng thái loading (để hiển thị xoay xoay nếu cần)
+
+    // Bộ lọc và phân trang
+    filter: {
+      pageNumber: 1,
+      pageSize: 20,
+      searchQuery: '',
+      sort: 'createdDate DESC',
+    },
+  }),
+
+  // 2. Actions: Các hàm xử lý nghiệp vụ
+  actions: {
+    /**
+     * Lấy danh sách ca làm việc từ API
+     */
+    async fetchShifts() {
+      this.isLoading = true
+      try {
+        const res = await ShiftAPI.getPaging(
+          this.filter.pageSize,
+          this.filter.pageNumber,
+          this.filter.searchQuery,
+          this.filter.sort,
+        )
+
+        if (res.data.success) {
+          // Map dữ liệu từ Backend sang format Frontend
+          this.shifts = mapShiftsFromBackend(res.data.data.data)
+          this.totalRecords = res.data.data.totalRecords
+        }
+      } catch (error) {
+        console.error('Lỗi fetch data:', error)
+        throw error // Ném lỗi để Component hứng và hiện thông báo
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /**
+     * Thêm mới ca làm việc
+     */
+    async addShift(formData) {
+      this.isLoading = true
+      try {
+        // Chuẩn bị dữ liệu trước khi gửi (Logic cũ của bạn)
+        const payload = { ...formData }
+        const now = new Date().toISOString()
+
+        // Xử lý format giờ
+        payload.shiftBeginTime = formatTimeForPayload(payload.shiftBeginTime)
+        payload.shiftEndTime = formatTimeForPayload(payload.shiftEndTime)
+        payload.shiftBeginBreakTime = formatTimeForPayload(payload.shiftBeginBreakTime)
+        payload.shiftEndBreakTime = formatTimeForPayload(payload.shiftEndBreakTime)
+
+        // Gán các giá trị mặc định
+        payload.shiftId = generateUUID()
+        payload.shiftStatus = payload.shiftStatus ?? 1
+        payload.createdBy = 'admin' // Có thể thay bằng user thật sau này
+        payload.createdDate = now
+        payload.modifiedBy = 'admin'
+        payload.modifiedDate = now
+
+        // Map sang format Backend
+        const backendPayload = mapShiftToBackend(payload)
+
+        // Gọi API
+        await ShiftAPI.insert(backendPayload)
+
+        // Load lại dữ liệu (về trang 1 để thấy bản ghi mới)
+        this.filter.pageNumber = 1
+        await this.fetchShifts()
+
+        return { success: true, message: 'Thêm mới thành công!' }
+      } catch (error) {
+        return { success: false, error }
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /**
+     * Cập nhật ca làm việc
+     */
+    async updateShift(id, formData) {
+      this.isLoading = true
+      try {
+        const payload = { ...formData }
+        const now = new Date().toISOString()
+
+        // Xử lý format giờ
+        payload.shiftBeginTime = formatTimeForPayload(payload.shiftBeginTime)
+        payload.shiftEndTime = formatTimeForPayload(payload.shiftEndTime)
+        payload.shiftBeginBreakTime = formatTimeForPayload(payload.shiftBeginBreakTime)
+        payload.shiftEndBreakTime = formatTimeForPayload(payload.shiftEndBreakTime)
+
+        payload.modifiedBy = 'admin'
+        payload.modifiedDate = now
+
+        const backendPayload = mapShiftToBackend(payload)
+
+        // Gọi API update
+        await ShiftAPI.update(id, backendPayload)
+
+        // Load lại dữ liệu để cập nhật thay đổi
+        await this.fetchShifts()
+
+        return { success: true, message: 'Cập nhật thành công!' }
+      } catch (error) {
+        return { success: false, error }
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /**
+     * Xóa 1 bản ghi
+     */
+    async removeShift(id) {
+      try {
+        await ShiftAPI.delete(id)
+
+        // Xóa trực tiếp trên UI store để phản hồi nhanh
+        this.shifts = this.shifts.filter((s) => s.shiftId !== id)
+        this.totalRecords--
+
+        return { success: true, message: 'Xóa thành công!' }
+      } catch (error) {
+        return { success: false, error }
+      }
+    },
+
+    /**
+     * Xóa nhiều bản ghi
+     */
+    async removeManyShifts(ids) {
+      try {
+        await ShiftAPI.deleteMany(ids)
+
+        // Load lại dữ liệu để đảm bảo đồng bộ
+        await this.fetchShifts()
+
+        return { success: true, message: 'Xóa thành công!' }
+      } catch (error) {
+        return { success: false, error }
+      }
+    },
+
+    /**
+     * Cập nhật trạng thái hàng loạt
+     */
+    async bulkUpdateStatus(ids, status) {
+      try {
+        await ShiftAPI.bulkUpdateStatus(ids, status)
+
+        // Cập nhật nhanh UI
+        this.shifts.forEach((shift) => {
+          if (ids.includes(shift.shiftId)) {
+            shift.shiftStatus = status
+          }
+        })
+
+        return { success: true, message: 'Cập nhật trạng thái thành công!' }
+      } catch (error) {
+        throw error
+      }
+    },
+  },
+})

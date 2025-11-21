@@ -89,7 +89,7 @@
       <div class="table-area">
         <TheTable
           :fields="shiftFields"
-          :rows="shiftRows"
+          :rows="shifts"
           v-model:selectedIds="selectedIds"
           rowKey="shiftId"
           @edit="handleEdit"
@@ -171,7 +171,7 @@
           <template #cell-createdDate="{ value }">
             {{ formatDateOnly(value) }}
           </template>
-          <template #cell-updatedDate="{ value }">
+          <template #cell-modifiedDate="{ value }">
             {{ formatDateOnly(value) }}
           </template>
         </TheTable>
@@ -217,25 +217,17 @@
 </template>
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
+import { storeToRefs } from 'pinia' // Import storeToRefs để giữ reactivity
+import { useShiftStore } from '@/stores/shiftStore.js' // Import Store
+
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
 import Notification from '@/components/notification/Notification.vue'
-import ShiftAPI from '@/api/ShiftAPI.js'
 import { WorkShiftStatusText, WorkShiftStatus } from '@/constants/enums.js'
-import {
-  mapShiftsFromBackend,
-  mapShiftFromBackend,
-  mapShiftToBackend,
-  formatTime,
-  formatDateOnly,
-  formatInteger,
-  formatTimeForPayload,
-  generateUUID,
-} from '@/ultils/formatter.js'
+import { formatTime, formatDateOnly, formatInteger } from '@/ultils/formatter.js'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import {
-  EditPen,
   MoreFilled,
   CopyDocument,
   CircleClose,
@@ -249,43 +241,65 @@ import {
 import useDialog from '@/composables/useDialog.js'
 import useToast from '@/composables/useToast.js'
 
+// --- 1. KHỞI TẠO STORE ---
+const store = useShiftStore()
+
+// Lấy state từ store (Dùng storeToRefs để khi state thay đổi, UI tự cập nhật)
+// shifts thay thế cho shiftRows cũ
+const { shifts, totalRecords, filter, isLoading } = storeToRefs(store)
+
+// --- 2. LOCAL STATE (UI) ---
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)
 const notificationRef = ref(null)
 const shiftToEdit = ref(null)
 const dialogTitle = ref('Thêm ca làm việc')
-const selectedIds = ref([]) // Danh sách ID các dòng được chọn
+const selectedIds = ref([]) // Danh sách ID đang chọn
 const isSaveAndAdd = ref(false)
-const { isDialogVisible, selectedItem, showDialog, hideDialog } = useDialog()
+const { isDialogVisible, selectedItem, showDialog, hideDialog } = useDialog() // Nếu bạn dùng logic này ở đâu đó
 const { showToast } = useToast()
-// --- PHẦN DỮ LIỆU BẢNG ---
 
-// 1. Định nghĩa các cột cho Bảng Ca làm việc
-// Các key phải khớp với ShiftDto.cs (ví dụ: shiftCode, shiftName)
-//
+// Cột bảng
 const shiftFields = ref([
   { key: 'shiftCode', label: 'Mã ca', width: '120px' },
   { key: 'shiftName', label: 'Tên ca', width: '250px' },
-  { key: 'shiftBeginTime', label: 'Giờ vào ca', type: 'text', width: '130px' }, // Dùng 'text' vì formatter có thể xử lý
+  { key: 'shiftBeginTime', label: 'Giờ vào ca', type: 'text', width: '130px' },
   { key: 'shiftEndTime', label: 'Giờ hết ca', type: 'text', width: '130px' },
   { key: 'shiftBeginBreakTime', label: 'Bắt đầu nghỉ giữa ca', type: 'text', width: '200px' },
   { key: 'shiftEndBreakTime', label: 'Kết thúc nghỉ giữa ca', type: 'text', width: '210px' },
   { key: 'workTimeHours', label: 'Thời gian làm việc (giờ)', type: 'number', width: '210px' },
   { key: 'breakTimeHours', label: 'Thời gian nghỉ giữa ca (giờ)', type: 'number', width: '230px' },
-  // Thêm các trường khác từ file docx nếu muốn (Trạng thái, Người tạo...)
   { key: 'shiftStatus', label: 'Trạng thái', width: '200px' },
   { key: 'createdBy', label: 'Người tạo', width: '160px' },
   { key: 'createdDate', label: 'Ngày tạo', width: '160px' },
-  { key: 'updatedBy', label: 'Người sửa', width: '16px' },
-  { key: 'updatedDate', label: 'Ngày cập nhật', width: '160px' },
+  { key: 'modifiedBy', label: 'Người sửa', width: '16px' },
+  { key: 'modifiedDate', label: 'Ngày sửa', width: '160px' },
 ])
 
-const searchQuery = ref('')
-const shiftRows = ref([])
-const totalRecords = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(20)
+// --- 3. COMPUTED (Liên kết v-model với Store) ---
+// Tạo các biến computed có get/set để khi người dùng thao tác trên UI, dữ liệu trong Store tự cập nhật
+const currentPage = computed({
+  get: () => filter.value.pageNumber,
+  set: (val) => {
+    filter.value.pageNumber = val
+  },
+})
 
+const pageSize = computed({
+  get: () => filter.value.pageSize,
+  set: (val) => {
+    filter.value.pageSize = val
+  },
+})
+
+const searchQuery = computed({
+  get: () => filter.value.searchQuery,
+  set: (val) => {
+    filter.value.searchQuery = val
+  },
+})
+
+// Tính toán hiển thị phân trang (Dựa trên dữ liệu từ Store)
 const rangeStart = computed(() => {
   if (totalRecords.value === 0) return 0
   return (currentPage.value - 1) * pageSize.value + 1
@@ -299,461 +313,218 @@ const totalPages = computed(() => {
   return Math.ceil(totalRecords.value / pageSize.value)
 })
 
-// 2. Hàm gọi API - Lấy dữ liệu theo trang
+// --- 4. CALL API & WATCHERS ---
 onMounted(() => {
   loadShifts()
 })
 
-/**
- * Hàm load dữ liệu ca làm việc
- * createdby: Bảo Trung
- */
+// Hàm gọi API thông qua Store Action
 const loadShifts = async () => {
   try {
-    const response = await ShiftAPI.getPaging(pageSize.value, currentPage.value, searchQuery.value)
-
-    if (response.data.success) {
-      const data = response.data.data
-      shiftRows.value = mapShiftsFromBackend(data.data)
-      totalRecords.value = data.totalRecords
-    } else {
-      console.error('Lỗi từ API:', response.data.message)
-    }
+    await store.fetchShifts()
   } catch (err) {
-    console.error('❌ Lỗi gọi API:', err)
+    // Xử lý lỗi kết nối
     if (err.code === 'ERR_CERT_AUTHORITY_INVALID') {
-      notificationRef.value.error(
-        'LỖI SSL: Bạn chưa chấp nhận chứng chỉ HTTPS (self-signed) của BE. Hãy mở BE URL (https://localhost:7248/api/Shift) trên tab mới và nhấn "Proceed".',
-      )
+      showToast('Lỗi SSL: Vui lòng chấp nhận chứng chỉ backend.', 'error')
     } else if (err.code === 'ERR_CONNECTION_REFUSED') {
-      notificationRef.value.error('LỖI KẾT NỐI: Backend của bạn chưa chạy?')
+      showToast('Không thể kết nối đến Server.', 'error')
+    } else {
+      showToast('Có lỗi xảy ra khi tải dữ liệu.', 'error')
     }
   }
 }
 
-// Watchers
+// Khi trang hoặc số lượng bản ghi/trang thay đổi -> Gọi API
 watch([currentPage, pageSize], () => {
   loadShifts()
 })
 
+// Debounce tìm kiếm
 let searchTimeout
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    currentPage.value = 1
+    filter.value.pageNumber = 1 // Reset về trang 1 khi tìm kiếm
     loadShifts()
   }, 500)
 })
-// --- PHẦN FORM/DIALOG ---
 
-/**
- * Mở dialog thêm mới
- * createdby: Bảo Trung
- */
+// --- 5. CÁC HÀM XỬ LÝ SỰ KIỆN (ACTIONS) ---
+
 const openAddDialog = () => {
   shiftToEdit.value = null
   dialogTitle.value = 'Thêm Ca làm việc'
   isFormVisible.value = true
 }
 
-/**
- * Xử lý sự kiện sửa
- * @param {object} row Dòng dữ liệu cần sửa
- * createdby: Bảo Trung
- */
 const handleEdit = (row) => {
-  // Row đã được map từ API, không cần map lại
   shiftToEdit.value = { ...row }
   dialogTitle.value = 'Sửa ca làm việc'
   isFormVisible.value = true
 }
 
-/**
- * Đóng form
- * createdby: Bảo Trung
- */
 const handleCancelForm = () => {
   isFormVisible.value = false
   shiftToEdit.value = null
 }
 
-// Gọi hàm submit của form con
-/**
- * Lưu dữ liệu (chỉ lưu)
- * createdby: Bảo Trung
- */
 const handleSaveOnly = () => {
   isSaveAndAdd.value = false
-  if (candidateFormRef.value && candidateFormRef.value.handleSubmit) {
-    candidateFormRef.value.handleSubmit()
-  }
+  candidateFormRef.value?.handleSubmit()
 }
 
-/**
- * Lưu và thêm mới tiếp
- * createdby: Bảo Trung
- */
 const handleSaveAndAdd = () => {
   isSaveAndAdd.value = true
-  if (candidateFormRef.value && candidateFormRef.value.handleSubmit) {
-    candidateFormRef.value.handleSubmit()
-  }
+  candidateFormRef.value?.handleSubmit()
 }
 
-/**
- * Chuẩn bị payload
- * @param {object} formData Dữ liệu từ form
- * createdby: Bảo Trung
- */
-const preparePayload = (formData) => {
-  const payload = { ...formData }
-  payload.shiftBeginTime = formatTimeForPayload(payload.shiftBeginTime)
-  payload.shiftEndTime = formatTimeForPayload(payload.shiftEndTime)
-  payload.shiftBeginBreakTime = formatTimeForPayload(payload.shiftBeginBreakTime)
-  payload.shiftEndBreakTime = formatTimeForPayload(payload.shiftEndBreakTime)
-  return payload
-}
+// Xử lý lưu (Thêm/Sửa)
+const handleAddCandidate = async (formData) => {
+  let result
 
-/**
- * Xử lý thêm mới
- * @param {object} payload Dữ liệu cần thêm
- * createdby: Bảo Trung
- */
-const createShift = async (payload) => {
-  const now = new Date().toISOString()
-  payload.shiftId = payload.shiftId || generateUUID()
-  payload.shiftStatus = payload.shiftStatus ?? 1
-  payload.createdBy = payload.createdBy || 'admin'
-  payload.createdDate = payload.createdDate || now
-  payload.modifiedBy = payload.modifiedBy || 'admin'
-  payload.modifiedDate = payload.modifiedDate || now
-
-  const backendPayload = mapShiftToBackend(payload)
-  await ShiftAPI.insert(backendPayload)
-}
-
-/**
- * Xử lý cập nhật
- * @param {object} payload Dữ liệu cần cập nhật
- * createdby: Bảo Trung
- */
-const updateShift = async (payload) => {
-  const now = new Date().toISOString()
-  // shiftToEdit.value chắc chắn tồn tại và có ID ở đây
-  payload.shiftId = shiftToEdit.value.shiftId || payload.shiftId
-  payload.modifiedBy = payload.modifiedBy || 'admin'
-  payload.modifiedDate = now
-
-  const backendPayload = mapShiftToBackend(payload)
-  await ShiftAPI.update(payload.shiftId, backendPayload)
-}
-
-/**
- * Xử lý khi lưu thành công
- * createdby: Bảo Trung
- */
-const handleSaveSuccess = () => {
-  loadShifts()
-
-  const isEdit = shiftToEdit.value && shiftToEdit.value.shiftId
-  const message = isEdit ? 'Cập nhật thành công!' : 'Thêm mới thành công!'
-
-  if (isSaveAndAdd.value) {
-    notificationRef.value.success(message)
-
-    if (candidateFormRef.value && candidateFormRef.value.resetForm) {
-      candidateFormRef.value.resetForm()
-    }
-    // Reset về chế độ thêm mới
-    shiftToEdit.value = null
-    dialogTitle.value = 'Thêm ca làm việc'
+  if (shiftToEdit.value && shiftToEdit.value.shiftId) {
+    // Gọi Action Update từ Store
+    result = await store.updateShift(shiftToEdit.value.shiftId, formData)
   } else {
-    handleCancelForm()
-    notificationRef.value.success(message)
+    // Gọi Action Add từ Store
+    result = await store.addShift(formData)
+  }
+
+  if (result.success) {
+    showToast(result.message, 'success')
+
+    if (isSaveAndAdd.value) {
+      candidateFormRef.value?.resetForm()
+      shiftToEdit.value = null
+      dialogTitle.value = 'Thêm ca làm việc'
+    } else {
+      handleCancelForm()
+    }
+  } else {
+    handleSaveError(result.error)
   }
 }
 
-/**
- * Xử lý lỗi khi lưu
- * @param {object} error Lỗi trả về
- * createdby: Bảo Trung
- */
+// Xử lý hiển thị lỗi
 const handleSaveError = (error) => {
   console.error('Lỗi khi lưu:', error)
-  let errMsg = 'Có lỗi xảy ra, vui lòng thử lại.'
+  let errMsg = 'Có lỗi xảy ra.'
 
-  if (error && error.response) {
-    const resp = error.response
-    const respData = resp.data
-
-    if (respData && respData.success === false && respData.message) {
-      errMsg = respData.message
-    } else if (respData && respData.errors) {
+  if (error?.response?.data) {
+    const respData = error.response.data
+    // Map lỗi validate vào form nếu có
+    if (respData.errors) {
       const mapped = {}
       Object.keys(respData.errors).forEach((k) => {
         const v = respData.errors[k]
-        if (Array.isArray(v) && v.length > 0) mapped[k] = String(v[0])
-        else mapped[k] = String(v)
+        mapped[k] = Array.isArray(v) ? String(v[0]) : String(v)
       })
-
-      if (candidateFormRef.value && candidateFormRef.value.setErrors) {
-        candidateFormRef.value.setErrors(mapped)
-      }
-      errMsg = respData.title || 'Có lỗi validate, vui lòng kiểm tra form.'
-    } else if (respData) {
-      if (typeof respData === 'string') {
-        errMsg = respData
-      } else if (respData.message) {
-        errMsg = respData.message
-      } else if (respData.title) {
-        errMsg = respData.title
-      } else {
-        try {
-          errMsg = JSON.stringify(respData)
-        } catch {
-          errMsg = String(respData)
-        }
-      }
-    } else {
-      errMsg = resp.statusText || errMsg
+      candidateFormRef.value?.setErrors(mapped)
+      errMsg = 'Dữ liệu không hợp lệ.'
+    } else if (respData.message) {
+      errMsg = respData.message
     }
-  } else if (error && error.message) {
-    errMsg = error.message
   }
-
-  notificationRef.value.error(`Lỗi: ${errMsg}`)
+  showToast(errMsg, 'error')
 }
 
-/**
- * Hàm Lưu (Thêm mới hoặc Cập nhật)
- * @param {object} formData Dữ liệu từ form
- * createdby: Bảo Trung
- */
-const handleSave = async (formData) => {
-  try {
-    const payload = preparePayload(formData)
-
-    if (shiftToEdit.value && shiftToEdit.value.shiftId) {
-      await updateShift(payload)
-    } else {
-      await createShift(payload)
-    }
-
-    handleSaveSuccess()
-  } catch (error) {
-    handleSaveError(error)
-  }
-}
-
-/**
- * Hàm Xóa
- */
-
-/**
- * Hàm Xóa
- * @param {object} row Dòng dữ liệu cần xóa
- * createdby: Bảo Trung
- */
+// Xử lý Xóa
 const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    `Ca làm việc ${row.shiftName} sau khi bị xóa sẽ không thể khôi phục. Bạn có muốn tiếp tục xóa không?`,
-    'Xóa ca làm việc',
-    {
-      confirmButtonText: 'Xóa',
-      cancelButtonText: 'Hủy',
-      type: 'warning',
-      confirmButtonClass: 'el-button--danger', // Optional: style the delete button red
-    },
-  )
-    .then(async () => {
-      try {
-        await ShiftAPI.delete(row.shiftId)
-
-        // Optimistic update
-        shiftRows.value = shiftRows.value.filter((r) => r.shiftId !== row.shiftId)
-        totalRecords.value -= 1
-
-        ElMessage({
-          type: 'success',
-          message: 'Xóa thành công!',
-        })
-        await loadShifts()
-      } catch (error) {
-        console.error('Lỗi khi xóa:', error)
-        ElMessage({
-          type: 'error',
-          message: 'Có lỗi xảy ra, không thể xóa.',
-        })
-      }
-    })
-    .catch(() => {
-      // User clicked Cancel
-    })
-}
-
-/**
- * Xử lý sự kiện submit từ form con
- * @param {object} formData
- * createdby: Bảo Trung
- */
-const handleAddCandidate = (formData) => {
-  handleSave(formData)
-}
-
-// --- BULK ACTIONS ---
-
-// Lấy danh sách object đầy đủ của các dòng đang chọn
-const selectedRows = computed(() => {
-  if (!selectedIds.value.length) return []
-  return shiftRows.value.filter((shift) => selectedIds.value.includes(shift.shiftId))
-})
-
-// Logic hiển thị nút
-const showActiveButton = computed(() => {
-  // Hiển thị nút "Sử dụng" nếu có ít nhất 1 dòng đang là "Ngừng sử dụng"
-  return selectedRows.value.some((row) => row.shiftStatus === WorkShiftStatus.INACTIVE)
-})
-
-const showInactiveButton = computed(() => {
-  // Hiển thị nút "Ngừng sử dụng" nếu có ít nhất 1 dòng đang là "Đang sử dụng"
-  return selectedRows.value.some((row) => row.shiftStatus === WorkShiftStatus.ACTIVE)
-})
-
-/**
- * Bỏ chọn tất cả
- * createdby: Bảo Trung
- */
-const handleUnselect = () => {
-  selectedIds.value = []
-}
-
-/**
- * Cập nhật trạng thái hàng loạt
- * @param {number} newStatus Trạng thái mới
- * createdby: Bảo Trung
- */
-const handleBulkUpdate = async (newStatus) => {
-  try {
-    const rowsToUpdate = selectedRows.value.filter((row) => row.shiftStatus !== newStatus)
-
-    if (rowsToUpdate.length === 0) return
-
-    const idsToUpdate = rowsToUpdate.map((row) => row.shiftId)
-
-    await ShiftAPI.bulkUpdateStatus(idsToUpdate, newStatus)
-
-    // Cập nhật UI ngay lập tức (Optimistic update)
-    shiftRows.value.forEach((row) => {
-      if (idsToUpdate.includes(row.shiftId)) {
-        row.shiftStatus = newStatus
-      }
-    })
-
-    notificationRef.value.success('Cập nhật trạng thái thành công!')
-
-    // Bỏ chọn trước khi reload để tránh lỗi giao diện nếu có
-    handleUnselect()
-
-    // Reload lại dữ liệu từ server để đảm bảo đồng bộ
-    await loadShifts()
-  } catch (error) {
-    console.error('Lỗi bulk update:', error)
-    let msg = 'Có lỗi xảy ra khi cập nhật trạng thái.'
-    if (error.response && error.response.data) {
-      msg =
-        error.response.data.userMsg ||
-        error.response.data.devMsg ||
-        JSON.stringify(error.response.data)
-    } else if (error.message) {
-      msg = error.message
-    }
-    notificationRef.value.error(msg)
-  }
-}
-
-/**
- * Nhân bản bản ghi
- * @param {object} row Dòng dữ liệu gốc
- * createdby: Bảo Trung
- */
-const handleDuplicate = (row) => {
-  const duplicatedData = { ...row }
-  duplicatedData.shiftId = null
-  duplicatedData.shiftCode = ''
-  // duplicatedData.shiftName = ''
-  // duplicatedData.createdBy = null
-  // duplicatedData.createdDate = null
-  // duplicatedData.modifiedBy = null
-  // duplicatedData.modifiedDate = null
-  shiftToEdit.value = duplicatedData
-  dialogTitle.value = 'Thêm ca làm việc'
-  isFormVisible.value = true
-}
-
-/**
- * Đổi trạng thái 1 dòng
- * @param {object} row Dòng dữ liệu
- * @param {number} newStatus Trạng thái mới
- * createdby: Bảo Trung
- */
-const handleToggleStatus = async (row, newStatus) => {
-  try {
-    await ShiftAPI.bulkUpdateStatus([row.shiftId], newStatus)
-    row.shiftStatus = newStatus
-
-    notificationRef.value.success('Cập nhật trạng thái thành công!')
-    await loadShifts()
-  } catch (error) {
-    console.error('Lỗi cập nhật trạng thái:', error)
-    let msg = 'Có lỗi xảy ra khi cập nhật trạng thái.'
-    if (error.response && error.response.data) {
-      msg =
-        error.response.data.userMsg ||
-        error.response.data.devMsg ||
-        JSON.stringify(error.response.data)
-    } else if (error.message) {
-      msg = error.message
-    }
-    notificationRef.value.error(msg)
-  }
-}
-
-/**
- * Xóa hàng loạt
- * createdby: Bảo Trung
- */
-const handleBulkDelete = () => {
-  ElMessageBox.confirm(`Bạn có chắc chắn muốn xóa các bản ghi đã chọn không?`, 'Xóa hàng loạt', {
+  ElMessageBox.confirm(`Bạn có chắc chắn muốn xóa ca "${row.shiftName}"?`, 'Xóa ca làm việc', {
     confirmButtonText: 'Xóa',
     cancelButtonText: 'Hủy',
     type: 'warning',
     confirmButtonClass: 'el-button--danger',
   })
     .then(async () => {
-      try {
-        const idsToDelete = [...selectedIds.value]
-        await ShiftAPI.deleteMany(idsToDelete)
-
-        // Optimistic update
-        shiftRows.value = shiftRows.value.filter((row) => !idsToDelete.includes(row.shiftId))
-        totalRecords.value -= idsToDelete.length
-
-        notificationRef.value.success('Xóa thành công!')
-
-        handleUnselect()
-        await loadShifts()
-      } catch (error) {
-        console.error('Lỗi bulk delete:', error)
-        let msg = 'Có lỗi xảy ra khi xóa.'
-        if (error.response && error.response.data) {
-          msg =
-            error.response.data.userMsg ||
-            error.response.data.devMsg ||
-            JSON.stringify(error.response.data)
-        } else if (error.message) {
-          msg = error.message
+      const result = await store.removeShift(row.shiftId)
+      if (result.success) {
+        showToast(result.message, 'success')
+        // Nếu xóa hết item trang cuối, lùi trang
+        if (shifts.value.length === 0 && currentPage.value > 1) {
+          currentPage.value--
         }
-        notificationRef.value.error(msg)
+      } else {
+        showToast('Không thể xóa bản ghi này.', 'error')
+      }
+    })
+    .catch(() => {})
+}
+
+const handleDuplicate = (row) => {
+  const duplicatedData = { ...row }
+  duplicatedData.shiftId = null
+  duplicatedData.shiftCode = ''
+  shiftToEdit.value = duplicatedData
+  dialogTitle.value = 'Thêm ca làm việc'
+  isFormVisible.value = true
+}
+
+// --- BULK ACTIONS ---
+const selectedRows = computed(() => {
+  if (!selectedIds.value.length) return []
+  return shifts.value.filter((shift) => selectedIds.value.includes(shift.shiftId))
+})
+
+const showActiveButton = computed(() =>
+  selectedRows.value.some((row) => row.shiftStatus === WorkShiftStatus.INACTIVE),
+)
+const showInactiveButton = computed(() =>
+  selectedRows.value.some((row) => row.shiftStatus === WorkShiftStatus.ACTIVE),
+)
+
+const handleUnselect = () => {
+  selectedIds.value = []
+}
+
+const handleBulkUpdate = async (newStatus) => {
+  try {
+    const rowsToUpdate = selectedRows.value.filter((row) => row.shiftStatus !== newStatus)
+    if (rowsToUpdate.length === 0) return
+
+    const idsToUpdate = rowsToUpdate.map((row) => row.shiftId)
+    const result = await store.bulkUpdateStatus(idsToUpdate, newStatus)
+
+    if (result.success) {
+      showToast(result.message, 'success')
+      handleUnselect()
+    }
+  } catch (error) {
+    showToast('Lỗi cập nhật trạng thái.', 'error')
+  }
+}
+
+const handleToggleStatus = async (row, newStatus) => {
+  try {
+    const result = await store.bulkUpdateStatus([row.shiftId], newStatus)
+    if (result.success) {
+      showToast(result.message, 'success')
+    }
+  } catch (error) {
+    showToast('Lỗi cập nhật trạng thái.', 'error')
+  }
+}
+
+const handleBulkDelete = () => {
+  ElMessageBox.confirm(
+    `Bạn muốn xóa ${selectedIds.value.length} bản ghi đã chọn?`,
+    'Xóa hàng loạt',
+    {
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy',
+      type: 'warning',
+      confirmButtonClass: 'el-button--danger',
+    },
+  )
+    .then(async () => {
+      const idsToDelete = [...selectedIds.value]
+      const result = await store.removeManyShifts(idsToDelete)
+
+      if (result.success) {
+        showToast(result.message, 'success')
+        handleUnselect()
+      } else {
+        showToast('Lỗi khi xóa hàng loạt.', 'error')
       }
     })
     .catch(() => {})

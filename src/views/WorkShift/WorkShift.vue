@@ -304,6 +304,10 @@ onMounted(() => {
   loadShifts()
 })
 
+/**
+ * Hàm load dữ liệu ca làm việc
+ * createdby: Bảo Trung
+ */
 const loadShifts = async () => {
   try {
     const response = await ShiftAPI.getPaging(pageSize.value, currentPage.value, searchQuery.value)
@@ -342,12 +346,21 @@ watch(searchQuery, () => {
 })
 // --- PHẦN FORM/DIALOG ---
 
+/**
+ * Mở dialog thêm mới
+ * createdby: Bảo Trung
+ */
 const openAddDialog = () => {
   shiftToEdit.value = null
   dialogTitle.value = 'Thêm Ca làm việc'
   isFormVisible.value = true
 }
 
+/**
+ * Xử lý sự kiện sửa
+ * @param {object} row Dòng dữ liệu cần sửa
+ * createdby: Bảo Trung
+ */
 const handleEdit = (row) => {
   // Row đã được map từ API, không cần map lại
   shiftToEdit.value = { ...row }
@@ -355,12 +368,20 @@ const handleEdit = (row) => {
   isFormVisible.value = true
 }
 
+/**
+ * Đóng form
+ * createdby: Bảo Trung
+ */
 const handleCancelForm = () => {
   isFormVisible.value = false
   shiftToEdit.value = null
 }
 
 // Gọi hàm submit của form con
+/**
+ * Lưu dữ liệu (chỉ lưu)
+ * createdby: Bảo Trung
+ */
 const handleSaveOnly = () => {
   isSaveAndAdd.value = false
   if (candidateFormRef.value && candidateFormRef.value.handleSubmit) {
@@ -368,6 +389,10 @@ const handleSaveOnly = () => {
   }
 }
 
+/**
+ * Lưu và thêm mới tiếp
+ * createdby: Bảo Trung
+ */
 const handleSaveAndAdd = () => {
   isSaveAndAdd.value = true
   if (candidateFormRef.value && candidateFormRef.value.handleSubmit) {
@@ -377,6 +402,8 @@ const handleSaveAndAdd = () => {
 
 /**
  * Chuẩn bị payload
+ * @param {object} formData Dữ liệu từ form
+ * createdby: Bảo Trung
  */
 const preparePayload = (formData) => {
   const payload = { ...formData }
@@ -389,6 +416,8 @@ const preparePayload = (formData) => {
 
 /**
  * Xử lý thêm mới
+ * @param {object} payload Dữ liệu cần thêm
+ * createdby: Bảo Trung
  */
 const createShift = async (payload) => {
   const now = new Date().toISOString()
@@ -405,6 +434,8 @@ const createShift = async (payload) => {
 
 /**
  * Xử lý cập nhật
+ * @param {object} payload Dữ liệu cần cập nhật
+ * createdby: Bảo Trung
  */
 const updateShift = async (payload) => {
   const now = new Date().toISOString()
@@ -419,6 +450,7 @@ const updateShift = async (payload) => {
 
 /**
  * Xử lý khi lưu thành công
+ * createdby: Bảo Trung
  */
 const handleSaveSuccess = () => {
   loadShifts()
@@ -443,6 +475,8 @@ const handleSaveSuccess = () => {
 
 /**
  * Xử lý lỗi khi lưu
+ * @param {object} error Lỗi trả về
+ * createdby: Bảo Trung
  */
 const handleSaveError = (error) => {
   console.error('Lỗi khi lưu:', error)
@@ -492,6 +526,8 @@ const handleSaveError = (error) => {
 
 /**
  * Hàm Lưu (Thêm mới hoặc Cập nhật)
+ * @param {object} formData Dữ liệu từ form
+ * createdby: Bảo Trung
  */
 const handleSave = async (formData) => {
   try {
@@ -515,6 +551,8 @@ const handleSave = async (formData) => {
 
 /**
  * Hàm Xóa
+ * @param {object} row Dòng dữ liệu cần xóa
+ * createdby: Bảo Trung
  */
 const handleDelete = (row) => {
   ElMessageBox.confirm(
@@ -553,7 +591,11 @@ const handleDelete = (row) => {
     })
 }
 
-// Hàm emit từ form
+/**
+ * Xử lý sự kiện submit từ form con
+ * @param {object} formData
+ * createdby: Bảo Trung
+ */
 const handleAddCandidate = (formData) => {
   handleSave(formData)
 }
@@ -577,10 +619,19 @@ const showInactiveButton = computed(() => {
   return selectedRows.value.some((row) => row.shiftStatus === WorkShiftStatus.ACTIVE)
 })
 
+/**
+ * Bỏ chọn tất cả
+ * createdby: Bảo Trung
+ */
 const handleUnselect = () => {
   selectedIds.value = []
 }
 
+/**
+ * Cập nhật trạng thái hàng loạt
+ * @param {number} newStatus Trạng thái mới
+ * createdby: Bảo Trung
+ */
 const handleBulkUpdate = async (newStatus) => {
   try {
     const rowsToUpdate = selectedRows.value.filter((row) => row.shiftStatus !== newStatus)
@@ -620,6 +671,11 @@ const handleBulkUpdate = async (newStatus) => {
   }
 }
 
+/**
+ * Nhân bản bản ghi
+ * @param {object} row Dòng dữ liệu gốc
+ * createdby: Bảo Trung
+ */
 const handleDuplicate = (row) => {
   const duplicatedData = { ...row }
   duplicatedData.shiftId = null
@@ -634,6 +690,12 @@ const handleDuplicate = (row) => {
   isFormVisible.value = true
 }
 
+/**
+ * Đổi trạng thái 1 dòng
+ * @param {object} row Dòng dữ liệu
+ * @param {number} newStatus Trạng thái mới
+ * createdby: Bảo Trung
+ */
 const handleToggleStatus = async (row, newStatus) => {
   try {
     await ShiftAPI.bulkUpdateStatus([row.shiftId], newStatus)
@@ -656,6 +718,10 @@ const handleToggleStatus = async (row, newStatus) => {
   }
 }
 
+/**
+ * Xóa hàng loạt
+ * createdby: Bảo Trung
+ */
 const handleBulkDelete = () => {
   ElMessageBox.confirm(`Bạn có chắc chắn muốn xóa các bản ghi đã chọn không?`, 'Xóa hàng loạt', {
     confirmButtonText: 'Xóa',

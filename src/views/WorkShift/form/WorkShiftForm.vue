@@ -137,6 +137,10 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'cancel'])
 
 // Hàm tạo form rỗng (đúng với Shift)
+/**
+ * Tạo object form rỗng
+ * createdby: Bảo Trung
+ */
 const createEmptyForm = () => ({
   shiftCode: '',
   shiftName: '',
@@ -153,6 +157,7 @@ const errors = ref({})
 /**
  * Tính toán thời gian làm việc (có xử lý qua đêm)
  * Trả về số giờ (dạng 8.5)
+ * createdby: Bảo Trung
  */
 const workTimeHours = computed(() => {
   const start = parseTime(formData.value.shiftBeginTime)
@@ -174,6 +179,7 @@ const workTimeHours = computed(() => {
 /**
  * Tính toán thời gian nghỉ (có xử lý qua đêm)
  * Trả về số giờ (dạng 1.0)
+ * createdby: Bảo Trung
  */
 const breakTimeHours = computed(() => {
   const start = parseTime(formData.value.shiftBeginBreakTime)
@@ -227,6 +233,7 @@ watch(
 /**
  * Validate form trước khi submit
  * Các rule dựa trên Đề đánh giá và Shift.cs
+ * createdby: Bảo Trung
  */
 const validateForm = () => {
   errors.value = {}
@@ -286,6 +293,11 @@ const validateForm = () => {
   return isValid
 }
 
+/**
+ * Xử lý sự kiện blur input
+ * @param {string} field Tên trường
+ * createdby: Bảo Trung
+ */
 const handleBlur = (field) => {
   if (!field) return
   const data = formData.value
@@ -328,6 +340,7 @@ const handleBlur = (field) => {
 /**
  * Hàm này được gọi từ component cha (WorkShift.vue)
  * Nó sẽ validate, nếu OK thì emit 'submit'
+ * createdby: Bảo Trung
  */
 const handleSubmit = () => {
   if (validateForm()) {
@@ -356,15 +369,19 @@ const handleSubmit = () => {
 }
 
 /**
- * Hàm này cũng được gọi từ cha
+ * Hàm này gọi từ cha
+ * createdby: Bảo Trung
  */
 const handleCancel = () => {
   emit('cancel')
 }
 
-// Expose methods to parent (handleSubmit, handleCancel, setErrors)
-
 // Cho phép component cha gán lỗi validation từ server
+/**
+ * Gán lỗi từ server vào form
+ * @param {object} serverErrors Lỗi từ server
+ * createdby: Bảo Trung
+ */
 const setErrors = (serverErrors) => {
   const mapped = {}
   if (serverErrors && typeof serverErrors === 'object') {
@@ -377,6 +394,10 @@ const setErrors = (serverErrors) => {
   errors.value = mapped
 }
 
+/**
+ * Reset form về trạng thái ban đầu
+ * createdby: Bảo Trung
+ */
 const resetForm = () => {
   formData.value = createEmptyForm()
   errors.value = {}

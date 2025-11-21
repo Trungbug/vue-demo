@@ -1,7 +1,7 @@
 /**
  * API axios instance cấu hình chung cho toàn bộ project
  * @module APIConfig
- * Created By NMDUC - 18/11/2025
+ * createdby: Bảo Trung
  */
 import axios from 'axios'
 
@@ -10,6 +10,7 @@ const baseURL = 'https://localhost:7248/api'
 /**
  * Tạo instance axios với cấu hình mặc định
  * @type {import('axios').AxiosInstance}
+ * createdby: Bảo Trung
  */
 let api = axios.create({
   baseURL: baseURL,

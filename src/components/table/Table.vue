@@ -107,6 +107,11 @@ const isAllChecked = computed(() => {
 })
 
 // Xử lý chọn 1 dòng
+/**
+ * Xử lý khi click checkbox 1 dòng
+ * @param {string} id ID của dòng
+ * createdby: Bảo Trung
+ */
 const handleRowCheck = (id) => {
   const newSelected = [...props.selectedIds]
   const index = newSelected.indexOf(id)
@@ -119,6 +124,11 @@ const handleRowCheck = (id) => {
 }
 
 // Xử lý chọn tất cả
+/**
+ * Xử lý khi click checkbox chọn tất cả
+ * @param {Event} event Sự kiện change
+ * createdby: Bảo Trung
+ */
 const handleSelectAll = (event) => {
   if (event.target.checked) {
     const allIds = props.rows.map((row) => row[props.rowKey])

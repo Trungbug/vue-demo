@@ -41,6 +41,10 @@ import { ref } from 'vue'
 
 const isCollapsed = ref(false)
 
+/**
+ * Toggle trạng thái thu gọn sidebar
+ * createdby: Bảo Trung
+ */
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
 }

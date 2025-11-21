@@ -7,6 +7,7 @@
  * Chuyển giá trị về chuỗi số có phân cách hàng nghìn
  * @param {number|string|null|undefined} v Giá trị đầu vào
  * @returns {string|number} Trả về chuỗi đã format hoặc '-' nếu không có giá trị
+ * createdby: Bảo Trung
  */
 export const formatNumber = (v) => {
   if (v === null || v === undefined || v === '') return '-'
@@ -19,6 +20,7 @@ export const formatNumber = (v) => {
  * Định dạng ngày giờ thành `dd/mm/yyyy hh:MM`
  * @param {string|Date|number} v Giá trị ngày (ISO string, timestamp hoặc Date)
  * @returns {string} Chuỗi định dạng ngày hoặc '-' nếu không có giá trị
+ * createdby: Bảo Trung
  */
 export const formatDate = (v) => {
   if (!v) return '-'
@@ -38,6 +40,7 @@ export const formatDate = (v) => {
  * Đảm bảo trả về chuỗi, xử lý null/undefined
  * @param {any} v Giá trị bất kỳ
  * @returns {string} Chuỗi hoặc '-' nếu không có giá trị
+ * createdby: Bảo Trung
  */
 export const formatText = (v) => {
   if (v === null || v === undefined || v === '') return '-'
@@ -48,6 +51,7 @@ export const formatText = (v) => {
  * Hàm lấy 2 chữ cái đầu của tên
  * @param {string} name Tên đầy đủ
  * @returns {string} 2 chữ cái đầu
+ * createdby: Bảo Trung
  */
 export const getInitials = (name) => {
   if (!name || typeof name !== 'string' || name.trim() === '') return '?'
@@ -68,6 +72,7 @@ export const getInitials = (name) => {
  * Định dạng giờ phút `HH:mm`
  * @param {string} timeStr Chuỗi giờ (HH:mm:ss hoặc HH:mm)
  * @returns {string} Giờ phút
+ * createdby: Bảo Trung
  */
 export const formatTime = (timeStr) => {
   if (!timeStr) return ''
@@ -81,6 +86,7 @@ export const formatTime = (timeStr) => {
  * Định dạng ngày `dd/mm/yyyy`
  * @param {string|Date} dateStr Giá trị ngày
  * @returns {string} Ngày tháng năm
+ * createdby: Bảo Trung
  */
 export const formatDateOnly = (dateStr) => {
   if (!dateStr) return ''
@@ -96,6 +102,7 @@ export const formatDateOnly = (dateStr) => {
  * Định dạng số nguyên (làm tròn)
  * @param {number|string} v Giá trị
  * @returns {string} Số nguyên hoặc '-'
+ * createdby: Bảo Trung
  */
 export const formatInteger = (v) => {
   if (v === null || v === undefined || v === '') return '-'
@@ -114,6 +121,7 @@ export const formatInteger = (v) => {
  * Map một Shift object từ backend sang frontend format
  * @param {Object} backendShift - Object từ API backend
  * @returns {Object} - Object với tên trường đúng cho frontend
+ * createdby: Bảo Trung
  */
 export const mapShiftFromBackend = (backendShift) => {
   if (!backendShift) return null
@@ -147,6 +155,7 @@ export const mapShiftFromBackend = (backendShift) => {
  * Map một danh sách Shifts từ backend
  * @param {Array} backendShifts - Mảng từ API backend
  * @returns {Array} - Mảng với format frontend
+ * createdby: Bảo Trung
  */
 export const mapShiftsFromBackend = (backendShifts) => {
   if (!Array.isArray(backendShifts)) return []
@@ -157,6 +166,7 @@ export const mapShiftsFromBackend = (backendShifts) => {
  * Map một Shift object từ frontend sang backend format để gửi API
  * @param {Object} frontendShift - Object từ form
  * @returns {Object} - Object với tên trường đúng cho backend
+ * createdby: Bảo Trung
  */
 export const mapShiftToBackend = (frontendShift) => {
   if (!frontendShift) return null
@@ -182,6 +192,7 @@ export const mapShiftToBackend = (frontendShift) => {
  * Helper: đảm bảo time string có định dạng HH:mm:ss
  * @param {string} timeStr - Chuỗi thời gian
  * @returns {string|null} - Chuỗi thời gian chuẩn hoặc null
+ * createdby: Bảo Trung
  */
 export const formatTimeForPayload = (timeStr) => {
   if (!timeStr) return null
@@ -195,6 +206,7 @@ export const formatTimeForPayload = (timeStr) => {
  * Hàm parse chuỗi "HH:mm" sang số phút trong ngày
  * @param {string} timeString - Chuỗi thời gian (ví dụ: "08:30")
  * @returns {number} - Số phút từ đầu ngày
+ * createdby: Bảo Trung
  */
 export const parseTime = (timeString) => {
   if (!timeString) return 0
@@ -207,6 +219,7 @@ export const parseTime = (timeString) => {
 /**
  * Simple UUID v4 generator
  * @returns {string} - UUID string
+ * createdby: Bảo Trung
  */
 export const generateUUID = () => {
   // RFC4122 version 4 compliant-ish

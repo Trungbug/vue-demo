@@ -9,6 +9,12 @@ const state = reactive({
 let timeout = null
 
 export default function useToast() {
+  /**
+   * Hiển thị toast message
+   * @param {string} msg Nội dung message
+   * @param {string} msgType Loại message (success, error, warning, info)
+   * createdby: Bảo Trung
+   */
   const showToast = (msg, msgType = 'success') => {
     state.isShow = true
     state.message = msg
@@ -20,6 +26,10 @@ export default function useToast() {
     }, 3000)
   }
 
+  /**
+   * Ẩn toast message
+   * createdby: Bảo Trung
+   */
   const hideToast = () => {
     state.isShow = false
   }

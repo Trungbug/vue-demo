@@ -13,6 +13,7 @@ class ShiftAPI extends BaseAPI {
    * @param {int} pageNumber
    * @param {string} search
    * @returns (Promise)
+   * createdby: Bảo Trung
    */
   getPaging(pageSize, pageNumber, search) {
     // Khớp với hàm GetPaged trong ShiftController
@@ -24,16 +25,17 @@ class ShiftAPI extends BaseAPI {
       },
     })
   }
-  
+
   /**
    * Cập nhật trạng thái hàng loạt
    * @param {Array} ids Danh sách ID
    * @param {int} status Trạng thái mới (0 hoặc 1)
+   * createdby: Bảo Trung
    */
   bulkUpdateStatus(ids, status) {
     return APIConfig.put(`${this.controller}/bulk-status`, {
       ids,
-      status
+      status,
     })
   }
 

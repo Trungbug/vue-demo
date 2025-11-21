@@ -177,3 +177,42 @@ export const mapShiftToBackend = (frontendShift) => {
     modifiedDate: frontendShift.modifiedDate,
   }
 }
+
+/**
+ * Helper: đảm bảo time string có định dạng HH:mm:ss
+ * @param {string} timeStr - Chuỗi thời gian
+ * @returns {string|null} - Chuỗi thời gian chuẩn hoặc null
+ */
+export const formatTimeForPayload = (timeStr) => {
+  if (!timeStr) return null
+  // Nếu có dạng HH:mm => thêm :00
+  if (timeStr.length === 5) return `${timeStr}:00`
+  // Nếu đã có giây hoặc khác, trả về nguyên bản
+  return timeStr
+}
+
+/**
+ * Hàm parse chuỗi "HH:mm" sang số phút trong ngày
+ * @param {string} timeString - Chuỗi thời gian (ví dụ: "08:30")
+ * @returns {number} - Số phút từ đầu ngày
+ */
+export const parseTime = (timeString) => {
+  if (!timeString) return 0
+  const parts = String(timeString).split(':').map(Number)
+  if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0
+  const [hours, minutes] = parts
+  return hours * 60 + minutes
+}
+
+/**
+ * Simple UUID v4 generator
+ * @returns {string} - UUID string
+ */
+export const generateUUID = () => {
+  // RFC4122 version 4 compliant-ish
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}

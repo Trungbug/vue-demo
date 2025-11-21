@@ -123,7 +123,8 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import BaseInput from '@/components/input/Input.vue'
-import { WorkShiftStatus } from '@/ultils/enums.js'
+import { WorkShiftStatus } from '@/constants/enums.js'
+import { parseTime } from '@/ultils/formatter.js'
 import DatetimePicker from '@/components/datetime/DatetimePicker.vue'
 import { ElMessageBox } from 'element-plus'
 const props = defineProps({
@@ -148,18 +149,6 @@ const createEmptyForm = () => ({
 
 const formData = ref(createEmptyForm())
 const errors = ref({})
-
-/**
- * Hàm parse chuỗi "HH:mm" sang số phút trong ngày
- * @param {string} timeString - Chuỗi thời gian (ví dụ: "08:30")
- */
-const parseTime = (timeString) => {
-  if (!timeString) return 0
-  const parts = String(timeString).split(':').map(Number)
-  if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0
-  const [hours, minutes] = parts
-  return hours * 60 + minutes
-}
 
 /**
  * Tính toán thời gian làm việc (có xử lý qua đêm)
@@ -478,10 +467,6 @@ defineExpose({
 .form-row {
   display: flex;
   gap: 24px; /* Khoảng cách giữa 2 cột lớn hơn */
-}
-
-.form-row .form-group.half {
-  flex: 1;
 }
 
 /* Label trong 2 cột cũng cần width cố định nhưng nhỏ hơn hoặc auto? 

@@ -222,7 +222,7 @@ import BaseDialog from '@/components/dialog/Dialog.vue'
 import CandidateForm from '@/views/WorkShift/form/WorkShiftForm.vue'
 import Notification from '@/components/notification/Notification.vue'
 import ShiftAPI from '@/api/ShiftAPI.js'
-import { WorkShiftStatusText, WorkShiftStatus } from '@/ultils/enums.js'
+import { WorkShiftStatusText, WorkShiftStatus } from '@/constants/enums.js'
 import {
   mapShiftsFromBackend,
   mapShiftFromBackend,
@@ -230,6 +230,8 @@ import {
   formatTime,
   formatDateOnly,
   formatInteger,
+  formatTimeForPayload,
+  generateUUID,
 } from '@/ultils/formatter.js'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import {
@@ -244,6 +246,9 @@ import {
   ArrowLeft,
   ArrowRight,
 } from '@element-plus/icons-vue'
+import useDialog from '@/composables/useDialog.js'
+import useToast from '@/composables/useToast.js'
+
 const isFormVisible = ref(false)
 const candidateFormRef = ref(null)
 const notificationRef = ref(null)
@@ -251,7 +256,8 @@ const shiftToEdit = ref(null)
 const dialogTitle = ref('Thêm ca làm việc')
 const selectedIds = ref([]) // Danh sách ID các dòng được chọn
 const isSaveAndAdd = ref(false)
-
+const { isDialogVisible, selectedItem, showDialog, hideDialog } = useDialog()
+const { showToast } = useToast()
 // --- PHẦN DỮ LIỆU BẢNG ---
 
 // 1. Định nghĩa các cột cho Bảng Ca làm việc
@@ -369,33 +375,15 @@ const handleSaveAndAdd = () => {
   }
 }
 
-// Helper: đảm bảo time string có định dạng HH:mm:ss
-const formatTimePayload = (timeStr) => {
-  if (!timeStr) return null
-  // Nếu có dạng HH:mm => thêm :00
-  if (timeStr.length === 5) return `${timeStr}:00`
-  // Nếu đã có giây hoặc khác, trả về nguyên bản
-  return timeStr
-}
-
-// Simple UUID v4 generator for shiftId (frontend can generate if backend expects)
-const generateUUID = () => {
-  // RFC4122 version 4 compliant-ish
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
-}
 /**
  * Chuẩn bị payload
  */
 const preparePayload = (formData) => {
   const payload = { ...formData }
-  payload.shiftBeginTime = formatTimePayload(payload.shiftBeginTime)
-  payload.shiftEndTime = formatTimePayload(payload.shiftEndTime)
-  payload.shiftBeginBreakTime = formatTimePayload(payload.shiftBeginBreakTime)
-  payload.shiftEndBreakTime = formatTimePayload(payload.shiftEndBreakTime)
+  payload.shiftBeginTime = formatTimeForPayload(payload.shiftBeginTime)
+  payload.shiftEndTime = formatTimeForPayload(payload.shiftEndTime)
+  payload.shiftBeginBreakTime = formatTimeForPayload(payload.shiftBeginBreakTime)
+  payload.shiftEndBreakTime = formatTimeForPayload(payload.shiftEndBreakTime)
   return payload
 }
 

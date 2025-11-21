@@ -452,7 +452,9 @@ const handleSaveError = (error) => {
     const resp = error.response
     const respData = resp.data
 
-    if (respData && respData.errors) {
+    if (respData && respData.success === false && respData.message) {
+      errMsg = respData.message
+    } else if (respData && respData.errors) {
       const mapped = {}
       Object.keys(respData.errors).forEach((k) => {
         const v = respData.errors[k]
@@ -528,11 +530,16 @@ const handleDelete = (row) => {
     .then(async () => {
       try {
         await ShiftAPI.delete(row.shiftId)
-        loadShifts()
+
+        // Optimistic update
+        shiftRows.value = shiftRows.value.filter((r) => r.shiftId !== row.shiftId)
+        totalRecords.value -= 1
+
         ElMessage({
           type: 'success',
           message: 'Xóa thành công!',
         })
+        await loadShifts()
       } catch (error) {
         console.error('Lỗi khi xóa:', error)
         ElMessage({
@@ -584,9 +591,20 @@ const handleBulkUpdate = async (newStatus) => {
 
     await ShiftAPI.bulkUpdateStatus(idsToUpdate, newStatus)
 
+    // Cập nhật UI ngay lập tức (Optimistic update)
+    shiftRows.value.forEach((row) => {
+      if (idsToUpdate.includes(row.shiftId)) {
+        row.shiftStatus = newStatus
+      }
+    })
+
     notificationRef.value.success('Cập nhật trạng thái thành công!')
-    loadShifts()
+
+    // Bỏ chọn trước khi reload để tránh lỗi giao diện nếu có
     handleUnselect()
+
+    // Reload lại dữ liệu từ server để đảm bảo đồng bộ
+    await loadShifts()
   } catch (error) {
     console.error('Lỗi bulk update:', error)
     let msg = 'Có lỗi xảy ra khi cập nhật trạng thái.'
@@ -619,8 +637,10 @@ const handleDuplicate = (row) => {
 const handleToggleStatus = async (row, newStatus) => {
   try {
     await ShiftAPI.bulkUpdateStatus([row.shiftId], newStatus)
+    row.shiftStatus = newStatus
+
     notificationRef.value.success('Cập nhật trạng thái thành công!')
-    loadShifts()
+    await loadShifts()
   } catch (error) {
     console.error('Lỗi cập nhật trạng thái:', error)
     let msg = 'Có lỗi xảy ra khi cập nhật trạng thái.'
@@ -645,10 +665,17 @@ const handleBulkDelete = () => {
   })
     .then(async () => {
       try {
-        await ShiftAPI.deleteMany(selectedIds.value)
+        const idsToDelete = [...selectedIds.value]
+        await ShiftAPI.deleteMany(idsToDelete)
+
+        // Optimistic update
+        shiftRows.value = shiftRows.value.filter((row) => !idsToDelete.includes(row.shiftId))
+        totalRecords.value -= idsToDelete.length
+
         notificationRef.value.success('Xóa thành công!')
-        loadShifts()
+
         handleUnselect()
+        await loadShifts()
       } catch (error) {
         console.error('Lỗi bulk delete:', error)
         let msg = 'Có lỗi xảy ra khi xóa.'

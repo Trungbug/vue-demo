@@ -185,6 +185,8 @@ export const mapShiftToBackend = (frontendShift) => {
     createdDate: frontendShift.createdDate,
     modifiedBy: frontendShift.modifiedBy,
     modifiedDate: frontendShift.modifiedDate,
+    workTimeHours: frontendShift.workTimeHours,
+    breakTimeHours: frontendShift.breakTimeHours,
   }
 }
 

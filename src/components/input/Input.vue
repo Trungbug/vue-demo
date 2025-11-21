@@ -82,7 +82,7 @@ defineEmits(['update:modelValue', 'blur'])
   width: 100%;
   height: 25px;
   padding: 6px 12px;
-  border: 1px solid #dddde4;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   transition: border-color 0.3s ease;
   font-size: 14px;
@@ -91,14 +91,13 @@ defineEmits(['update:modelValue', 'blur'])
 
 /* Hiệu ứng khi hover */
 .texteditor-input:hover {
-  border-color: #2680eb; /* Màu viền xanh khi hover */
+  border-color: #9ca3af; /* Màu viền xanh khi hover */
 }
 
 /* Hiệu ứng khi focus */
 .texteditor-input:focus {
-  border-color: #2680eb;
+  border-color: #009b71;
   outline: none;
-  box-shadow: 0 0 0 1px #2680eb;
 }
 
 .input-error {

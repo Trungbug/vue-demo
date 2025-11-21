@@ -29,7 +29,7 @@
           </th>
 
           <th class="sticky-cell actions-header" v-if="showActions">
-            <div class="ms-th-content">Chức năng</div>
+            <div class="ms-th-content"></div>
           </th>
         </tr>
       </thead>

@@ -69,13 +69,13 @@
         <div class="form-row">
           <BaseInput
             class="inline half"
-            v-model="workTimeHours"
+            :modelValue="formatToIntegerDisplay(workTimeHours)"
             label="Thời gian làm việc (giờ)"
             :disabled="true"
           />
           <BaseInput
             class="inline half"
-            v-model="breakTimeHours"
+            :modelValue="formatToIntegerDisplay(breakTimeHours)"
             label="Thời gian nghỉ giữa ca (giờ)"
             :disabled="true"
           />
@@ -173,7 +173,7 @@ const workTimeHours = computed(() => {
     const minutesInDay = 24 * 60
     durationMin = minutesInDay - start + end
   }
-  return Math.round(durationMin / 60) // Làm tròn số tự nhiên
+  return parseFloat((durationMin / 60).toFixed(4))
 })
 
 /**
@@ -195,7 +195,7 @@ const breakTimeHours = computed(() => {
     const minutesInDay = 24 * 60
     durationMin = minutesInDay - start + end
   }
-  return Math.round(durationMin / 60)
+  return parseFloat((durationMin / 60).toFixed(4))
 })
 
 // Watcher để cập nhật formdata khi prop initialData thay đổi (chế độ Sửa)
@@ -347,8 +347,8 @@ const handleSubmit = () => {
     // Thêm các giá trị tính toán vào object trước khi gửi đi
     const dataToSubmit = {
       ...formData.value,
-      workTimeHours: parseFloat(workTimeHours.value),
-      breakTimeHours: parseFloat(breakTimeHours.value),
+      workTimeHours: Number(workTimeHours.value),
+      breakTimeHours: Number(breakTimeHours.value),
     }
     // Thêm .value vào formData
     console.log('Dữ liệu gửi đi:', JSON.stringify(formData.value, null, 2))
@@ -409,6 +409,16 @@ defineExpose({
   setErrors,
   resetForm,
 })
+
+/**
+ * Format số thập phân sang số tự nhiên để hiển thị
+ * Ví dụ: 8.5 -> "9" hoặc 8.2 -> "8"
+ */
+const formatToIntegerDisplay = (val) => {
+  if (val === '' || val === null || val === undefined) return ''
+  // Dùng Math.round để làm tròn (8.5 -> 9), hoặc Math.floor nếu muốn làm tròn xuống
+  return String(Math.round(Number(val)))
+}
 </script>
 
 <style scoped>

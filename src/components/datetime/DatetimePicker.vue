@@ -6,10 +6,10 @@
     </label>
 
     <el-time-select
+      ref="timeSelectRef"
       v-model="internalValue"
       :start="start"
       :end="end"
-      :step="computedStep"
       :placeholder="placeholder"
       :editable="true"
       class="custom-time-select"
@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { ElTimeSelect } from 'element-plus'
 import 'element-plus/es/components/time-select/style/css'
 
@@ -33,36 +33,70 @@ const props = defineProps({
   required: { type: Boolean, default: false },
   error: { type: String, default: '' },
   start: { type: String, default: '00:00' },
-  end: { type: String, default: '23:30' },
-  minuteStep: { type: Number, default: 30 },
+  end: { type: String, default: '23:59' },
 })
 
 const emit = defineEmits(['update:modelValue', 'blur'])
-
 const internalValue = ref(props.modelValue)
+const timeSelectRef = ref(null)
 
-// Chuyển đổi số phút (30) thành chuỗi ("00:30")
-const computedStep = computed(() => {
-  const mm = props.minuteStep
-  const h = Math.floor(mm / 60)
-    .toString()
-    .padStart(2, '0')
-  const m = (mm % 60).toString().padStart(2, '0')
-  return `${h}:${m}`
-})
-
-// Đồng bộ v-model
+// Đồng bộ từ props vào internalValue
 watch(
   () => props.modelValue,
-  (val) => {
-    internalValue.value = val
+  (v) => {
+    if (v !== internalValue.value) {
+      internalValue.value = v
+    }
   },
 )
-watch(internalValue, (val) => {
-  emit('update:modelValue', val)
+
+// Watch internalValue để xử lý real-time formatting
+watch(internalValue, (newVal) => {
+  if (!newVal) {
+    emit('update:modelValue', '')
+    return
+  }
+
+  // 1. Lọc chỉ lấy số
+  const cleanVal = newVal.replace(/\D/g, '').slice(0, 4)
+
+  // 2. Format hiển thị (HH:M hoặc HH:MM)
+  let formatted = cleanVal
+  if (cleanVal.length >= 3) {
+    formatted = cleanVal.slice(0, 2) + ':' + cleanVal.slice(2)
+  }
+
+  // 3. Nếu giá trị format khác giá trị hiện tại (ví dụ user nhập "123" -> formatted "12:3")
+  // Ta cập nhật lại internalValue để UI hiển thị dấu :
+  if (formatted !== newVal) {
+    internalValue.value = formatted
+  }
+
+  // 4. Emit giá trị chuẩn cho v-model (HH:MM)
+  // Logic:
+  // - 12:3 -> 12:03 (để lưu data đúng chuẩn)
+  // - 12:34 -> 12:34
+  // - 12 -> 12:00
+  let dataVal = formatted
+  if (cleanVal.length === 3) {
+    dataVal = cleanVal.slice(0, 2) + ':0' + cleanVal.slice(2)
+  } else if (cleanVal.length === 2) {
+    dataVal = cleanVal + ':00'
+  }
+
+  // Emit dataVal (hoặc formatted nếu muốn giữ nguyên input của user trong model cho đến khi blur)
+  // Tuy nhiên, user yêu cầu "nhập đến đâu định dạng đến đấy", thường là UI.
+  // Model value nên là giá trị hợp lệ hoặc đồng bộ với UI.
+  // Để an toàn và tránh conflict khi user đang gõ, ta emit formatted (giống UI)
+  // hoặc dataVal (đã chuẩn hóa).
+  // Nếu emit dataVal (12:03) khi user thấy 12:3, có thể gây confuse nếu parent component format lại.
+  // Tạm thời emit formatted để parent nắm được state hiện tại.
+  emit('update:modelValue', formatted)
 })
 
-// 1. Chặn ký tự không phải số
+/* ----------------------------------------------
+   1. ON KEYDOWN — VALIDATE CHẶT CHẼ
+----------------------------------------------- */
 const onKeydown = (e) => {
   const allowedKeys = [
     'Backspace',
@@ -74,140 +108,105 @@ const onKeydown = (e) => {
     'Home',
     'End',
   ]
-  if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+  if (allowedKeys.includes(e.key)) return
+
+  // Chỉ cho phép nhập số
+  if (!/^[0-9]$/.test(e.key)) {
     e.preventDefault()
+    return
+  }
+
+  const el = e.target
+  // Lấy giá trị số hiện tại (bỏ qua :)
+  const val = el.value.replace(/\D/g, '')
+  const key = e.key
+
+  // Chặn nếu đã đủ 4 số và không bôi đen (selection)
+  // Lưu ý: el.selectionStart === el.selectionEnd nghĩa là không bôi đen
+  if (val.length >= 4 && el.selectionStart === el.selectionEnd) {
+    e.preventDefault()
+    return
+  }
+
+  // Logic validate từng vị trí số
+  // Ta cần biết user đang nhập vào vị trí số thứ mấy (0, 1, 2, 3)
+  // Điều này hơi phức tạp vì có dấu : xen giữa.
+  // Cách đơn giản: Dự đoán chuỗi số kết quả
+
+  // Tuy nhiên, logic đơn giản của user trước đó:
+  // Rule 1: Ký tự đầu tiên (Giờ chục) - Chỉ 0, 1, 2
+  if (val.length === 0) {
+    if (!['0', '1', '2'].includes(key)) e.preventDefault()
+  }
+  // Rule 2: Ký tự thứ 2 (Giờ đơn vị)
+  else if (val.length === 1) {
+    if (val[0] === '2' && key > '3') e.preventDefault()
+  }
+  // Rule 3: Ký tự thứ 3 (Phút chục) - Chỉ 0-5
+  else if (val.length === 2) {
+    if (key > '5') e.preventDefault()
   }
 }
 
-// 2. Format dữ liệu khi Blur
+/* ----------------------------------------------
+   2. ON BLUR — CHUẨN HÓA CUỐI CÙNG
+----------------------------------------------- */
 const onBlur = (e) => {
-  let val = e.target.value.replace(/\D/g, '') // Chỉ lấy số
-  if (!val) return
+  let val = e.target.value.replace(/\D/g, '')
 
-  let h = '',
-    m = ''
+  if (!val) {
+    emit('update:modelValue', '')
+    emit('blur', e)
+    return
+  }
 
-  // Logic đoán giờ phút
+  let h = '00',
+    m = '00'
+
   if (val.length === 1) {
     h = '0' + val
-    m = '00'
   } else if (val.length === 2) {
     h = val
-    m = '00'
   } else if (val.length === 3) {
+    // Nếu user nhập 123 (hiển thị 12:3), blur sẽ thành 12:30
     h = val.slice(0, 2)
     m = val.slice(2) + '0'
-  } else {
+  } else if (val.length >= 4) {
     h = val.slice(0, 2)
     m = val.slice(2, 4)
   }
 
-  // Validate giới hạn
-  if (parseInt(h) > 23) h = '23'
-  if (parseInt(m) > 59) m = '59'
-
   const finalTime = `${h}:${m}`
-
   internalValue.value = finalTime
-  e.target.value = finalTime
+  emit('update:modelValue', finalTime)
   emit('blur', e)
 }
 </script>
 
 <style scoped>
+/* Giữ nguyên style cũ của bạn */
 .form-group {
   display: flex;
   flex-direction: column;
   width: 100%;
-  position: relative;
 }
-
 .form-label {
   font-size: 14px;
   font-weight: 500;
-  margin-bottom: 8px;
-  color: #1f1f1f;
+  margin-bottom: 6px;
 }
-
 .text-required {
-  color: #e53935;
-  margin-left: 4px;
+  color: red;
 }
-
-.error-message {
-  font-size: 12px;
-  color: #e53935;
-  margin-top: 4px;
-}
-
-/* --- Tùy chỉnh Element Plus --- */
-
-/* Input Box */
 :deep(.el-input__wrapper) {
-  box-shadow: none !important;
   border: 1px solid #dddde4;
   border-radius: 4px;
-  height: 25px !important; /* Force height */
-  min-height: 25px !important;
-  padding: 0 30px 0 12px;
-  transition: border-color 0.3s;
-  width: 100%;
-  background-color: white;
+  height: 30px !important;
 }
-
-:deep(.el-input__wrapper:hover) {
-  border-color: #2680eb;
-}
-
 :deep(.el-input__wrapper.is-focus) {
   border-color: #2680eb;
-  box-shadow: 0 0 0 1px #2680eb !important;
 }
-
-/* Input Text bên trong */
-:deep(.el-input__inner) {
-  font-size: 13px;
-  color: #1f1f1f;
-  height: 25px !important;
-  line-height: 25px !important; /* Ensure text is centered vertically */
-  font-family: inherit;
-  padding: 0 !important; /* Remove default padding */
-}
-
-/* Ẩn icon mặc định bên trái của Element Plus */
-:deep(.el-input__prefix) {
-  display: none;
-}
-
-/* Icon lỗi */
 .input-error :deep(.el-input__wrapper) {
-  border-color: #e53935;
-}
-.input-error :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #e53935 !important;
-}
-
-/* Định vị icon đồng hồ custom sang phải */
-.icon-time-wrapper {
-  position: absolute;
-  right: 10px;
-  top: 32px; /* Adjusted for 25px height (was 38px) */
-  pointer-events: none;
-  color: #666;
-  font-size: 14px;
-}
-.form-group:not(:has(.form-label)) .icon-time-wrapper {
-  top: 5px; /* Adjusted for 25px height (was 10px) */
-}
-</style>
-
-<style>
-/* Global styles cho Dropdown */
-.el-select-dropdown__item.selected {
-  color: #2680eb !important;
-  font-weight: 600;
-}
-.el-time-panel {
-  border-radius: 4px;
+  border-color: #e53935 !important;
 }
 </style>

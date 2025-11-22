@@ -4,8 +4,8 @@
       <div class="title-left">Ca làm việc</div>
       <div class="title-right">
         <button class="btn" @click="openAddDialog">
-          <div class="icon icon-add"></div>
-          <span class="title-name pl-2">Thêm</span>
+          <div class="icon-add"></div>
+          <span class="title-name">Thêm</span>
         </button>
       </div>
     </div>
@@ -52,7 +52,7 @@
                   v-if="showActiveButton"
                   @click="handleBulkUpdate(WorkShiftStatus.ACTIVE)"
                 >
-                  <div class="icon icon-check-circle"></div>
+                  <div class="icon-check-circle"></div>
                   <span>Sử dụng</span>
                 </button>
 
@@ -66,7 +66,7 @@
                 </button>
 
                 <button class="btn-bulk btn-bulk-delete" @click="handleBulkDelete">
-                  <div class="icon icon-trash"></div>
+                  <div class="icon-trash"></div>
                   <span>Xóa</span>
                 </button>
               </div>
@@ -183,12 +183,41 @@
         </div>
         <div class="paging-right">
           <span class="text-label">Số dòng/trang</span>
-          <el-select v-model="pageSize" class="page-size-select">
-            <el-option :value="5" label="5" />
-            <el-option :value="20" label="20" />
-            <el-option :value="30" label="30" />
-            <el-option :value="50" label="50" />
-            <el-option :value="100" label="100" />
+          <el-select
+            v-model="pageSize"
+            class="page-size-select"
+            popper-class="pagination-select-dropdown"
+          >
+            <el-option :value="10" label="10">
+              <div class="option-content">
+                <span>10</span>
+                <el-icon v-if="pageSize === 10" class="check-icon"><Check /></el-icon>
+              </div>
+            </el-option>
+            <el-option :value="20" label="20">
+              <div class="option-content">
+                <span>20</span>
+                <el-icon v-if="pageSize === 20" class="check-icon"><Check /></el-icon>
+              </div>
+            </el-option>
+            <el-option :value="30" label="30">
+              <div class="option-content">
+                <span>30</span>
+                <el-icon v-if="pageSize === 30" class="check-icon"><Check /></el-icon>
+              </div>
+            </el-option>
+            <el-option :value="50" label="50">
+              <div class="option-content">
+                <span>50</span>
+                <el-icon v-if="pageSize === 50" class="check-icon"><Check /></el-icon>
+              </div>
+            </el-option>
+            <el-option :value="100" label="100">
+              <div class="option-content">
+                <span>100</span>
+                <el-icon v-if="pageSize === 100" class="check-icon"><Check /></el-icon>
+              </div>
+            </el-option>
           </el-select>
           <span class="record-range">{{ rangeStart }} - {{ rangeEnd }}</span>
           <div class="pagination-buttons">
@@ -237,6 +266,7 @@ import {
   DArrowRight,
   ArrowLeft,
   ArrowRight,
+  Check,
 } from '@element-plus/icons-vue'
 import useDialog from '@/composables/useDialog.js'
 import useToast from '@/composables/useToast.js'
@@ -267,9 +297,21 @@ const shiftFields = ref([
   { key: 'shiftEndTime', label: 'Giờ hết ca', type: 'text', width: '130px' },
   { key: 'shiftBeginBreakTime', label: 'Bắt đầu nghỉ giữa ca', type: 'text', width: '200px' },
   { key: 'shiftEndBreakTime', label: 'Kết thúc nghỉ giữa ca', type: 'text', width: '210px' },
-  { key: 'workTimeHours', label: 'Thời gian làm việc (giờ)', type: 'number', width: '210px' },
-  { key: 'breakTimeHours', label: 'Thời gian nghỉ giữa ca (giờ)', type: 'number', width: '230px' },
-  { key: 'shiftStatus', label: 'Trạng thái', width: '200px' },
+  {
+    key: 'workTimeHours',
+    label: 'Thời gian làm việc (giờ)',
+    type: 'number',
+    width: '210px',
+    align: 'right',
+  },
+  {
+    key: 'breakTimeHours',
+    label: 'Thời gian nghỉ giữa ca (giờ)',
+    type: 'number',
+    width: '230px',
+    align: 'right',
+  },
+  { key: 'shiftStatus', label: 'Trạng thái', width: '200px', noTooltip: true },
   { key: 'createdBy', label: 'Người tạo', width: '160px' },
   { key: 'createdDate', label: 'Ngày tạo', width: '160px' },
   { key: 'modifiedBy', label: 'Người sửa', width: '16px' },
@@ -336,6 +378,7 @@ const loadShifts = async () => {
 
 // Khi trang hoặc số lượng bản ghi/trang thay đổi -> Gọi API
 watch([currentPage, pageSize], () => {
+  selectedIds.value = []
   loadShifts()
 })
 
@@ -694,11 +737,9 @@ const handleBulkDelete = () => {
   min-width: 16px;
   position: relative;
   mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
   background-color: #4b5563;
   mask-position: 0px 0px;
-  mask-image: url('./pas.Icon Warehouse-e29a964d.svg?v=3.1.0.6');
-  -webkit-mask-image: url('./pas.Icon Warehouse-e29a964d.svg?v=3.1.0.6');
+  mask-image: url(@/assets/icon/icon1.svg);
 }
 
 .texteditor-input {
@@ -748,6 +789,9 @@ const handleBulkDelete = () => {
   font-size: 13px;
   height: 28px;
   font-weight: 500;
+}
+.btn:hover {
+  background-color: #007b5d;
 }
 .total-records strong {
   color: #1f1f1f;
@@ -803,6 +847,7 @@ const handleBulkDelete = () => {
   gap: 8px;
   flex-direction: row;
   align-items: center;
+  display: flex;
 }
 .input-search {
   height: auto;
@@ -815,23 +860,24 @@ const handleBulkDelete = () => {
 
 .status-badge {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 4px 7px;
   border-radius: 4px;
   font-size: 13px;
   font-weight: 500;
   text-align: center;
+  border-radius: 999px;
 }
 
 .status-active {
+  background-color: #ebfef6;
   color: #009b71;
-  background-color: #edfdf8;
-  border: 1px solid #009b71;
+  border: none;
 }
 
 .status-inactive {
-  color: #6b7280;
-  background-color: #f3f4f6;
-  border: 1px solid #d1d5db;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: none;
 }
 
 /* Bulk Actions Toolbar */
@@ -886,9 +932,9 @@ const handleBulkDelete = () => {
 }
 
 .btn-bulk-delete {
-  color: #ef4444;
-  border-color: #fca5a5;
-  background-color: #fef2f2;
+  border: 1px solid #dc2626;
+  color: #dc2626;
+  background-color: #fff;
 }
 .btn-bulk-delete:hover {
   background-color: #fee2e2;
@@ -968,30 +1014,27 @@ const handleBulkDelete = () => {
   height: 16px;
   /* Replace with actual icon path or font class */
   background-color: #009b71;
-  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>');
-  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>');
+  mask-image: url(@/assets/icon/icon1.svg);
   mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
+  mask-position: -192px 0px;
 }
 
 .icon-ban {
   width: 16px;
   height: 16px;
   background-color: #ef4444;
-  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" /></svg>'); /* Using x-circle as ban placeholder */
-  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" /></svg>');
+  mask-image: url(@/assets/icon/icon1.svg);
   mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
+  mask-position: -176px 0px;
 }
 
 .icon-trash {
   width: 16px;
   height: 16px;
+  mask-position: -208px 0px;
   background-color: #ef4444;
-  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" /></svg>');
-  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" /></svg>');
+  mask-image: url(@/assets/icon/icon1.svg);
   mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
 }
 .icon-edit {
   width: 20px;
@@ -1008,5 +1051,45 @@ const handleBulkDelete = () => {
   mask-position: -8px -48px;
   mask-repeat: no-repeat;
   background-color: #4b5563;
+}
+.icon-add {
+  width: 16px;
+  height: 16px;
+  mask-image: url(@/assets/icon/icon1.svg);
+  mask-position: -79px 0px;
+  mask-repeat: no-repeat;
+  background-color: #fff;
+}
+</style>
+
+<style>
+/* Global styles for pagination dropdown */
+.pagination-select-dropdown .el-select-dropdown__item {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.pagination-select-dropdown .el-select-dropdown__item.selected {
+  background-color: #e5fcf4 !important;
+  color: #009b71 !important;
+  font-weight: normal;
+}
+
+.pagination-select-dropdown .el-select-dropdown__item:hover {
+  background-color: #f5f5f5;
+}
+
+.pagination-select-dropdown .option-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.pagination-select-dropdown .check-icon {
+  color: #009b71;
+  font-size: 14px;
 }
 </style>

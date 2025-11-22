@@ -179,7 +179,7 @@ export const mapShiftToBackend = (frontendShift) => {
     shiftEndTime: frontendShift.shiftEndTime,
     shiftBeginBreakTime: frontendShift.shiftBeginBreakTime,
     shiftEndBreakTime: frontendShift.shiftEndBreakTime,
-    shiftDescription: frontendShift.shiftDescription || '',
+    shiftDescription: frontendShift.Description || frontendShift.shiftDescription || '',
     shiftStatus: Number(frontendShift.shiftStatus),
     createdBy: frontendShift.createdBy,
     createdDate: frontendShift.createdDate,

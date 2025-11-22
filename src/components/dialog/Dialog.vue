@@ -3,8 +3,10 @@
     <div class="dialog-content">
       <div class="dialog-header">
         <h3 class="dialog-title">{{ title }}</h3>
-        <div class="misa-helpmenu-trigger"></div>
-        <button class="close-btn" @click="close" title="Đóng (ESC)">&times;</button>
+        <div class="header-actions">
+          <div class="misa-helpmenu-trigger"></div>
+          <button class="close-btn" @click="close" title="Đóng (ESC)">&times;</button>
+        </div>
       </div>
       <div class="dialog-body">
         <slot></slot>
@@ -89,8 +91,13 @@ const close = () => {
   bottom: 0;
   flex-shrink: 0; /* Ngăn footer co lại */
 }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .misa-helpmenu-trigger {
-  margin-left: 12px;
   width: 32px;
   height: 32px;
   border-radius: 16px;

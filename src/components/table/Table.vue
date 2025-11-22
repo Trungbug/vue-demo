@@ -18,13 +18,22 @@
             v-for="field in fields"
             :key="field.key"
             class="sticky-cell"
-            :style="{ width: field.width, minWidth: field.width }"
+            :style="{
+              width: field.width,
+              minWidth: field.width,
+              textAlign: field.align || 'left',
+            }"
             :class="field.class"
           >
-            <div class="ms-th-content">
-              <div class="ms-th-title" :title="field.label">
-                {{ field.label }}
-              </div>
+            <div
+              class="ms-th-content"
+              :style="{ justifyContent: field.align === 'right' ? 'flex-end' : 'flex-start' }"
+            >
+              <el-tooltip :content="field.label" placement="top" effect="dark" :transition="'none'">
+                <div class="ms-th-title">
+                  {{ field.label }}
+                </div>
+              </el-tooltip>
             </div>
           </th>
 
@@ -39,8 +48,11 @@
           v-for="row in rows"
           :key="row[rowKey]"
           class="table-row"
-          :class="{ 'row-checked': selectedIds.includes(row[rowKey]) }"
+          :class="{
+            'row-checked': selectedIds.includes(row[rowKey]) || activeRowId === row[rowKey],
+          }"
           @dblclick="$emit('row-dblclick', row)"
+          @click="handleRowClick(row)"
         >
           <td class="checkbox-cell" v-if="showCheckbox">
             <input
@@ -48,19 +60,36 @@
               class="ms-checkbox"
               :checked="selectedIds.includes(row[rowKey])"
               @change="handleRowCheck(row[rowKey])"
+              @click.stop
             />
           </td>
 
-          <td v-for="field in fields" :key="field.key">
-            <div class="ms-td-content" :title="row[field.key]">
-              <slot :name="`cell-${field.key}`" :row="row" :value="row[field.key]">
-                {{ row[field.key] || '--' }}
-              </slot>
-            </div>
+          <td
+            v-for="field in fields"
+            :key="field.key"
+            :style="{ textAlign: field.align || 'left' }"
+          >
+            <el-tooltip
+              placement="bottom-end"
+              effect="dark"
+              :transition="'none'"
+              :disabled="!row[field.key] || field.noTooltip"
+            >
+              <template #content>
+                <slot :name="`cell-${field.key}`" :row="row" :value="row[field.key]">
+                  {{ row[field.key] || '--' }}
+                </slot>
+              </template>
+              <div class="ms-td-content">
+                <slot :name="`cell-${field.key}`" :row="row" :value="row[field.key]">
+                  {{ row[field.key] || '--' }}
+                </slot>
+              </div>
+            </el-tooltip>
           </td>
 
           <td class="actions-cell" v-if="showActions">
-            <div class="action-buttons">
+            <div class="action-buttons" @click.stop>
               <slot name="actions" :row="row">
                 <button class="edit-text-btn" @click="$emit('edit', row)">Sửa</button>
                 <button class="context-menu-btn" @click="$emit('delete', row)">
@@ -80,7 +109,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   fields: { type: Array, required: true }, // Cấu hình cột
@@ -91,7 +120,9 @@ const props = defineProps({
   showActions: { type: Boolean, default: true },
 })
 
-const emit = defineEmits(['update:selectedIds', 'edit', 'delete', 'row-dblclick'])
+const emit = defineEmits(['update:selectedIds', 'edit', 'delete', 'row-dblclick', 'row-click'])
+
+const activeRowId = ref(null)
 
 // Tính toán tổng số cột để merge cell khi empty
 const totalColumns = computed(() => {
@@ -135,7 +166,13 @@ const handleSelectAll = (event) => {
     emit('update:selectedIds', allIds)
   } else {
     emit('update:selectedIds', [])
+    emit('update:selectedIds', [])
   }
+}
+
+const handleRowClick = (row) => {
+  activeRowId.value = row[props.rowKey]
+  emit('row-click', row)
 }
 </script>
 
@@ -191,7 +228,7 @@ tbody .table-row .checkbox-cell {
 }
 
 tbody .table-row:hover .checkbox-cell {
-  background-color: #f0f8ff;
+  background-color: #e5e7eb;
 }
 
 /* Cột chức năng - dính ở bên phải */
@@ -243,23 +280,23 @@ th {
 }
 
 .table-row:hover {
-  background-color: #f0f8ff;
+  background-color: #e5e7eb;
 }
 
 .table-row.row-checked {
-  background-color: #e6f9f4; /* Lighter green to match design */
+  background-color: #a4f6d3; /* Lighter green to match design */
 }
 
 .table-row.row-checked:hover {
-  background-color: #dcfce7;
+  background-color: #a4f6d3;
 }
 
 .table-row.row-checked .checkbox-cell {
-  background-color: #e6f9f4;
+  background-color: #a4f6d3;
 }
 
 .table-row.row-checked .actions-cell {
-  background-color: #e6f9f4;
+  background-color: #a4f6d3;
 }
 
 .checkbox-cell {

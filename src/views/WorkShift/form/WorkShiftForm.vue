@@ -2,60 +2,96 @@
   <form class="workshift-form-container">
     <div class="form-content">
       <div class="form-layout">
-        <BaseInput
-          class="inline"
-          v-model="formData.shiftCode"
-          label="Mã ca"
-          :required="true"
-          placeholder=""
-          :error="errors.shiftCode"
-          maxLength="20"
-          @blur="handleBlur('shiftCode')"
-        />
+        <el-tooltip
+          :content="errors.shiftCode"
+          placement="bottom"
+          effect="dark"
+          :disabled="!errors.shiftCode"
+        >
+          <BaseInput
+            class="inline"
+            v-model="formData.shiftCode"
+            label="Mã ca"
+            :required="true"
+            placeholder=""
+            :error="errors.shiftCode"
+            maxLength="20"
+            @blur="handleBlur('shiftCode')"
+          />
+        </el-tooltip>
 
-        <BaseInput
-          class="inline"
-          v-model="formData.shiftName"
-          label="Tên ca"
-          :required="true"
-          placeholder=""
-          :error="errors.shiftName"
-          maxLength="50"
-          @blur="handleBlur('shiftName')"
-        />
+        <el-tooltip
+          :content="errors.shiftName"
+          placement="bottom"
+          effect="dark"
+          :disabled="!errors.shiftName"
+        >
+          <BaseInput
+            class="inline"
+            v-model="formData.shiftName"
+            label="Tên ca"
+            :required="true"
+            placeholder=""
+            :error="errors.shiftName"
+            maxLength="50"
+            @blur="handleBlur('shiftName')"
+          />
+        </el-tooltip>
 
         <div class="form-row">
-          <DatetimePicker
-            class="inline half"
-            v-model="formData.shiftBeginTime"
-            label="Giờ vào ca"
-            :required="true"
-            placeholder="HH:MM"
-            :minute-step="30"
-            :error="errors.shiftBeginTime"
-            @blur="handleBlur('shiftBeginTime')"
-          />
+          <el-tooltip
+            :content="errors.shiftBeginTime"
+            placement="bottom"
+            effect="dark"
+            :disabled="!errors.shiftBeginTime"
+          >
+            <DatetimePicker
+              class="inline half"
+              v-model="formData.shiftBeginTime"
+              label="Giờ vào ca"
+              :required="true"
+              placeholder="HH:MM"
+              :minute-step="30"
+              :error="errors.shiftBeginTime"
+              @blur="handleBlur('shiftBeginTime')"
+            />
+          </el-tooltip>
 
-          <DatetimePicker
-            class="inline half"
-            v-model="formData.shiftEndTime"
-            label="Giờ hết ca"
-            :required="true"
-            placeholder="HH:MM"
-            :minute-step="30"
-            :error="errors.shiftEndTime"
-            @blur="handleBlur('shiftEndTime')"
-          />
+          <el-tooltip
+            :content="errors.shiftEndTime"
+            placement="bottom"
+            effect="dark"
+            :disabled="!errors.shiftEndTime"
+          >
+            <DatetimePicker
+              class="inline half"
+              v-model="formData.shiftEndTime"
+              label="Giờ hết ca"
+              :required="true"
+              placeholder="HH:MM"
+              :minute-step="30"
+              :error="errors.shiftEndTime"
+              @blur="handleBlur('shiftEndTime')"
+            />
+          </el-tooltip>
         </div>
 
         <div class="form-row">
-          <DatetimePicker
-            class="inline half"
-            v-model="formData.shiftBeginBreakTime"
-            label="Bắt đầu nghỉ giữa ca"
-            placeholder="HH:MM"
-            :minute-step="30"
-          />
+          <el-tooltip
+            :content="errors.shiftBeginBreakTime"
+            placement="bottom"
+            effect="dark"
+            :disabled="!errors.shiftBeginBreakTime"
+          >
+            <DatetimePicker
+              class="inline half"
+              v-model="formData.shiftBeginBreakTime"
+              label="Bắt đầu nghỉ giữa ca"
+              placeholder="HH:MM"
+              :minute-step="30"
+              :error="errors.shiftBeginBreakTime"
+            />
+          </el-tooltip>
 
           <DatetimePicker
             class="inline half"
@@ -74,7 +110,7 @@
             :disabled="true"
           />
           <BaseInput
-            class="inline half"
+            class="inline half break-time"
             :modelValue="formatToIntegerDisplay(breakTimeHours)"
             label="Thời gian nghỉ giữa ca (giờ)"
             :disabled="true"
@@ -481,7 +517,10 @@ const formatToIntegerDisplay = (val) => {
   /* padding-top: 9px; Căn giữa text label với input height 36px */
   font-weight: 500;
   color: #1f1f1f;
-  font-size: 13px;
+  font-size: 12px;
+}
+.form-group.inline .form-label.break-time {
+  width: 160px;
 }
 
 /* Input chiếm hết phần còn lại */
@@ -494,10 +533,27 @@ const formatToIntegerDisplay = (val) => {
   width: 100%;
 }
 
+.form-group.inline :deep(.custom-time-select),
+.form-group.inline :deep(.el-date-editor),
+.form-row .form-group.inline :deep(.texteditor-input) {
+  max-width: 122px !important;
+}
+
 /* Layout 2 cột (Giờ vào/ra, Thời gian làm việc...) */
 .form-row {
   display: flex;
+  justify-content: space-between;
   gap: 24px; /* Khoảng cách giữa 2 cột lớn hơn */
+}
+
+.form-row .form-group {
+  width: auto !important;
+  flex: 0 0 auto;
+}
+
+/* Label của cột bên phải rộng 160px */
+.form-row > .form-group:nth-child(2) :deep(.form-label) {
+  width: 160px !important;
 }
 
 /* Label trong 2 cột cũng cần width cố định nhưng nhỏ hơn hoặc auto? 

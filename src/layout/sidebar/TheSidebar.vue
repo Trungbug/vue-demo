@@ -5,6 +5,86 @@
         <template v-for="item in menu" :key="item.title || item.type">
           <div v-if="item.type === 'separator'" class="menu-separator"></div>
 
+          <!-- Mega Menu (Danh mục khác) - Flyout Type -->
+          <div v-else-if="item.type === 'flyout'" class="menu-item-wrapper">
+            <el-popover
+              placement="right-start"
+              :width="700"
+              trigger="hover"
+              popper-class="mega-menu-popper"
+              :show-arrow="false"
+              :offset="0"
+              :popper-options="{
+                modifiers: [
+                  {
+                    name: 'flip',
+                    enabled: false,
+                  },
+                ],
+              }"
+            >
+              <template #reference>
+                <div class="menu-item-container" :class="{ active: isActive(item) }">
+                  <div class="w-full block">
+                    <div class="menu-item-admin">
+                      <div class="menu-item-icon">
+                        <i :class="item.icon"></i>
+                      </div>
+                      <div class="menu-item-title title">{{ item.title }}</div>
+
+                      <div v-if="!isCollapsed" class="flex flex-end pr-1">
+                        <i class="icon-flyout"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Mega Menu Content -->
+              <div class="mega-menu-container">
+                <div class="mega-column">
+                  <div class="mega-group-title">Đối tượng</div>
+                  <router-link to="/customers" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Khách hàng
+                  </router-link>
+                  <router-link to="/employees" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Nhân viên
+                  </router-link>
+                  <router-link to="/cost-objects" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Đối tượng tập hợp chi phí
+                  </router-link>
+                </div>
+                <div class="mega-column">
+                  <div class="mega-group-title">Lịch làm việc</div>
+                  <router-link to="/work-shift" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Ca làm việc
+                  </router-link>
+                  <router-link to="/time-off" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Ngày nghỉ
+                  </router-link>
+                  <router-link to="/work-schedule" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Lịch làm việc
+                  </router-link>
+                </div>
+                <div class="mega-column">
+                  <div class="mega-group-title">Khác</div>
+                  <router-link to="/organization" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Cơ cấu tổ chức
+                  </router-link>
+                  <router-link to="/inventory" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Kho
+                  </router-link>
+                  <router-link to="/units" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Đơn vị tính
+                  </router-link>
+                  <router-link to="/stop-reasons" class="mega-link" active-class="active-link">
+                    <i class="sub-nav"></i> Lý do dừng công việc
+                  </router-link>
+                </div>
+              </div>
+            </el-popover>
+          </div>
+
           <router-link v-else :to="item.path" custom v-slot="{ navigate, isActive }">
             <div class="menu-item-container" :class="{ active: isActive }" @click="navigate">
               <div class="w-full block">
@@ -23,13 +103,13 @@
             </div>
           </router-link>
         </template>
-        <div class="bottom-area">
-          <div class="menu-item-admin collape-btn" title="Thu gọn sidebar" @click="toggleSidebar">
-            <div class="menu-item-icon">
-              <i class="fa-solid fa-angles-left"></i>
-            </div>
-            <div class="menu-item-title title">Thu gọn</div>
+      </div>
+      <div class="bottom-area">
+        <div class="menu-item-admin collape-btn" title="Thu gọn sidebar" @click="toggleSidebar">
+          <div class="menu-item-icon">
+            <i :class="isCollapsed ? 'icon-collapse-right' : 'icon-collapse-left'"></i>
           </div>
+          <div class="menu-item-title title">Thu gọn</div>
         </div>
       </div>
     </div>
@@ -38,8 +118,16 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const isCollapsed = ref(false)
+
+const isActive = (item) => {
+  if (item.path && route.path.startsWith(item.path)) return true
+  if (item.relatedPaths && item.relatedPaths.some((p) => route.path.startsWith(p))) return true
+  return false
+}
 
 /**
  * Toggle trạng thái thu gọn sidebar
@@ -116,11 +204,12 @@ const menu = [
     icon: 'icon-others', // icon-list từ file icon.css của bạn
     type: 'flyout', // <-- Loại "sang phải"
     path: '/others',
+    relatedPaths: ['/work-shift'],
   },
   {
     title: 'Thiết lập',
     icon: 'icon-setting',
-    type: 'flyout', // <-- Loại "sang phải"
+    type: 'link', // <-- Đổi từ 'flyout' sang 'link'
     path: '/settings',
   },
 ]
@@ -154,7 +243,7 @@ const menu = [
   display: flex;
   flex-direction: column;
   padding: 12px 12px 0;
-  row-gap: 4px;
+  row-gap: 3px;
   overflow-y: overlay;
   flex: 1;
   min-height: 0;
@@ -172,6 +261,7 @@ const menu = [
   -moz-column-gap: 8px;
   column-gap: 8px;
   width: 100%;
+  border-radius: 4px;
 }
 
 /* Icon wrapper */
@@ -243,26 +333,22 @@ const menu = [
   box-sizing: border-box; /* Đảm bảo padding không làm vỡ layout */
 }
 .collape-btn {
-  /* Đây là NÚT BẤM (giống .btn-collapse) */
   width: 100%;
-  height: 36px; /* Giống trong ảnh */
-  border-radius: 4px; /* Giống trong ảnh */
+  height: 36px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
-  padding-left: 8px; /* Giữ padding trái cho icon */
-  padding-right: 8px;
+  /* Căn nội dung ra giữa */
+  justify-content: center;
   cursor: pointer;
-  color: #9ca3af; /* Màu chữ xám */
-  /* Nền mặc định (giống .bottom-area) */
+  color: #9ca3af;
   background: transparent;
-  /* Kế thừa từ .menu-item-admin */
   position: relative;
   font-size: 13px;
-  -moz-column-gap: 8px;
   column-gap: 8px;
 }
 .collape-btn .menu-item-icon i {
-  font-size: 14px;
+  font-size: 13px;
   color: #9ca3af; /* Màu icon xám */
   transition: transform 0.2s; /* Hiệu ứng xoay icon */
 }
@@ -275,9 +361,8 @@ const menu = [
   width: 72px;
 }
 .sidebar.collapsed .collape-btn {
-  justify-content: center; /* Căn giữa icon khi thu gọn */
-  padding-left: 0; /* Bỏ padding 2 bên */
-  padding-right: 0;
+  justify-content: center; /* Đưa icon ra giữa khi thu gọn */
+  padding: 0;
 }
 
 /* Ẩn tiêu đề đi */
@@ -292,20 +377,21 @@ const menu = [
 }
 
 .collape-btn .menu-item-icon {
-  width: 26px;
-  height: 26px;
-  border: 1px solid rgba(156, 163, 175, 0.5); /* viền mờ */
-  border-radius: 4px;
+  width: 20px; /* Kích thước chuẩn giống các icon menu trên */
+  height: 20px;
+  border: none; /* QUAN TRỌNG: Bỏ viền vuông */
+  border-radius: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  /* Bỏ margin-left để căn giữa chuẩn */
   margin-left: 0;
-  /* Đảm bảo icon không bị co lại */
   flex-shrink: 0;
+  transition: transform 0.2s;
 }
 /* Xoay icon "Thu gọn" */
 .sidebar.collapsed .collape-btn .menu-item-icon i {
-  transform: rotate(180deg);
+  margin-left: 0;
 }
 
 /* --- MÔ PHỎNG CÁC CLASS TAILWIND --- */
@@ -461,7 +547,7 @@ const menu = [
   width: 20px;
   height: 20px;
   mask-image: url(@/assets/icon/iconn.svg);
-  mask-position: -63px -33px;
+  mask-position: -60px -28px;
   mask-repeat: no-repeat;
   background-color: #9ca3af;
 }
@@ -469,8 +555,110 @@ const menu = [
   width: 20px;
   height: 20px;
   mask-image: url(@/assets/icon/iconn.svg);
-  mask-position: -39px -31px;
+  mask-position: -35px -28px;
   mask-repeat: no-repeat;
   background-color: #9ca3af;
+}
+.icon-collapse-left {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/icon1.svg);
+  mask-position: -140px -16px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.icon-collapse-right {
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/icon1.svg);
+  mask-position: -140px -16px;
+  mask-repeat: no-repeat;
+  background-color: #9ca3af;
+}
+.collape-btn .menu-item-title {
+  flex: none;
+  width: auto;
+}
+
+/* Đảm bảo icon không bị dính margin trái (nếu chưa được override) */
+.collape-btn .menu-item-icon {
+  margin-left: 0;
+}
+</style>
+
+<style>
+/* Global styles for Mega Menu Popper */
+.mega-menu-popper {
+  background-color: #111827 !important;
+  border: 1px solid #374151 !important;
+  padding: 0 !important;
+  color: #fff !important;
+}
+
+.mega-menu-container {
+  display: flex;
+  padding: 8px;
+  gap: 8px;
+}
+
+.mega-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mega-group-title {
+  font-weight: 600;
+  color: #6b7280;
+
+  font-size: 14px;
+  padding-left: 36px;
+}
+
+.mega-link {
+  color: #d1d5db;
+  cursor: pointer;
+  height: 32px;
+  padding: 0 12px 0 36px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.mega-link:hover {
+  background-color: #374151;
+  color: #fff;
+}
+
+.mega-link.active-link {
+  background-color: #374151;
+  color: #fff;
+}
+
+.mr-2 {
+  margin-right: 8px;
+}
+.sub-nav {
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  mask-image: url(@/assets/icon/iconn.svg);
+  mask-repeat: no-repeat;
+  mask-position: -58px -67px;
+  background-color: #fff;
+  z-index: 2;
+  display: none;
+}
+
+.mega-link:hover .sub-nav,
+.mega-link.active-link .sub-nav {
+  display: block;
 }
 </style>

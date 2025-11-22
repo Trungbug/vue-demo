@@ -15,7 +15,7 @@ class ShiftAPI extends BaseAPI {
    * @returns (Promise)
    * createdby: Bảo Trung
    */
-  getPaging(pageSize, pageNumber, search, sort) {
+  getPaging(pageSize, pageNumber, search, sort, filters) {
     // Khớp với hàm GetPaged trong ShiftController
     return APIConfig.get(this.controller, {
       params: {
@@ -23,6 +23,7 @@ class ShiftAPI extends BaseAPI {
         pageNumber,
         search,
         sort,
+        filters: filters && filters.length > 0 ? JSON.stringify(filters) : null,
       },
     })
   }

@@ -41,6 +41,21 @@
                   />
                 </div>
               </div>
+              <div
+                class="filter-tags-list d-flex align-items-center gap-2 ml-2"
+                v-if="filter.filters.length > 0"
+              >
+                <div v-for="(f, index) in filter.filters" :key="index" class="filter-tag">
+                  <span class="tag-label">{{ f.label }}</span>
+                  <span class="tag-operator">{{ getOperatorText(f.operator) }}</span>
+                  <span class="tag-value">{{ f.value }}</span>
+                  <span class="tag-close" @click="removeFilterTag(f.column)">✕</span>
+                </div>
+
+                <span class="clear-all-filters text-red cursor-pointer" @click="clearAllFilters">
+                  Bỏ lọc
+                </span>
+              </div>
               <div class="bulk-actions" v-if="selectedIds.length > 0">
                 <span class="selected-count"
                   >Đã chọn <strong>{{ selectedIds.length }}</strong></span
@@ -90,8 +105,10 @@
         <TheTable
           :fields="shiftFields"
           :rows="shifts"
+          :active-filters="filter.filters"
           v-model:selectedIds="selectedIds"
           rowKey="shiftId"
+          @apply-filter="handleTableFilter"
           @edit="handleEdit"
           @delete="handleDelete"
           @row-dblclick="handleEdit"
@@ -291,7 +308,7 @@ const { showToast } = useToast()
 
 // Cột bảng
 const shiftFields = ref([
-  { key: 'shiftCode', label: 'Mã ca', width: '120px' },
+  { key: 'shiftCode', label: 'Mã ca', width: '120px', allowFilter: true },
   { key: 'shiftName', label: 'Tên ca', width: '250px' },
   { key: 'shiftBeginTime', label: 'Giờ vào ca', type: 'text', width: '130px' },
   { key: 'shiftEndTime', label: 'Giờ hết ca', type: 'text', width: '130px' },
@@ -471,6 +488,59 @@ const handleSaveError = (error) => {
   showToast(errMsg, 'error')
 }
 
+// Helper chuyển đổi Operator sang tiếng Việt hiển thị
+const getOperatorText = (op) => {
+  const map = {
+    Contains: 'Chứa',
+    NotContains: 'Không chứa',
+    StartsWith: 'Bắt đầu với',
+    EndsWith: 'Kết thúc với',
+    Equals: 'Bằng',
+  }
+  return map[op] || op
+}
+
+// Xử lý sự kiện apply-filter từ Table
+const handleTableFilter = (filterData) => {
+  if (filterData.remove) {
+    // Trường hợp nút "Bỏ lọc" trong popover
+    removeFilterTag(filterData.column)
+  } else {
+    // Thêm hoặc cập nhật filter
+    const existingIndex = filter.value.filters.findIndex((f) => f.column === filterData.column)
+
+    const newFilterItem = {
+      column: filterData.column,
+      operator: filterData.operator,
+      value: filterData.value,
+      label: filterData.label,
+    }
+
+    if (existingIndex >= 0) {
+      filter.value.filters[existingIndex] = newFilterItem
+    } else {
+      filter.value.filters.push(newFilterItem)
+    }
+
+    // Reset về trang 1 và reload
+    filter.value.pageNumber = 1
+    loadShifts()
+  }
+}
+
+// Xóa 1 tag trên toolbar
+const removeFilterTag = (columnKey) => {
+  filter.value.filters = filter.value.filters.filter((f) => f.column !== columnKey)
+  filter.value.pageNumber = 1
+  loadShifts()
+}
+
+// Xóa tất cả (nút Bỏ lọc đỏ)
+const clearAllFilters = () => {
+  filter.value.filters = []
+  filter.value.pageNumber = 1
+  loadShifts()
+}
 // Xử lý Xóa
 const handleDelete = (row) => {
   ElMessageBox.confirm(`Bạn có chắc chắn muốn xóa ca "${row.shiftName}"?`, 'Xóa ca làm việc', {
@@ -529,8 +599,8 @@ const handleBulkUpdate = async (newStatus) => {
     const result = await store.bulkUpdateStatus(idsToUpdate, newStatus)
 
     if (result.success) {
-      showToast(result.message, 'success')
-      handleUnselect()
+      // showToast(result.message, 'success')
+      // handleUnselect()
     }
   } catch (error) {
     showToast('Lỗi cập nhật trạng thái.', 'error')
@@ -1091,5 +1161,55 @@ const handleBulkDelete = () => {
 .pagination-select-dropdown .check-icon {
   color: #009b71;
   font-size: 14px;
+}
+.ml-2 {
+  margin-left: 8px;
+}
+.gap-2 {
+  gap: 8px;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.filter-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  padding: 0 8px;
+  font-size: 13px;
+  color: #1f1f1f;
+  white-space: nowrap;
+  height: 28px;
+}
+
+.tag-operator {
+  color: #009b71;
+  font-weight: 500;
+}
+
+.tag-value {
+}
+
+.tag-close {
+  margin-left: 4px;
+  cursor: pointer;
+  color: #757575;
+  font-size: 12px;
+}
+
+.tag-close:hover {
+  color: #ef4444;
+}
+
+.clear-all-filters {
+  font-size: 13px;
+  font-weight: 500;
+}
+.clear-all-filters:hover {
+  text-decoration: underline;
 }
 </style>

@@ -18,22 +18,70 @@
             v-for="field in fields"
             :key="field.key"
             class="sticky-cell"
-            :style="{
-              width: field.width,
-              minWidth: field.width,
-              textAlign: field.align || 'left',
-            }"
-            :class="field.class"
+            :style="{ width: field.width, minWidth: field.width, textAlign: field.align || 'left' }"
           >
             <div
-              class="ms-th-content"
+              class="ms-th-content header-content"
               :style="{ justifyContent: field.align === 'right' ? 'flex-end' : 'flex-start' }"
             >
               <el-tooltip :content="field.label" placement="top" effect="dark" :transition="'none'">
-                <div class="ms-th-title">
-                  {{ field.label }}
-                </div>
+                <div class="ms-th-title">{{ field.label }}</div>
               </el-tooltip>
+
+              <el-popover
+                v-if="field.allowFilter"
+                placement="bottom"
+                :width="320"
+                trigger="manual"
+                :visible="popoverVisible[field.key]"
+                popper-class="filter-popover"
+                @hide="resetTempFilter"
+              >
+                <template #reference>
+                  <div
+                    :class="isColumnFiltered(field.key) ? 'filter-icon2' : 'filter-icon1'"
+                    @click.stop="togglePopover(field)"
+                  >
+                    <i class="fas fa-filter"></i>
+                  </div>
+                </template>
+
+                <div class="filter-container">
+                  <div class="filter-header">
+                    <span class="fw-600">Lọc {{ field.label }}</span>
+                    <span class="close-filter" @click="closePopover(field.key)">✕</span>
+                  </div>
+
+                  <div class="filter-body mt-2">
+                    <el-select v-model="tempFilter.operator" class="w-100 mb-2" size="default">
+                      <el-option label="Chứa" value="Contains" />
+                      <el-option label="Không chứa" value="NotContains" />
+                      <el-option label="Bắt đầu với" value="StartsWith" />
+                      <el-option label="Kết thúc với" value="EndsWith" />
+                      <el-option label="Bằng" value="Equals" />
+                    </el-select>
+
+                    <el-input
+                      v-model="tempFilter.value"
+                      placeholder="Nhập giá trị lọc"
+                      size="default"
+                      @keyup.enter="handleApplyFilter(field)"
+                    />
+                  </div>
+
+                  <div class="filter-footer mt-3 d-flex justify-content-space-between">
+                    <button class="btn-text text-red" @click="handleClearFilter(field.key)">
+                      Bỏ lọc
+                    </button>
+                    <div class="d-flex gap-2">
+                      <button class="btn-secondary-sm" @click="closePopover(field.key)">Hủy</button>
+                      <button class="btn-primary-sm" @click="handleApplyFilter(field)">
+                        Áp dụng
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </el-popover>
             </div>
           </th>
 
@@ -118,9 +166,88 @@ const props = defineProps({
   selectedIds: { type: Array, default: () => [] }, // Danh sách ID đang chọn (v-model)
   showCheckbox: { type: Boolean, default: true },
   showActions: { type: Boolean, default: true },
+  activeFilters: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['update:selectedIds', 'edit', 'delete', 'row-dblclick', 'row-click'])
+const emit = defineEmits([
+  'update:selectedIds',
+  'edit',
+  'delete',
+  'row-dblclick',
+  'row-click',
+  'apply-filter',
+])
+
+const tempFilter = ref({
+  column: '',
+  operator: 'Contains',
+  value: '',
+})
+
+const popoverVisible = ref({})
+
+const isColumnFiltered = (key) => {
+  return props.activeFilters.some((f) => f.column === key)
+}
+
+// Khởi tạo dữ liệu khi mở popover
+const initFilter = (field) => {
+  // Tìm xem đã có lọc cho cột này chưa
+  const current = props.activeFilters.find((f) => f.column === field.key)
+  if (current) {
+    tempFilter.value = { ...current }
+  } else {
+    tempFilter.value = {
+      column: field.key,
+      operator: 'Contains',
+      value: '',
+    }
+  }
+}
+const resetTempFilter = () => {
+  // Có thể reset nếu cần
+}
+
+// Toggle popover
+const togglePopover = (field) => {
+  if (popoverVisible.value[field.key]) {
+    popoverVisible.value[field.key] = false
+  } else {
+    // Close other popovers first if needed (optional)
+    Object.keys(popoverVisible.value).forEach((k) => (popoverVisible.value[k] = false))
+
+    initFilter(field)
+    popoverVisible.value[field.key] = true
+  }
+}
+
+// Đóng popover
+const closePopover = (key) => {
+  if (key) {
+    popoverVisible.value[key] = false
+  }
+}
+
+const handleApplyFilter = (field) => {
+  if (!tempFilter.value.value && tempFilter.value.operator !== 'NotNull') {
+    // Nếu không nhập gì mà ấn áp dụng -> coi như bỏ lọc
+    handleClearFilter(field.key)
+    return
+  }
+
+  // Emit ra ngoài cho WorkShift xử lý
+  emit('apply-filter', {
+    ...tempFilter.value,
+    column: field.key,
+    label: field.label, // Truyền thêm label để hiển thị tag
+  })
+  closePopover(field.key)
+}
+
+const handleClearFilter = (key) => {
+  emit('apply-filter', { column: key, remove: true })
+  closePopover(key)
+}
 
 const activeRowId = ref(null)
 
@@ -182,6 +309,12 @@ const handleRowClick = (row) => {
   width: 100%;
   height: 100%;
   overflow: auto; /* Bật thanh cuộn khi cần */
+}
+.header-content {
+  display: flex;
+  align-items: center;
+  /* justifyContent sẽ được set inline style */
+  height: 100%;
 }
 
 table {
@@ -351,6 +484,7 @@ th {
   background-color: #fff;
   transition: all 0.2s ease;
   position: relative;
+  margin: 0 auto;
 }
 
 .ms-checkbox:checked {
@@ -419,6 +553,7 @@ thead.ms-thead th .ms-th-content {
   border-right: 1px solid #d1d5db;
 }
 .ms-th-title {
+  flex: 1;
   display: flex;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -427,11 +562,101 @@ thead.ms-thead th .ms-th-content {
   width: 100%;
   position: relative;
 }
-.ms-th-checkbox {
+.filter-icon1 {
+  mask-image: url(@/assets/icon/icon1.svg);
+  mask-position: -544px 0px;
+  height: 16px;
+  width: 16px;
+  min-height: 16px;
+  min-width: 16px;
+  position: relative;
+  background-color: #4b5563;
+  opacity: 0; /* Ẩn mặc định */
+  transition: opacity 0.2s ease; /* Hiệu ứng mượt */
+}
+.filter-icon2 {
+  mask-image: url(@/assets/icon/icon1.svg);
+  mask-position: -720px 0px;
+  height: 16px;
+  width: 16px;
+  min-height: 16px;
+  min-width: 16px;
+  position: relative;
+  background-color: #4b5563;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+th:hover .filter-icon1 {
+  opacity: 1;
+}
+
+/* .filter-icon1:hover,
+.filter-icon2:hover {
+  background-color: #e5e7eb;
+} */
+
+/* .filter-icon2 {
+  color: #009b71;
+  background-color: #ebfef6;
+} */
+
+.filter-header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  height: 100%;
+  margin-bottom: 8px;
+}
+
+.close-filter {
+  cursor: pointer;
+  font-size: 16px;
+  color: #757575;
+  padding: 4px;
+}
+
+.close-filter:hover {
+  background-color: #f3f4f6;
+  border-radius: 4px;
+}
+
+/* Style nút nhỏ trong popover */
+.btn-secondary-sm {
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-primary-sm {
+  background: #009b71;
+  color: #fff;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-text {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.mt-2 {
+  margin-top: 8px;
+}
+.mt-3 {
+  margin-top: 12px;
+}
+.mb-2 {
+  margin-bottom: 8px;
+}
+.gap-2 {
+  gap: 8px;
+}
+.fw-600 {
+  font-weight: 600;
+}
+.pointer {
+  cursor: pointer;
 }
 thead.ms-thead .checkbox-cell .ms-th-content,
 thead.ms-thead .actions-header .ms-th-content {

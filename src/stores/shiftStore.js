@@ -20,10 +20,10 @@ export const useShiftStore = defineStore('shift', {
       pageSize: 20,
       searchQuery: '',
       sort: 'createdDate DESC',
+      filters: [],
     },
   }),
 
-  // 2. Actions: Các hàm xử lý nghiệp vụ
   actions: {
     /**
      * Lấy danh sách ca làm việc từ API
@@ -36,6 +36,7 @@ export const useShiftStore = defineStore('shift', {
           this.filter.pageNumber,
           this.filter.searchQuery,
           this.filter.sort,
+          this.filter.filters,
         )
 
         if (res.data.success) {
@@ -70,9 +71,9 @@ export const useShiftStore = defineStore('shift', {
         // Gán các giá trị mặc định
         payload.shiftId = generateUUID()
         payload.shiftStatus = payload.shiftStatus ?? 1
-        payload.createdBy = 'admin' // Có thể thay bằng user thật sau này
+        payload.createdBy = 'Trương Hoàng Bảo Trung' // Có thể thay bằng user thật sau này
         payload.createdDate = now
-        payload.modifiedBy = 'admin'
+        payload.modifiedBy = 'Trương Hoàng Bảo Trung'
         payload.modifiedDate = now
 
         // Map sang format Backend

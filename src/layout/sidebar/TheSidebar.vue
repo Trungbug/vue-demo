@@ -223,7 +223,7 @@ const menu = [
 
 /* -- Cấu trúc Sidebar chính -- */
 .sidebar {
-  width: 238px; /* Độ rộng khi mở */
+  width: 234px; /* Độ rộng khi mở */
   background: #111827; /* Màu nền dark theo ảnh */
   color: #fff;
   transition: width 0.2s;

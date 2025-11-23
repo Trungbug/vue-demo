@@ -196,7 +196,7 @@
 
       <div class="paging">
         <div class="paging-left">
-          Tổng số: <strong>{{ totalRecords }}</strong> bản ghi
+          Tổng số: <strong>{{ totalRecords }}</strong>
         </div>
         <div class="paging-right">
           <span class="text-label">Số dòng/trang</span>
@@ -309,7 +309,7 @@ const { showToast } = useToast()
 // Cột bảng
 const shiftFields = ref([
   { key: 'shiftCode', label: 'Mã ca', width: '120px', allowFilter: true },
-  { key: 'shiftName', label: 'Tên ca', width: '250px' },
+  { key: 'shiftName', label: 'Tên ca', width: '250px', allowFilter: true },
   { key: 'shiftBeginTime', label: 'Giờ vào ca', type: 'text', width: '130px' },
   { key: 'shiftEndTime', label: 'Giờ hết ca', type: 'text', width: '130px' },
   { key: 'shiftBeginBreakTime', label: 'Bắt đầu nghỉ giữa ca', type: 'text', width: '200px' },
@@ -686,7 +686,7 @@ const handleBulkDelete = () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background-color: #fff;
+  background-color: #f3f4f6;
   border: 1px solid #e0e0e0;
   border-top: none;
   border-bottom-left-radius: 4px;
@@ -1020,8 +1020,8 @@ const handleBulkDelete = () => {
 }
 
 .btn-circle {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: none;
   background-color: #fff;
@@ -1107,10 +1107,10 @@ const handleBulkDelete = () => {
   mask-repeat: no-repeat;
 }
 .icon-edit {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   mask-image: url(@/assets/icon/iconn.svg);
-  mask-position: -33px -48px;
+  mask-position: -36px -48px;
   mask-repeat: no-repeat;
   background-color: #4b5563;
 }

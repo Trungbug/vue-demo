@@ -198,7 +198,7 @@ const errors = ref({})
 const workTimeHours = computed(() => {
   const start = parseTime(formData.value.shiftBeginTime)
   const end = parseTime(formData.value.shiftEndTime)
-  if (start === 0 || end === 0) return ''
+  if (start === null || end === null) return ''
 
   let durationMin = 0
   if (end >= start) {
@@ -220,7 +220,7 @@ const workTimeHours = computed(() => {
 const breakTimeHours = computed(() => {
   const start = parseTime(formData.value.shiftBeginBreakTime)
   const end = parseTime(formData.value.shiftEndBreakTime)
-  if (start === 0 || end === 0) return ''
+  if (start === null || end === null) return ''
 
   let durationMin = 0
   if (end >= start) {
@@ -239,30 +239,25 @@ watch(
   () => props.initialData,
   (newData) => {
     if (newData) {
+      // gán dữ liệu edit vào form
       formData.value = { ...newData }
 
-      // Backend (Shift.cs) dùng TimeSpan, nó có thể trả về "HH:mm:ss"
-      // Cần cắt bỏ ":ss" nếu có để input time (HH:mm) hiểu
-      if (formData.value.shiftBeginTime && formData.value.shiftBeginTime.length > 5) {
-        formData.value.shiftBeginTime = formData.value.shiftBeginTime.substring(0, 5)
-      }
-      if (formData.value.shiftEndTime && formData.value.shiftEndTime.length > 5) {
-        formData.value.shiftEndTime = formData.value.shiftEndTime.substring(0, 5)
-      }
-      if (formData.value.shiftBeginBreakTime && formData.value.shiftBeginBreakTime.length > 5) {
-        formData.value.shiftBeginBreakTime = formData.value.shiftBeginBreakTime.substring(0, 5)
-      }
-      if (formData.value.shiftEndBreakTime && formData.value.shiftEndBreakTime.length > 5) {
-        formData.value.shiftEndBreakTime = formData.value.shiftEndBreakTime.substring(0, 5)
-      }
+      // loại bỏ giây nếu backend trả cả HH:mm:ss
+      ;['shiftBeginTime', 'shiftEndTime', 'shiftBeginBreakTime', 'shiftEndBreakTime'].forEach(
+        (key) => {
+          if (formData.value[key] && formData.value[key].length > 5) {
+            formData.value[key] = formData.value[key].substring(0, 5)
+          }
+        },
+      )
     } else {
       formData.value = createEmptyForm()
       errors.value = {}
     }
   },
   {
-    immediate: true,
-    deep: true,
+    immediate: true, // giữ nếu bạn cần load dữ liệu khi mở Form Edit
+    deep: false, // ❗ MUST FIX: không được deep
   },
 )
 
@@ -528,14 +523,16 @@ const formatToIntegerDisplay = (val) => {
 .form-group.inline .control-wrapper,
 .form-group.inline .text-input,
 .form-group.inline :deep(.custom-time-select),
-.form-group.inline :deep(.el-date-editor) {
+.form-group.inline :deep(.el-date-editor),
+.form-group.inline :deep(.time-input) {
   flex: 1;
   width: 100%;
 }
 
 .form-group.inline :deep(.custom-time-select),
 .form-group.inline :deep(.el-date-editor),
-.form-row .form-group.inline :deep(.texteditor-input) {
+.form-row .form-group.inline :deep(.texteditor-input),
+.form-group.inline :deep(.time-input) {
   max-width: 122px !important;
 }
 

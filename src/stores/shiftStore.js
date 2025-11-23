@@ -109,7 +109,7 @@ export const useShiftStore = defineStore('shift', {
         payload.shiftBeginBreakTime = formatTimeForPayload(payload.shiftBeginBreakTime)
         payload.shiftEndBreakTime = formatTimeForPayload(payload.shiftEndBreakTime)
 
-        payload.modifiedBy = 'admin'
+        payload.modifiedBy = 'Trương Hoàng Bảo Trung'
         payload.modifiedDate = now
 
         const backendPayload = mapShiftToBackend(payload)

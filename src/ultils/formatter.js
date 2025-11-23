@@ -207,13 +207,13 @@ export const formatTimeForPayload = (timeStr) => {
 /**
  * Hàm parse chuỗi "HH:mm" sang số phút trong ngày
  * @param {string} timeString - Chuỗi thời gian (ví dụ: "08:30")
- * @returns {number} - Số phút từ đầu ngày
+ * @returns {number|null} - Số phút từ đầu ngày, hoặc null nếu không hợp lệ
  * createdby: Bảo Trung
  */
 export const parseTime = (timeString) => {
-  if (!timeString) return 0
+  if (!timeString) return null
   const parts = String(timeString).split(':').map(Number)
-  if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0
+  if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return null
   const [hours, minutes] = parts
   return hours * 60 + minutes
 }

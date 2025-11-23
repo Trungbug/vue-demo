@@ -20,7 +20,12 @@
           </div>
         </div>
         <div class="nav-item-content-right">
-          <div class="icon-download"></div>
+          <div
+            class="icon-download"
+            @click="handleExport"
+            title="Xuất khẩu danh sách"
+            style="cursor: pointer"
+          ></div>
           <div class="nav-separator"></div>
           <div class="icon-package"></div>
 
@@ -38,7 +43,28 @@
 </template>
 
 <script setup>
-// Nơi để thêm logic cho component sau này
+import { useShiftStore } from '@/stores/shiftStore.js'
+import useToast from '@/composables/useToast.js'
+
+const shiftStore = useShiftStore()
+const { showToast } = useToast()
+
+/**
+ * Xử lý sự kiện click xuất khẩu
+ */
+const handleExport = async () => {
+  try {
+    const result = await shiftStore.exportData()
+
+    if (result.success) {
+      showToast(result.message, 'success')
+    } else {
+      showToast('Có lỗi xảy ra khi xuất khẩu file.', 'error')
+    }
+  } catch (error) {
+    showToast('Lỗi hệ thống.', 'error')
+  }
+}
 </script>
 
 <style scoped>

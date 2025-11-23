@@ -26,6 +26,41 @@ export const useShiftStore = defineStore('shift', {
 
   actions: {
     /**
+     * Xuất khẩu dữ liệu ra file Excel
+     */
+    async exportData() {
+      this.isLoading = true
+      try {
+        // Lấy tham số search hiện tại từ state filter
+        const response = await ShiftAPI.exportExcel(this.filter.searchQuery)
+
+        // Tạo URL tạm thời cho blob dữ liệu
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+
+        // Tạo thẻ a ẩn để kích hoạt tải xuống
+        const link = document.createElement('a')
+        link.href = url
+
+        // Đặt tên file (Backend đã trả về tên, nhưng ta có thể đặt lại ở đây)
+        const fileName = `Danh_sach_ca_${new Date().toISOString().slice(0, 10)}.xlsx`
+        link.setAttribute('download', fileName)
+
+        document.body.appendChild(link)
+        link.click()
+
+        // Dọn dẹp
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        return { success: true, message: 'Xuất khẩu thành công!' }
+      } catch (error) {
+        console.error(error)
+        return { success: false, error }
+      } finally {
+        this.isLoading = false
+      }
+    },
+    /**
      * Lấy danh sách ca làm việc từ API
      */
     async fetchShifts() {

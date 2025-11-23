@@ -303,7 +303,7 @@ const shiftToEdit = ref(null)
 const dialogTitle = ref('Thêm ca làm việc')
 const selectedIds = ref([]) // Danh sách ID đang chọn
 const isSaveAndAdd = ref(false)
-const { isDialogVisible, selectedItem, showDialog, hideDialog } = useDialog() // Nếu bạn dùng logic này ở đâu đó
+const { isDialogVisible, selectedItem, showDialog, hideDialog } = useDialog()
 const { showToast } = useToast()
 
 // Cột bảng

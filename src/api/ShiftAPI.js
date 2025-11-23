@@ -42,7 +42,18 @@ class ShiftAPI extends BaseAPI {
   }
 
   // Các hàm insert, update, delete đã được kế thừa từ BaseAPI
-}
 
+  /**
+   * Xuất khẩu Excel
+   * @param {string} search Từ khóa tìm kiếm
+   * createdby: Bảo Trung
+   */
+  exportExcel(search) {
+    return APIConfig.get(`${this.controller}/export`, {
+      params: { search: search },
+      responseType: 'blob', // Bắt buộc để tải file
+    })
+  }
+}
 // Xuất ra một instance để dùng chung
 export default new ShiftAPI()

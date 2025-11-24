@@ -10,10 +10,10 @@
       </div>
     </div>
 
-    <BaseDialog v-model:show="isFormVisible" :title="dialogTitle">
+    <BaseDialog v-model:show="isFormVisible" :title="dialogTitle" @close="handleCancelForm">
       <CandidateForm
         ref="candidateFormRef"
-        @cancel="handleCancelForm"
+        @cancel="closeDialog"
         @submit="handleAddCandidate"
         :initialData="shiftToEdit"
       />
@@ -263,8 +263,8 @@
 </template>
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { storeToRefs } from 'pinia' // Import storeToRefs để giữ reactivity
-import { useShiftStore } from '@/stores/shiftStore.js' // Import Store
+import { storeToRefs } from 'pinia'
+import { useShiftStore } from '@/stores/shiftStore.js'
 
 import TheTable from '@/components/table/Table.vue'
 import BaseDialog from '@/components/dialog/Dialog.vue'
@@ -335,22 +335,32 @@ const shiftFields = ref([
   { key: 'modifiedDate', label: 'Ngày sửa', width: '160px' },
 ])
 
-// --- 3. COMPUTED (Liên kết v-model với Store) ---
-// Tạo các biến computed có get/set để khi người dùng thao tác trên UI, dữ liệu trong Store tự cập nhật
+/**
+ * Computed binding 2 chiều cho trang hiện tại (Current Page)
+ * Get: Lấy giá trị từ Store
+ * Set: Cập nhật vào Store -> Trigger watcher để load lại dữ liệu
+ * createdby: Bảo Trung
+ */
 const currentPage = computed({
   get: () => filter.value.pageNumber,
   set: (val) => {
     filter.value.pageNumber = val
   },
 })
-
+/**
+ * Computed binding 2 chiều cho kích thước trang (Page Size)
+ * createdby: Bảo Trung
+ */
 const pageSize = computed({
   get: () => filter.value.pageSize,
   set: (val) => {
     filter.value.pageSize = val
   },
 })
-
+/**
+ * Computed binding 2 chiều cho từ khóa tìm kiếm (Search Query)
+ * createdby: Bảo Trung
+ */
 const searchQuery = computed({
   get: () => filter.value.searchQuery,
   set: (val) => {
@@ -377,7 +387,12 @@ onMounted(() => {
   loadShifts()
 })
 
-// Hàm gọi API thông qua Store Action
+/**
+ * Hàm gọi API lấy danh sách ca làm việc thông qua Store Action
+ * Bao gồm xử lý lỗi kết nối hoặc lỗi SSL
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const loadShifts = async () => {
   try {
     await store.fetchShifts()
@@ -393,7 +408,7 @@ const loadShifts = async () => {
   }
 }
 
-// Khi trang hoặc số lượng bản ghi/trang thay đổi -> Gọi API
+// Watcher reload khi thay đổi trang hoặc kích thước trang
 watch([currentPage, pageSize], () => {
   selectedIds.value = []
   loadShifts()
@@ -409,23 +424,40 @@ watch(searchQuery, () => {
   }, 500)
 })
 
-// --- 5. CÁC HÀM XỬ LÝ SỰ KIỆN (ACTIONS) ---
-
+/**
+ * Mở Dialog để thêm mới ca làm việc
+ * createdby: Bảo Trung
+ */
 const openAddDialog = () => {
   shiftToEdit.value = null
   dialogTitle.value = 'Thêm Ca làm việc'
   isFormVisible.value = true
 }
 
+/**
+ * Mở Dialog để sửa ca làm việc
+ * @param {object} row - Dữ liệu dòng cần sửa
+ * createdby: Bảo Trung
+ */
 const handleEdit = (row) => {
   shiftToEdit.value = { ...row }
   dialogTitle.value = 'Sửa ca làm việc'
   isFormVisible.value = true
 }
 
-const handleCancelForm = () => {
+/**
+ * Đóng dialog và reset form
+ */
+const closeDialog = () => {
   isFormVisible.value = false
   shiftToEdit.value = null
+}
+
+/**
+ * Xử lý sự kiện hủy - gọi handleCancel của form để kiểm tra thay đổi
+ */
+const handleCancelForm = () => {
+  candidateFormRef.value?.handleCancel()
 }
 
 const handleSaveOnly = () => {
@@ -438,7 +470,11 @@ const handleSaveAndAdd = () => {
   candidateFormRef.value?.handleSubmit()
 }
 
-// Xử lý lưu (Thêm/Sửa)
+/**
+ * Hàm xử lý sự kiện Lưu từ Form (dùng chung cho cả Thêm và Sửa)
+ * @param {object} formData - Dữ liệu nhận được từ Form component
+ * createdby: Bảo Trung
+ */
 const handleAddCandidate = async (formData) => {
   let result
 
@@ -465,7 +501,12 @@ const handleAddCandidate = async (formData) => {
   }
 }
 
-// Xử lý hiển thị lỗi
+/**
+ * Hàm xử lý hiển thị lỗi từ Backend trả về sau khi Lưu thất bại
+ * Map lỗi field vào form validate hoặc hiện toast message chung
+ * @param {object} error - Object lỗi trả về
+ * createdby: Bảo Trung
+ */
 const handleSaveError = (error) => {
   console.error('Lỗi khi lưu:', error)
   let errMsg = 'Có lỗi xảy ra.'
@@ -500,7 +541,11 @@ const getOperatorText = (op) => {
   return map[op] || op
 }
 
-// Xử lý sự kiện apply-filter từ Table
+/**
+ * Hàm xử lý khi người dùng áp dụng bộ lọc từ component Table
+ * @param {object} filterData - Dữ liệu lọc { column, value, operator... }
+ * createdby: Bảo Trung
+ */
 const handleTableFilter = (filterData) => {
   if (filterData.remove) {
     // Trường hợp nút "Bỏ lọc" trong popover
@@ -522,26 +567,36 @@ const handleTableFilter = (filterData) => {
       filter.value.filters.push(newFilterItem)
     }
 
-    // Reset về trang 1 và reload
     filter.value.pageNumber = 1
     loadShifts()
   }
 }
 
-// Xóa 1 tag trên toolbar
+/**
+ * Xóa 1 thẻ lọc (Filter Tag) trên toolbar
+ * @param {string} columnKey - Mã cột cần xóa lọc
+ * createdby: Bảo Trung
+ */
 const removeFilterTag = (columnKey) => {
   filter.value.filters = filter.value.filters.filter((f) => f.column !== columnKey)
   filter.value.pageNumber = 1
   loadShifts()
 }
 
-// Xóa tất cả (nút Bỏ lọc đỏ)
+/**
+ * Xóa tất cả các bộ lọc hiện có (Reset về mặc định)
+ * createdby: Bảo Trung
+ */
 const clearAllFilters = () => {
   filter.value.filters = []
   filter.value.pageNumber = 1
   loadShifts()
 }
-// Xử lý Xóa
+/**
+ * Hàm xử lý xóa 1 ca làm việc
+ * @param {object} row - Dòng dữ liệu cần xóa
+ * createdby: Bảo Trung
+ */
 const handleDelete = (row) => {
   ElMessageBox.confirm(`Bạn có chắc chắn muốn xóa ca "${row.shiftName}"?`, 'Xóa ca làm việc', {
     confirmButtonText: 'Xóa',
@@ -564,6 +619,11 @@ const handleDelete = (row) => {
     .catch(() => {})
 }
 
+/**
+ * Hàm nhân bản ca làm việc
+ * Copy dữ liệu dòng cũ nhưng xóa ID và Code để tạo mới
+ * createdby: Bảo Trung
+ */
 const handleDuplicate = (row) => {
   const duplicatedData = { ...row }
   duplicatedData.shiftId = null
@@ -590,6 +650,11 @@ const handleUnselect = () => {
   selectedIds.value = []
 }
 
+/**
+ * Hàm xử lý cập nhật trạng thái hàng loạt (Sử dụng / Ngừng sử dụng)
+ * @param {int} newStatus - Trạng thái mới
+ * createdby: Bảo Trung
+ */
 const handleBulkUpdate = async (newStatus) => {
   try {
     const rowsToUpdate = selectedRows.value.filter((row) => row.shiftStatus !== newStatus)
@@ -607,6 +672,10 @@ const handleBulkUpdate = async (newStatus) => {
   }
 }
 
+/**
+ * Hàm toggle nhanh trạng thái 1 dòng từ dropdown menu
+ * createdby: Bảo Trung
+ */
 const handleToggleStatus = async (row, newStatus) => {
   try {
     const result = await store.bulkUpdateStatus([row.shiftId], newStatus)
@@ -618,6 +687,10 @@ const handleToggleStatus = async (row, newStatus) => {
   }
 }
 
+/**
+ * Hàm xử lý xóa hàng loạt các bản ghi đã chọn
+ * createdby: Bảo Trung
+ */
 const handleBulkDelete = () => {
   ElMessageBox.confirm(
     `Bạn muốn xóa ${selectedIds.value.length} bản ghi đã chọn?`,

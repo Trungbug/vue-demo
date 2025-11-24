@@ -186,11 +186,22 @@ const tempFilter = ref({
 
 const popoverVisible = ref({})
 
+/**
+ * Hàm kiểm tra xem cột hiện tại có đang được áp dụng bộ lọc hay không
+ * @param {string} key - Mã cột (field key)
+ * @returns {boolean} - True nếu đang lọc
+ * createdby: Bảo Trung
+ */
 const isColumnFiltered = (key) => {
   return props.activeFilters.some((f) => f.column === key)
 }
 
-// Khởi tạo dữ liệu khi mở popover
+/**
+ * Hàm khởi tạo dữ liệu mặc định cho popover lọc khi mở lên
+ * Nếu đã có lọc trước đó thì fill lại giá trị cũ
+ * @param {object} field - Cấu hình cột
+ * createdby: Bảo Trung
+ */
 const initFilter = (field) => {
   // Tìm xem đã có lọc cho cột này chưa
   const current = props.activeFilters.find((f) => f.column === field.key)
@@ -208,7 +219,12 @@ const resetTempFilter = () => {
   // Có thể reset nếu cần
 }
 
-// Toggle popover
+/**
+ * Hàm bật/tắt popover lọc cho từng cột
+ * Đảm bảo chỉ có 1 popover mở tại 1 thời điểm
+ * @param {object} field - Cấu hình cột
+ * createdby: Bảo Trung
+ */
 const togglePopover = (field) => {
   if (popoverVisible.value[field.key]) {
     popoverVisible.value[field.key] = false
@@ -221,13 +237,23 @@ const togglePopover = (field) => {
   }
 }
 
-// Đóng popover
+/**
+ * Hàm đóng popover dựa theo key
+ * @param {string} key - Mã cột
+ * createdby: Bảo Trung
+ */
 const closePopover = (key) => {
   if (key) {
     popoverVisible.value[key] = false
   }
 }
 
+/**
+ * Hàm xử lý khi nhấn nút "Áp dụng" trên form lọc
+ * Nếu giá trị rỗng -> chuyển sang logic bỏ lọc
+ * @param {object} field - Cấu hình cột
+ * createdby: Bảo Trung
+ */
 const handleApplyFilter = (field) => {
   if (!tempFilter.value.value && tempFilter.value.operator !== 'NotNull') {
     // Nếu không nhập gì mà ấn áp dụng -> coi như bỏ lọc
@@ -244,6 +270,11 @@ const handleApplyFilter = (field) => {
   closePopover(field.key)
 }
 
+/**
+ * Hàm xử lý khi nhấn nút "Bỏ lọc"
+ * @param {string} key - Mã cột
+ * createdby: Bảo Trung
+ */
 const handleClearFilter = (key) => {
   emit('apply-filter', { column: key, remove: true })
   closePopover(key)
@@ -251,7 +282,11 @@ const handleClearFilter = (key) => {
 
 const activeRowId = ref(null)
 
-// Tính toán tổng số cột để merge cell khi empty
+/**
+ * Computed tính tổng số cột hiển thị để merge cell (colspan) khi bảng không có dữ liệu
+ * @returns {number} Tổng số cột
+ * createdby: Bảo Trung
+ */
 const totalColumns = computed(() => {
   let count = props.fields.length
   if (props.showCheckbox) count++
@@ -259,15 +294,19 @@ const totalColumns = computed(() => {
   return count
 })
 
-// Kiểm tra đã chọn hết chưa
+/**
+ * Computed kiểm tra trạng thái chọn tất cả (cho checkbox header)
+ * @returns {boolean} True nếu tất cả các dòng đều được chọn
+ * createdby: Bảo Trung
+ */
 const isAllChecked = computed(() => {
   return props.rows.length > 0 && props.selectedIds.length === props.rows.length
 })
 
-// Xử lý chọn 1 dòng
 /**
- * Xử lý khi click checkbox 1 dòng
- * @param {string} id ID của dòng
+ * Hàm xử lý khi tick chọn checkbox của một dòng
+ * Thêm hoặc xóa ID khỏi danh sách selectedIds
+ * @param {string} id - ID của dòng
  * createdby: Bảo Trung
  */
 const handleRowCheck = (id) => {
@@ -281,10 +320,9 @@ const handleRowCheck = (id) => {
   emit('update:selectedIds', newSelected)
 }
 
-// Xử lý chọn tất cả
 /**
- * Xử lý khi click checkbox chọn tất cả
- * @param {Event} event Sự kiện change
+ * Hàm xử lý khi tick chọn checkbox "Chọn tất cả" ở header
+ * @param {Event} event - Sự kiện change
  * createdby: Bảo Trung
  */
 const handleSelectAll = (event) => {
@@ -293,16 +331,20 @@ const handleSelectAll = (event) => {
     emit('update:selectedIds', allIds)
   } else {
     emit('update:selectedIds', [])
-    emit('update:selectedIds', [])
+    emit('update:selectedIds', []) // Lưu ý: Code gốc đang emit 2 lần, có thể là lỗi copy paste, nên giữ nguyên logic của bạn
   }
 }
 
+/**
+ * Hàm xử lý khi click vào một dòng (để highlight dòng đang chọn)
+ * @param {object} row - Dữ liệu dòng
+ * createdby: Bảo Trung
+ */
 const handleRowClick = (row) => {
   activeRowId.value = row[props.rowKey]
   emit('row-click', row)
 }
 </script>
-
 <style scoped>
 /* Container chính cho phép cuộn cả ngang và dọc */
 .table-container {

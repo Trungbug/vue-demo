@@ -123,6 +123,14 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const isCollapsed = ref(false)
 
+/**
+ * Hàm kiểm tra trạng thái active của menu item (dùng cho Flyout Menu)
+ * Logic: Kiểm tra nếu route hiện tại bắt đầu bằng path của item
+ * hoặc thuộc danh sách relatedPaths (các path con trong Mega Menu)
+ * @param {Object} item - Đối tượng cấu hình menu
+ * @returns {Boolean} - True nếu item đó đang được chọn
+ * createdby: Bảo Trung
+ */
 const isActive = (item) => {
   if (item.path && route.path.startsWith(item.path)) return true
   if (item.relatedPaths && item.relatedPaths.some((p) => route.path.startsWith(p))) return true
@@ -130,13 +138,24 @@ const isActive = (item) => {
 }
 
 /**
- * Toggle trạng thái thu gọn sidebar
+ * Hàm toggle trạng thái thu gọn/mở rộng sidebar
+ * Thay đổi giá trị biến isCollapsed
+ * @returns (void)
  * createdby: Bảo Trung
  */
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
 }
 
+/**
+ * Cấu hình danh sách menu hiển thị trên Sidebar
+ * @property {string} title - Tên hiển thị
+ * @property {string} icon - Class CSS của icon (dùng mask-image)
+ * @property {string} type - Loại menu: 'link' (thường), 'dropdown' (có mũi tên xuống), 'flyout' (mega menu), 'separator' (kẻ ngang)
+ * @property {string} path - Đường dẫn router
+ * @property {Array} relatedPaths - Các đường dẫn con để giữ trạng thái active cho mục cha (dùng cho flyout)
+ * createdby: Bảo Trung
+ */
 const menu = [
   {
     title: 'Tổng quan',
@@ -204,7 +223,7 @@ const menu = [
     icon: 'icon-others', // icon-list từ file icon.css của bạn
     type: 'flyout', // <-- Loại "sang phải"
     path: '/others',
-    relatedPaths: ['/work-shift'],
+    relatedPaths: ['/work-shift', '/customers', '/employees', '/time-off'], // Đã bổ sung thêm các path con
   },
   {
     title: 'Thiết lập',

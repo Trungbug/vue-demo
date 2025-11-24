@@ -26,7 +26,9 @@ export const useShiftStore = defineStore('shift', {
 
   actions: {
     /**
-     * Xuất khẩu dữ liệu ra file Excel
+     * Hàm xuất khẩu dữ liệu danh sách ca làm việc ra file Excel
+     * @returns (Promise) - Object chứa kết quả { success, message/error }
+     * createdby: Bảo Trung
      */
     async exportData() {
       this.isLoading = true
@@ -60,8 +62,11 @@ export const useShiftStore = defineStore('shift', {
         this.isLoading = false
       }
     },
+
     /**
-     * Lấy danh sách ca làm việc từ API
+     * Hàm lấy danh sách ca làm việc từ API (có phân trang và lọc)
+     * @returns (Promise) - Void (Cập nhật trực tiếp vào state shifts và totalRecords)
+     * createdby: Bảo Trung
      */
     async fetchShifts() {
       this.isLoading = true
@@ -88,7 +93,10 @@ export const useShiftStore = defineStore('shift', {
     },
 
     /**
-     * Thêm mới ca làm việc
+     * Hàm thêm mới một ca làm việc
+     * @param {object} formData - Dữ liệu từ form nhập liệu
+     * @returns (Promise) - Object kết quả { success, message/error }
+     * createdby: Bảo Trung
      */
     async addShift(formData) {
       this.isLoading = true
@@ -130,7 +138,11 @@ export const useShiftStore = defineStore('shift', {
     },
 
     /**
-     * Cập nhật ca làm việc
+     * Hàm cập nhật thông tin ca làm việc
+     * @param {string} id - ID của ca làm việc cần sửa
+     * @param {object} formData - Dữ liệu mới từ form
+     * @returns (Promise) - Object kết quả { success, message/error }
+     * createdby: Bảo Trung
      */
     async updateShift(id, formData) {
       this.isLoading = true
@@ -164,7 +176,10 @@ export const useShiftStore = defineStore('shift', {
     },
 
     /**
-     * Xóa 1 bản ghi
+     * Hàm xóa một ca làm việc theo ID
+     * @param {string} id - ID của ca làm việc
+     * @returns (Promise) - Object kết quả { success, message/error }
+     * createdby: Bảo Trung
      */
     async removeShift(id) {
       try {
@@ -181,7 +196,10 @@ export const useShiftStore = defineStore('shift', {
     },
 
     /**
-     * Xóa nhiều bản ghi
+     * Hàm xóa nhiều ca làm việc cùng lúc
+     * @param {Array} ids - Mảng chứa các ID cần xóa
+     * @returns (Promise) - Object kết quả { success, message/error }
+     * createdby: Bảo Trung
      */
     async removeManyShifts(ids) {
       try {
@@ -197,7 +215,11 @@ export const useShiftStore = defineStore('shift', {
     },
 
     /**
-     * Cập nhật trạng thái hàng loạt
+     * Hàm cập nhật trạng thái hoạt động cho nhiều ca làm việc
+     * @param {Array} ids - Mảng ID cần cập nhật
+     * @param {int} status - Trạng thái mới (0: Ngưng, 1: Đang dùng)
+     * @returns (Promise) - Object kết quả { success, message }
+     * createdby: Bảo Trung
      */
     async bulkUpdateStatus(ids, status) {
       try {

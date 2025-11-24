@@ -172,9 +172,9 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// Hàm tạo form rỗng (đúng với Shift)
 /**
- * Tạo object form rỗng
+ * Hàm tạo object dữ liệu mặc định cho form (dùng khi thêm mới hoặc reset)
+ * @returns {Object} - Object chứa các trường khởi tạo rỗng
  * createdby: Bảo Trung
  */
 const createEmptyForm = () => ({
@@ -188,11 +188,13 @@ const createEmptyForm = () => ({
 })
 
 const formData = ref(createEmptyForm())
+const initialFormData = ref(createEmptyForm())
 const errors = ref({})
 
 /**
- * Tính toán thời gian làm việc (có xử lý qua đêm)
- * Trả về số giờ (dạng 8.5)
+ * Computed tính toán tổng thời gian làm việc dựa trên giờ bắt đầu và kết thúc
+ * Có xử lý trường hợp ca làm việc qua đêm (ví dụ: 22:00 -> 06:00 hôm sau)
+ * @returns {number} - Tổng số giờ làm việc (làm tròn 4 chữ số thập phân)
  * createdby: Bảo Trung
  */
 const workTimeHours = computed(() => {
@@ -213,8 +215,9 @@ const workTimeHours = computed(() => {
 })
 
 /**
- * Tính toán thời gian nghỉ (có xử lý qua đêm)
- * Trả về số giờ (dạng 1.0)
+ * Computed tính toán tổng thời gian nghỉ giữa ca
+ * Có xử lý trường hợp nghỉ qua đêm
+ * @returns {number} - Tổng số giờ nghỉ (làm tròn 4 chữ số thập phân)
  * createdby: Bảo Trung
  */
 const breakTimeHours = computed(() => {
@@ -234,6 +237,27 @@ const breakTimeHours = computed(() => {
   return parseFloat((durationMin / 60).toFixed(4))
 })
 
+/**
+ * Computed kiểm tra xem form có thay đổi so với dữ liệu ban đầu hay không
+ * @returns {boolean} - True nếu có thay đổi, False nếu không
+ * createdby: Bảo Trung
+ */
+const hasChanges = computed(() => {
+  const current = formData.value
+  const initial = initialFormData.value
+
+  return (
+    current.shiftCode !== initial.shiftCode ||
+    current.shiftName !== initial.shiftName ||
+    current.shiftBeginTime !== initial.shiftBeginTime ||
+    current.shiftEndTime !== initial.shiftEndTime ||
+    current.shiftBeginBreakTime !== initial.shiftBeginBreakTime ||
+    current.shiftEndBreakTime !== initial.shiftEndBreakTime ||
+    current.shiftDescription !== initial.shiftDescription ||
+    current.shiftStatus !== initial.shiftStatus
+  )
+})
+
 // Watcher để cập nhật formdata khi prop initialData thay đổi (chế độ Sửa)
 watch(
   () => props.initialData,
@@ -250,20 +274,25 @@ watch(
           }
         },
       )
+
+      // Lưu trạng thái ban đầu để so sánh (deep clone)
+      initialFormData.value = JSON.parse(JSON.stringify(formData.value))
     } else {
       formData.value = createEmptyForm()
+      initialFormData.value = JSON.parse(JSON.stringify(createEmptyForm()))
       errors.value = {}
     }
   },
   {
-    immediate: true, // giữ nếu bạn cần load dữ liệu khi mở Form Edit
-    deep: false, // ❗ MUST FIX: không được deep
+    immediate: true,
+    deep: false,
   },
 )
 
 /**
- * Validate form trước khi submit
- * Các rule dựa trên Đề đánh giá và Shift.cs
+ * Hàm validate toàn bộ dữ liệu form trước khi submit
+ * Kiểm tra các trường bắt buộc và logic nghiệp vụ (giờ nghỉ phải nằm trong giờ làm việc)
+ * @returns {boolean} - True nếu dữ liệu hợp lệ, False nếu có lỗi
  * createdby: Bảo Trung
  */
 const validateForm = () => {
@@ -325,8 +354,9 @@ const validateForm = () => {
 }
 
 /**
- * Xử lý sự kiện blur input
- * @param {string} field Tên trường
+ * Hàm xử lý sự kiện khi người dùng focus out khỏi ô input (Blur)
+ * Kiểm tra và hiển thị/xóa lỗi cho từng trường cụ thể
+ * @param {string} field - Tên trường dữ liệu (vd: 'shiftCode', 'shiftName')
  * createdby: Bảo Trung
  */
 const handleBlur = (field) => {
@@ -369,8 +399,9 @@ const handleBlur = (field) => {
 }
 
 /**
- * Hàm này được gọi từ component cha (WorkShift.vue)
- * Nó sẽ validate, nếu OK thì emit 'submit'
+ * Hàm xử lý sự kiện submit form (được gọi từ component cha hoặc nút Lưu)
+ * Thực hiện validate, format dữ liệu và emit sự kiện 'submit' ra ngoài
+ * @returns (void)
  * createdby: Bảo Trung
  */
 const handleSubmit = () => {
@@ -400,17 +431,44 @@ const handleSubmit = () => {
 }
 
 /**
- * Hàm này gọi từ cha
+ * Hàm xử lý sự kiện hủy bỏ/đóng form
+ * Kiểm tra xem có thay đổi không, nếu có thì hiển thị hộp thoại xác nhận
+ * @returns (void)
  * createdby: Bảo Trung
  */
-const handleCancel = () => {
-  emit('cancel')
+const handleCancel = async () => {
+  console.log('handleCancel called')
+  console.log('hasChanges:', hasChanges.value)
+  console.log('formData:', formData.value)
+  console.log('initialFormData:', initialFormData.value)
+
+  if (hasChanges.value) {
+    try {
+      await ElMessageBox.confirm(
+        'Nếu bạn thoát, các dữ liệu đang nhập liệu sẽ không được lưu lại.',
+        'Thoát và không lưu?',
+        {
+          confirmButtonText: 'Đồng ý',
+          cancelButtonText: 'Hủy',
+          type: 'warning',
+          customClass: 'custom-exit-confirm-box',
+        },
+      )
+      // Nếu người dùng chọn "Đồng ý", emit sự kiện cancel
+      emit('cancel')
+    } catch {
+      // Nếu người dùng chọn "Hủy", không làm gì (giữ form mở)
+    }
+  } else {
+    // Không có thay đổi, đóng form ngay
+    emit('cancel')
+  }
 }
 
 // Cho phép component cha gán lỗi validation từ server
 /**
- * Gán lỗi từ server vào form
- * @param {object} serverErrors Lỗi từ server
+ * Hàm gán danh sách lỗi từ Server trả về vào Form để hiển thị
+ * @param {Object} serverErrors - Object lỗi từ API (key: fieldName, value: array/string)
  * createdby: Bảo Trung
  */
 const setErrors = (serverErrors) => {
@@ -426,11 +484,13 @@ const setErrors = (serverErrors) => {
 }
 
 /**
- * Reset form về trạng thái ban đầu
+ * Hàm reset form về trạng thái rỗng ban đầu và xóa các thông báo lỗi
+ * @returns (void)
  * createdby: Bảo Trung
  */
 const resetForm = () => {
   formData.value = createEmptyForm()
+  initialFormData.value = createEmptyForm()
   errors.value = {}
 }
 
@@ -442,8 +502,11 @@ defineExpose({
 })
 
 /**
- * Format số thập phân sang số tự nhiên để hiển thị
- * Ví dụ: 8.5 -> "9" hoặc 8.2 -> "8"
+ * Hàm format giá trị số thành chuỗi hiển thị (làm tròn)
+ * Dùng để hiển thị thời gian làm việc/nghỉ trên giao diện
+ * @param {number|string} val - Giá trị cần format
+ * @returns {string} - Chuỗi số đã làm tròn
+ * createdby: Bảo Trung
  */
 const formatToIntegerDisplay = (val) => {
   if (val === '' || val === null || val === undefined) return ''
@@ -464,7 +527,7 @@ const formatToIntegerDisplay = (val) => {
 /* .form-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px; 
+  padding: 24px;
 } */
 
 /* Scrollbar custom */
@@ -553,13 +616,10 @@ const formatToIntegerDisplay = (val) => {
   width: 160px !important;
 }
 
-/* Label trong 2 cột cũng cần width cố định nhưng nhỏ hơn hoặc auto? 
+/* Label trong 2 cột cũng cần width cố định nhưng nhỏ hơn hoặc auto?
    Theo ảnh thì label "Giờ hết ca" nằm ngay trước input.
    Để đẹp thì nên chia đều: [Label Input] -gap- [Label Input]
 */
-.form-row .form-group.inline {
-  /* gap: 12px; */
-}
 .form-row .form-group.inline :deep(.form-label) {
   width: 140px; /* Để label co giãn tự nhiên trong cột hẹp */
   /* min-width: 140px; Đảm bảo tối thiểu */
@@ -630,5 +690,18 @@ const formatToIntegerDisplay = (val) => {
 .radio-label {
   font-size: 14px;
   color: #1f1f1f;
+}
+</style>
+
+<style>
+/* Custom styling cho MessageBox x\u00e1c nh\u1eadn tho\u00e1t */
+.custom-exit-confirm-box .el-message-box__btns .el-button--default {
+  background-color: #009b71;
+  color: #fff;
+  border: none;
+}
+
+.custom-exit-confirm-box .el-message-box__btns .el-button--default:hover {
+  background-color: #007b5d;
 }
 </style>

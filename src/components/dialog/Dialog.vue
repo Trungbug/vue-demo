@@ -24,10 +24,10 @@ defineProps({
   title: { type: String, default: 'Dialog' },
 })
 
-const emit = defineEmits(['update:show'])
+const emit = defineEmits(['update:show', 'close'])
 
 const close = () => {
-  emit('update:show', false)
+  emit('close')
 }
 </script>
 

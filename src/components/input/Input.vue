@@ -17,10 +17,20 @@
     />
   </div>
 </template>
-
 <script setup>
+/**
+ * Định nghĩa các Props (thuộc tính) đầu vào cho component Input
+ * @property {String} modelValue - Giá trị liên kết 2 chiều (v-model)
+ * @property {String} label - Tiêu đề hiển thị của ô nhập liệu
+ * @property {String} placeholder - Nội dung gợi ý khi chưa nhập
+ * @property {Boolean} required - Đánh dấu trường bắt buộc (hiển thị dấu *)
+ * @property {String} type - Loại input (text, password, email...)
+ * @property {String} error - Trạng thái lỗi (nếu có chuỗi lỗi thì viền đỏ)
+ * @property {Boolean} disabled - Trạng thái vô hiệu hóa nhập liệu
+ * @property {Number|String} maxLength - Độ dài tối đa cho phép nhập
+ * createdby: Bảo Trung
+ */
 defineProps({
-  // Hỗ trợ v-model để truyền và cập nhật giá trị từ component cha
   modelValue: {
     type: String,
     default: '',
@@ -55,6 +65,12 @@ defineProps({
   },
 })
 
+/**
+ * Định nghĩa các sự kiện (Events) emit ra component cha
+ * @event update:modelValue - Sự kiện cập nhật giá trị v-model khi nhập liệu
+ * @event blur - Sự kiện khi con trỏ chuột rời khỏi ô input
+ * createdby: Bảo Trung
+ */
 defineEmits(['update:modelValue', 'blur'])
 </script>
 

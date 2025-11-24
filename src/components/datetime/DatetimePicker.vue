@@ -72,7 +72,11 @@ const displayValue = ref(props.modelValue || '')
 const showDropdown = ref(false)
 const dropdownStyle = ref({}) // Style động để định vị dropdown
 
-// Generate time options based on step
+/**
+ * Computed tạo danh sách các mốc thời gian dựa trên bước nhảy (minuteStep)
+ * @returns (Array) - Mảng chứa các chuỗi thời gian (HH:mm)
+ * createdby: Bảo Trung
+ */
 const timeOptions = computed(() => {
   const options = []
   const stepMinutes = props.minuteStep
@@ -96,7 +100,11 @@ watch(
   },
 )
 
-// Hàm tính toán vị trí Dropdown
+/**
+ * Hàm tính toán vị trí hiển thị của Dropdown (bám theo input)
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const updateDropdownPosition = () => {
   if (inputRef.value) {
     const rect = inputRef.value.getBoundingClientRect()
@@ -110,11 +118,22 @@ const updateDropdownPosition = () => {
   }
 }
 
+/**
+ * Hàm xử lý sự kiện focus vào ô input
+ * @param {Event} e - Sự kiện focus
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const onFocus = (e) => {
   // Input focus không mở dropdown, chỉ focus để nhập liệu
   // Dropdown chỉ mở khi click vào icon
 }
 
+/**
+ * Hàm bật/tắt trạng thái hiển thị dropdown chọn giờ
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
   if (showDropdown.value) {
@@ -125,14 +144,25 @@ const toggleDropdown = () => {
   }
 }
 
+/**
+ * Hàm chọn thời gian từ danh sách dropdown
+ * @param {string} time - Giá trị thời gian được chọn (HH:mm)
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const selectTime = (time) => {
   displayValue.value = time
   emit('update:modelValue', time)
   showDropdown.value = false
 }
 
+/**
+ * Hàm xử lý nhập liệu text (format tự động thêm dấu hai chấm và giới hạn ký tự)
+ * @param {Event} e - Sự kiện input
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const onInput = (e) => {
-  // Logic xử lý nhập liệu giữ nguyên như cũ
   const cursorPos = e.target.selectionStart
   let val = e.target.value
   val = val.replace(/[^\d:]/g, '')
@@ -160,8 +190,13 @@ const onInput = (e) => {
   }
 }
 
+/**
+ * Hàm xử lý chặn các phím không hợp lệ (chỉ cho phép số và phím điều hướng)
+ * @param {KeyboardEvent} e - Sự kiện nhấn phím
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const onKeydown = (e) => {
-  // Logic keydown giữ nguyên
   const allowedKeys = [
     'Backspace',
     'Tab',
@@ -208,9 +243,13 @@ const onKeydown = (e) => {
   }
 }
 
+/**
+ * Hàm xử lý khi input mất focus (validate và format lại chuẩn HH:mm)
+ * @param {Event} e - Sự kiện blur
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const onBlur = (e) => {
-  // Logic blur giữ nguyên
-  // Delay nhỏ để click event (nếu có) kịp chạy
   setTimeout(() => {
     showDropdown.value = false
   }, 10)
@@ -243,7 +282,12 @@ const onBlur = (e) => {
   emit('blur', e)
 }
 
-// Xử lý đóng dropdown khi click ra ngoài hoặc cuộn trang
+/**
+ * Hàm đóng dropdown khi click ra ngoài component
+ * @param {Event} e - Sự kiện click
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const handleClickOutside = (e) => {
   const isClickWrapper = wrapperRef.value && wrapperRef.value.contains(e.target)
   const isClickDropdown = dropdownRef.value && dropdownRef.value.contains(e.target)
@@ -253,9 +297,13 @@ const handleClickOutside = (e) => {
   }
 }
 
+/**
+ * Hàm đóng dropdown khi cuộn chuột hoặc resize cửa sổ
+ * @returns (void)
+ * createdby: Bảo Trung
+ */
 const handleScrollOrResize = () => {
   if (showDropdown.value) {
-    // Đóng dropdown khi cuộn hoặc resize để tránh bị lệch vị trí
     showDropdown.value = false
   }
 }

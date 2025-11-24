@@ -162,7 +162,7 @@ import BaseInput from '@/components/input/Input.vue'
 import { WorkShiftStatus } from '@/constants/enums.js'
 import { parseTime } from '@/ultils/formatter.js'
 import DatetimePicker from '@/components/datetime/DatetimePicker.vue'
-import { ElMessageBox } from 'element-plus'
+import useMessageBox from '@/composables/useMessageBox.js'
 const props = defineProps({
   initialData: {
     type: Object,
@@ -171,6 +171,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'cancel'])
+
+const { confirm: showMessageBox } = useMessageBox()
 
 /**
  * Hàm tạo object dữ liệu mặc định cho form (dùng khi thêm mới hoặc reset)
@@ -437,21 +439,15 @@ const handleSubmit = () => {
  * createdby: Bảo Trung
  */
 const handleCancel = async () => {
-  console.log('handleCancel called')
-  console.log('hasChanges:', hasChanges.value)
-  console.log('formData:', formData.value)
-  console.log('initialFormData:', initialFormData.value)
-
   if (hasChanges.value) {
     try {
-      await ElMessageBox.confirm(
+      await showMessageBox(
         'Nếu bạn thoát, các dữ liệu đang nhập liệu sẽ không được lưu lại.',
         'Thoát và không lưu?',
         {
           confirmButtonText: 'Đồng ý',
           cancelButtonText: 'Hủy',
-          type: 'warning',
-          customClass: 'custom-exit-confirm-box',
+          type: 'info',
         },
       )
       // Nếu người dùng chọn "Đồng ý", emit sự kiện cancel
@@ -690,18 +686,5 @@ const formatToIntegerDisplay = (val) => {
 .radio-label {
   font-size: 14px;
   color: #1f1f1f;
-}
-</style>
-
-<style>
-/* Custom styling cho MessageBox x\u00e1c nh\u1eadn tho\u00e1t */
-.custom-exit-confirm-box .el-message-box__btns .el-button--default {
-  background-color: #009b71;
-  color: #fff;
-  border: none;
-}
-
-.custom-exit-confirm-box .el-message-box__btns .el-button--default:hover {
-  background-color: #007b5d;
 }
 </style>

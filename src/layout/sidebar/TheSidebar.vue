@@ -590,7 +590,7 @@ const menu = [
   width: 20px;
   height: 20px;
   mask-image: url(@/assets/icon/icon1.svg);
-  mask-position: -140px -16px;
+  mask-position: -160px -16px;
   mask-repeat: no-repeat;
   background-color: #9ca3af;
 }

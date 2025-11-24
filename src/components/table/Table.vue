@@ -331,7 +331,7 @@ const handleSelectAll = (event) => {
     emit('update:selectedIds', allIds)
   } else {
     emit('update:selectedIds', [])
-    emit('update:selectedIds', []) // Lưu ý: Code gốc đang emit 2 lần, có thể là lỗi copy paste, nên giữ nguyên logic của bạn
+    // Lưu ý: Code gốc đang emit 2 lần, có thể là lỗi copy paste, nên giữ nguyên logic của bạn
   }
 }
 

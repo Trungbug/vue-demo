@@ -299,11 +299,17 @@ const handleClickOutside = (e) => {
 
 /**
  * Hàm đóng dropdown khi cuộn chuột hoặc resize cửa sổ
+ * @param {Event} e - Sự kiện scroll hoặc resize
  * @returns (void)
  * createdby: Bảo Trung
  */
-const handleScrollOrResize = () => {
+const handleScrollOrResize = (e) => {
   if (showDropdown.value) {
+    if (e && e.type === 'scroll') {
+      if (dropdownRef.value && dropdownRef.value.contains(e.target)) {
+        return
+      }
+    }
     showDropdown.value = false
   }
 }

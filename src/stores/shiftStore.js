@@ -86,7 +86,7 @@ export const useShiftStore = defineStore('shift', {
         }
       } catch (error) {
         console.error('Lỗi fetch data:', error)
-        throw error // Ném lỗi để Component hứng và hiện thông báo
+        throw error
       } finally {
         this.isLoading = false
       }
@@ -160,11 +160,7 @@ export const useShiftStore = defineStore('shift', {
         payload.modifiedDate = now
 
         const backendPayload = mapShiftToBackend(payload)
-
-        // Gọi API update
         await ShiftAPI.update(id, backendPayload)
-
-        // Load lại dữ liệu để cập nhật thay đổi
         await this.fetchShifts()
 
         return { success: true, message: 'Cập nhật thành công!' }
@@ -184,8 +180,6 @@ export const useShiftStore = defineStore('shift', {
     async removeShift(id) {
       try {
         await ShiftAPI.delete(id)
-
-        // Xóa trực tiếp trên UI store để phản hồi nhanh
         this.shifts = this.shifts.filter((s) => s.shiftId !== id)
         this.totalRecords--
 

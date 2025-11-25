@@ -77,21 +77,14 @@
         </div>
 
         <div class="form-row">
-          <el-tooltip
-            :content="errors.shiftBeginBreakTime"
-            placement="bottom"
-            effect="dark"
-            :disabled="!errors.shiftBeginBreakTime"
-          >
-            <DatetimePicker
-              class="inline half"
-              v-model="formData.shiftBeginBreakTime"
-              label="Bắt đầu nghỉ giữa ca"
-              placeholder="HH:MM"
-              :minute-step="30"
-              :error="errors.shiftBeginBreakTime"
-            />
-          </el-tooltip>
+          <DatetimePicker
+            class="inline half"
+            v-model="formData.shiftBeginBreakTime"
+            label="Bắt đầu nghỉ giữa ca"
+            placeholder="HH:MM"
+            :minute-step="30"
+            :error="errors.shiftBeginBreakTime"
+          />
 
           <DatetimePicker
             class="inline half"
@@ -99,6 +92,7 @@
             label="Kết thúc nghỉ giữa ca"
             placeholder="HH:MM"
             :minute-step="30"
+            :error="errors.shiftEndBreakTime"
           />
         </div>
 
@@ -209,7 +203,6 @@ const workTimeHours = computed(() => {
     // Ca trong ngày
     durationMin = end - start
   } else {
-    // Ca qua đêm (ví dụ: 22:00 - 06:00)
     const minutesInDay = 24 * 60
     durationMin = minutesInDay - start + end
   }
@@ -326,11 +319,25 @@ const validateForm = () => {
     isValid = false
   }
 
-  // 5. Validate Giờ nghỉ giữa ca phải nằm trong khoảng làm việc
+  // 5. Validate cả hai ô thời gian nghỉ phải được nhập cùng nhau
+  if (data.shiftBeginBreakTime && !data.shiftEndBreakTime) {
+    errors.value.shiftEndBreakTime =
+      'Bạn đã nhập thời gian bắt đầu nghỉ giữa ca nhưng chưa nhập thời gian kết thúc nghỉ giữa ca'
+    isValid = false
+  }
+
+  if (!data.shiftBeginBreakTime && data.shiftEndBreakTime) {
+    errors.value.shiftBeginBreakTime =
+      'Bạn đã nhập thời gian kết thúc nghỉ giữa ca nhưng chưa nhập thời gian bắt đầu nghỉ giữa ca'
+    isValid = false
+  }
+
+  // 6. Validate Giờ nghỉ giữa ca phải nằm trong khoảng làm việc
   if (data.shiftBeginBreakTime && data.shiftBeginTime && data.shiftEndTime) {
     const start = parseTime(data.shiftBeginTime)
     const end = parseTime(data.shiftEndTime)
     const breakStart = parseTime(data.shiftBeginBreakTime)
+    const breakEnd = parseTime(data.shiftEndBreakTime)
 
     let isBreakValid = false
     if (end >= start) {
@@ -346,6 +353,13 @@ const validateForm = () => {
     }
 
     if (!isBreakValid) {
+      errors.value.shiftBeginBreakTime =
+        'Thời gian bắt đầu nghỉ phải nằm trong khoảng thời gian làm việc'
+      isValid = false
+    }
+
+    // Validate thời gian kết thúc nghỉ phải nhỏ hơn hoặc bằng thời gian hết ca
+    if ((breakEnd !== null && breakEnd > end) || (breakStart !== null && breakStart < start)) {
       errors.value.shiftBeginBreakTime =
         'Thời gian bắt đầu nghỉ phải nằm trong khoảng thời gian làm việc'
       isValid = false
@@ -424,10 +438,42 @@ const handleSubmit = () => {
     const firstErrorMessage = errors.value[firstErrorKey]
 
     if (firstErrorMessage) {
-      ElMessageBox.alert(firstErrorMessage, 'Cảnh báo', {
-        confirmButtonText: 'Đóng',
-        type: 'warning',
-      })
+      if (firstErrorKey === 'shiftBeginBreakTime') {
+        // Kiểm tra loại lỗi cụ thể
+        if (firstErrorMessage.includes('chưa nhập thời gian bắt đầu')) {
+          showMessageBox(
+            'Bạn đã nhập thời gian kết thúc nghỉ giữa ca nhưng chưa nhập thời gian bắt đầu nghỉ giữa ca. Vui lòng kiểm tra lại.',
+            'Cảnh báo!',
+            {
+              confirmButtonText: 'Đóng',
+              type: 'warning',
+            },
+          ).catch(() => {})
+        } else {
+          showMessageBox(
+            'Thời gian bắt đầu nghỉ giữa ca phải nằm trong khoảng thời gian tính từ giờ vào ca đến giờ hết ca. Vui lòng kiểm tra lại.',
+            'Cảnh báo!',
+            {
+              confirmButtonText: 'Đóng',
+              type: 'warning',
+            },
+          ).catch(() => {})
+        }
+      } else if (firstErrorKey === 'shiftEndBreakTime') {
+        showMessageBox(
+          'Bạn đã nhập thời gian bắt đầu nghỉ giữa ca nhưng chưa nhập thời gian kết thúc nghỉ giữa ca. Vui lòng kiểm tra lại.',
+          'Cảnh báo!',
+          {
+            confirmButtonText: 'Đóng',
+            type: 'warning',
+          },
+        ).catch(() => {})
+      } else {
+        showMessageBox(firstErrorMessage, 'Cảnh báo!', {
+          confirmButtonText: 'Đóng',
+          type: 'warning',
+        }).catch(() => {})
+      }
     }
   }
 }

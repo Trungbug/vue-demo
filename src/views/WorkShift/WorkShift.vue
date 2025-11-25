@@ -494,7 +494,7 @@ const handleAddCandidate = async (formData) => {
       shiftToEdit.value = null
       dialogTitle.value = 'Thêm ca làm việc'
     } else {
-      handleCancelForm()
+      closeDialog()
     }
   } else {
     handleSaveError(result.error)

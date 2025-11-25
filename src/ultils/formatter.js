@@ -1,9 +1,4 @@
 /**
- * Utils định dạng hiển thị nhỏ
- * Created By NMDUC - 18/11/2025
- */
-
-/**
  * Chuyển giá trị về chuỗi số có phân cách hàng nghìn
  * @param {number|string|null|undefined} v Giá trị đầu vào
  * @returns {string|number} Trả về chuỗi đã format hoặc '-' nếu không có giá trị
